@@ -1,0 +1,426 @@
+{% set header_hide_navigation_bar = 'true' %}
+
+{% extends "new/account/layout.html" %}
+
+{% block body %}
+<div class="container standard" id="sm-account-verification-center">    
+    <div v-if="page == 0">
+        <div class="row block-1 block-border">
+            <div class="col-sm-6 verify-comment">
+                <h1>Verify my Identity</h1>
+                <div class="sub-verify-comment">
+                Freelancers are encouraged to verify their identity to market themselves to potential
+                employers as trusted members of our Freelancer.com community.
+                <br>
+                <br>
+                Users that verify their identity will receive the benefit of faster processing of 
+                their payments and faster resolution of account issues and disputes.
+                </div>
+            </div>
+            <div class="col-sm-6">          
+                <div class="verify-icon hidden-xs">
+                </div> 
+            </div>
+        </div>
+        <div class="row block-2 block-border">
+            <div class="col-md-4">      
+                <div class="circle-num digit">1</div>
+                <div class="sub-block-2">
+                    <div class="sub-block-img proof-identity"></div>
+                    <div class="sub-block-title">proof of identity</div>
+                    <div class="sub-block-desc"> Lorem ipsum dolor sit amet.
+                    consecteuer adipiscing elit. sed diam nonum
+                    Lorem ipsum dolor sit amet.
+                    consecteuer adipiscing elit. sed diam nonum
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="circle-num digit">2</div>
+                <div class="sub-block-2">
+                    <div class="sub-block-img keycode"></div>
+                    <div class="sub-block-title">keycode verification</div>
+                    <div class="sub-block-desc"> Lorem ipsum dolor sit amet.
+                    consecteuer adipiscing elit. sed diam nonum
+                    Lorem ipsum dolor sit amet.
+                    consecteuer adipiscing elit. sed diam nonum
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="circle-num digit">3</div>
+                <div class="sub-block-2">
+                    <div class="sub-block-img proof-address"></div>
+                    <div class="sub-block-title">proof of address</div>
+                    <div class="sub-block-desc"> Lorem ipsum dolor sit amet.
+                    consecteuer adipiscing elit. sed diam nonum
+                    Lorem ipsum dolor sit amet.
+                    consecteuer adipiscing elit. sed diam nonum
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row block-3">
+            <div class="col-md-12 label">please select your country of residence</div>
+            <br>
+            <div class="col-md-12">
+                <div class='form-group flex'>
+                    <select v-model="country" class="form-control country" placeholder="Select country">
+                      <option v-bind:value="ct" v-for="ct in countries" v-text="ct"></option>
+                    </select>
+                </div>        
+            </div>
+            <br>
+            <div class="col-md-12 center">
+                <div class="flex">
+                    <button type="button" class="form-control btn btn-success country" @click="verifyStart">Verify My Self</button>
+                </div>
+            </div>
+            <div class="col-md-12 desc">Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonum</div>
+        </div>
+    </div>
+    <div v-if="page == 1" class="verify-stage">
+        <div class="row block-border" style="padding:21px;">
+            <div class="col-md-12">
+                <h1>Verification Center</h1>
+            </div>
+            <div class="col-md-12 vertical-gap stepbar progressive">
+                <div class="circle-num digit-1">1</div>             
+                <div class="circle-num digit-2 gray">2</div>                
+                <div class="circle-num digit-3 gray">3</div>
+            </div>
+            <div class="col-md-12 vertical-gap">
+                <form class="form-horizontal vertical-gap">
+                    <label class="sub-title">Confirm Your Details</label>
+                    <div class="form-group vertical-gap">
+                      <label class="control-label col-sm-3" for="first_name">First Name</label>
+                      <div class="col-sm-6">                        
+                          <input v-model="first_name" type="text" class="form-control">                     
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-sm-3" for="last_name">Last Name</label>
+                      <div class="col-sm-6">                        
+                          <input v-model="last_name" type="text" class="form-control">                      
+                      </div>
+                    </div>
+                    <div class="form-group date_fields">
+                      <label class="control-label col-sm-3">Date of Birth</label>
+                      <div class="col-sm-2">
+                        <select v-model="birth_date.day" class="form-control">
+                            <option value="" disabled="" selected>Days</option>
+                            <option v-bind:value="it" v-for="it in [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]" v-text="it"></option>
+                        </select>
+                      </div>
+                      <div class="col-sm-2">
+                        <select v-model="birth_date.month" class="form-control">
+                            <option value="" disabled="" selected>Months</option>
+                            <option v-bind:value="it" v-for="it in [1,2,3,4,5,6,7,8,9,10,11,12]" v-text="it"></option>
+                        </select>
+                      </div>
+                      <div class="col-sm-2">
+                        <select v-model="birth_date.year" class="form-control">
+                            <option value="" disabled="" selected>Year</option>
+                            <option v-bind:value="it" v-for="it in [2017, 2016, 2015]" v-text="it"></option>
+                        </select>
+                      </div>                      
+                    </div>
+                </form>
+                <hr class="vertical-gap">       
+            </div>
+            <div class="col-md-12">
+                <form class="form-horizontal">
+                    <label class="sub-title">Upload a Scan of Your ID</label>
+                    <div class="form-group vertical-gap">                     
+                        <div class="col-sm-4">                                                
+                            <div class="card"></div>
+                        </div>                      
+                        <div class="col-sm-8 card-desc">
+                            Lorem ipsum dolor sit amet, consecteuet adipiscing elit. sed diam nonummy nibh
+                            euisomd tincidunt ut laoreet dolore magna aliquam erat volupat. Ut wisi enim ad minim
+                            veniam. quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea
+                            commodo consecuat.
+                            <br>
+                            Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat,
+                            vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim
+                            qui blandit praesent lupatatum zzril delenit augue duis dolore te feugait nulla facilisi.
+                        </div>
+                    </div>
+                    <div class="form-group vertical-gap">
+                        <div class="col-md-12">
+                            <label>Upload your ID pictures</label>                    
+                            <div class="grid-upload">
+                              <div class="panel upload-file">
+                                <file-upload title="Drag or Browse your picture here" name="" :multiple="false" :thread="1" accept="image/JPEG, image/JPG, image/PNG">
+                                </file-upload>
+                              </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <hr class="vertical-gap">                   
+            </div>
+            <div class="col-md-12">
+                <form class="form-horizontal">                  
+                    <div class="form-group">
+                      <label class="control-label col-sm-3" for="id_issue_country">ID Issuing Country</label>
+                      <div class="col-sm-6">                        
+                          <input v-model="id_issue_country" type="text" class="form-control">                   
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-sm-3" for="id_type">ID Type</label>
+                      <div class="col-sm-6">                        
+                          <input v-model="id_type" type="text" class="form-control">                        
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-sm-3" for="id_number">ID Number</label>
+                      <div class="col-sm-6">                        
+                          <input v-model="id_number" type="text" class="form-control">                      
+                      </div>
+                    </div>
+                    <div class="form-group date_fields">
+                      <label class="control-label col-sm-3">ID Expires on</label>
+                      <div class="col-sm-2">
+                        <select v-model="id_expired_on.day" class="form-control">
+                            <option value="" disabled="" selected>Days</option>
+                            <option v-bind:value="it" v-for="it in [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]" v-text="it"></option>
+                        </select>
+                      </div>
+                      <div class="col-sm-2">
+                        <select v-model="id_expired_on.month" class="form-control">
+                            <option value="" disabled="" selected>Months</option>
+                            <option v-bind:value="it" v-for="it in [1,2,3,4,5,6,7,8,9,10,11,12]" v-text="it"></option>
+                        </select>
+                      </div>
+                      <div class="col-sm-2">
+                        <select v-model="id_expired_on.year" class="form-control">
+                            <option value="" disabled="" selected>Year</option>
+                            <option v-bind:value="it" v-for="it in [2017, 2016, 2015]" v-text="it"></option>
+                        </select>
+                      </div>                      
+                    </div>
+                </form>                     
+            </div>
+            <div class="col-md-12 vertical-gap">
+                <button type="button" class="btn btn-primary next" @click="page=3">My Save and continue</button>
+                <a href="#" class="cancel">Click to cancel request</a>
+            </div>
+        </div>      
+    </div>
+    <div v-if="page == 2" class="verify-stage">
+        <div class="row block-border" style="padding:21px;">
+            <div class="col-md-12">
+                <h1>Verification Center</h1>
+            </div>
+            <div class="col-md-12 vertical-gap stepbar progressive">
+                <div class="circle-num digit-1">1</div>
+                <div class="circle-num digit-2">2</div>
+                <div class="circle-num digit-3 gray">3</div>
+            </div>
+            <div class="col-md-12 vertical-gap">
+                <form class="form-horizontal">
+                    <label class="sub-title">Keycode Verification</label>
+                    <div class="form-group vertical-gap">
+                        <div class="col-sm-6">                                                
+                            <div class="keycode-sample"></div>
+                        </div>                      
+                        <div class="col-sm-6 card-desc">
+                            Lorem ipsum dolor sit amet, consecteuet adipiscing elit. sed diam nonummy nibh
+                            euisomd tincidunt ut laoreet dolore magna aliquam erat volupat. Ut wisi enim ad minim
+                            veniam. quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea
+                            commodo consecuat.
+                            <br>
+                            Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat,
+                            vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim
+                            qui blandit praesent lupatatum zzril delenit augue duis dolore te feugait nulla facilisi.
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="form-group">
+                        <div class="col-md-12">
+                            <label>Upload your ID pictures</label>                    
+                            <div class="grid-upload">
+                              <div class="panel upload-file">
+                                <file-upload title="Drag or Browse your picture here" name="" :multiple="false" :thread="1" accept="image/JPEG, image/JPG, image/PNG">
+                                </file-upload>
+                              </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>                     
+            </div>
+            <div class="col-md-12 vertical-gap">
+                <button type="button" class="btn btn-primary next" @click="page=3">My Save and continue</button>
+                <a href="#" class="cancel">Click to cancel request</a>
+            </div>
+        </div>      
+    </div>
+    <div v-if="page == 3" class="verify-stage">
+        <div class="row block-border" style="padding:21px;">
+            <div class="col-md-12">
+                <h1>Verification Center</h1>
+            </div>
+            <div class="col-md-12 vertical-gap stepbar progressive">
+                <div class="circle-num digit-1">1</div>             
+                <div class="circle-num digit-2">2</div>             
+                <div class="circle-num digit-3">3</div>
+            </div>
+            <div class="col-md-12 vertical-gap">
+                <form class="form-horizontal vertical-gap">
+                    <label class="sub-title">Confirm Your Address</label>
+                    <div class="form-group vertical-gap">
+                      <label class="control-label col-sm-2">Address</label>
+                      <div class="col-sm-6">                        
+                          <input v-model="address1" type="text" class="form-control">
+                          <br>                      
+                          <input v-model="address2" type="text" class="form-control">                       
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-sm-2" for="city">City</label>
+                      <div class="col-sm-6">                        
+                          <input v-model="city" type="text" class="form-control">                       
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-sm-2" for="state">State</label>
+                      <div class="col-sm-6">                        
+                          <input v-model="state" type="text" class="form-control">                      
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-sm-2" for="postal_code">Postal Code</label>
+                      <div class="col-sm-6">                        
+                          <input v-model="postal_code" type="text" class="form-control">                        
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-sm-2" for="city">Country</label>
+                      <div class="col-sm-6">                        
+                            <input type="text" class="form-control" value="Italy" disabled>                     
+                      </div>
+                    </div>                  
+                </form>
+                <hr class="vertical-gap">       
+            </div>
+            <div class="col-md-12">
+                <form class="form-horizontal">
+                    <label class="sub-title">Provide supporting documents</label>
+                    <div class="form-group vertical-gap">                     
+                        <div class="col-sm-2">                                                
+                            <div class="documents"></div>
+                        </div>                      
+                        <div class="col-sm-10 card-desc">
+                            Lorem ipsum dolor sit amet, consecteuet adipiscing elit. sed diam nonummy nibh
+                            euisomd tincidunt ut laoreet dolore magna aliquam erat volupat. Ut wisi enim ad minim
+                            veniam. quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea
+                            commodo consecuat.
+                            <br>
+                            Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat,
+                            vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim
+                            qui blandit praesent lupatatum zzril delenit augue duis dolore te feugait nulla facilisi.
+                        </div>
+                    </div>
+                    <div class="form-group vertical-gap">
+                        <div class="col-md-12">
+                            <label>Upload your documents pictures</label>                     
+                            <div class="grid-upload">
+                              <div class="panel upload-file">
+                                <file-upload title="Drag or Browse your picture here" name="" :multiple="false" :thread="1" accept="image/JPEG, image/JPG, image/PNG">
+                                </file-upload>
+                              </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <hr class="vertical-gap">                   
+            </div>
+            <div class="col-md-12">
+                <form class="form-horizontal">
+                    <label class="sub-title">Provide supporting documents</label>
+                    <div class="form-group vertical-gap">
+                      <label class="control-label col-sm-2" for="institutions_name">Institutions Name</label>
+                      <div class="col-sm-6">                        
+                          <input v-model="institutions_name" type="text" class="form-control">                  
+                      </div>
+                    </div>
+                    <div class="form-group">
+                      <label class="control-label col-sm-2" for="document_type">Document Type</label>
+                      <div class="col-sm-6">                        
+                          <input v-model="document_type" type="text" class="form-control">                      
+                      </div>
+                    </div>                  
+                    <div class="form-group">
+                      <label class="control-label col-sm-2">Date Issued</label>
+                      <div class="col-sm-2">
+                        <select v-model="document_issued.day" class="form-control">
+                            <option value="" disabled="" selected>Days</option>
+                            <option v-bind:value="it" v-for="it in [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24]" v-text="it"></option>
+                        </select>
+                      </div>
+                      <div class="col-sm-2">
+                        <select v-model="document_issued.month" class="form-control">
+                            <option value="" disabled="" selected>Months</option>
+                            <option v-bind:value="it" v-for="it in [1,2,3,4,5,6,7,8,9,10,11,12]" v-text="it"></option>
+                        </select>
+                      </div>
+                      <div class="col-sm-2">
+                        <select v-model="document_issued.year" class="form-control">
+                            <option value="" disabled="" selected>Year</option>
+                            <option v-bind:value="it" v-for="it in [2017, 2016, 2015]" v-text="it"></option>
+                        </select>
+                      </div>                      
+                    </div>
+                </form>                     
+            </div>
+            <div class="col-md-12 vertical-gap">
+                <button type="button" class="btn btn-primary next" @click="page=4">My Save and continue</button>
+                <a href="#" class="cancel">Click to cancel request</a>
+            </div>
+        </div>      
+    </div>
+    <div v-if="page == 4" class="verify-stage">
+        <div class="block-border">
+            <div class="row">
+                <div class="col-md-12 padding">
+                    <h1>Verification Center</h1>
+                </div>
+            </div>
+            <div class="row"> 
+                <div class="col-md-12">
+                    <div class="message">
+                        <div class="verify-check"></div>
+                        <div class="verify-message">
+                            <h5>You have successfully submitted your request to verify your identity</h5>
+                            <br>
+                            Lorem ipsum dolor sit amet, consecteuet adipiscing elit. sed diam nonummy nibh
+                            euisomd tincidunt ut laoreet dolore magna aliquam erat volupat. Ut wisi enim ad minim
+                            veniam. quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea
+                            commodo consecuat.
+                            <br>
+                            Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat,
+                            vel illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim
+                            qui blandit praesent lupatatum zzril delenit augue duis dolore te feugait nulla facilisi.
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+            <div class="col-md-12 padding">
+                <button type="button" class="btn btn-primary next" @click="goToDashboard">Return to dashboard</button>
+            </div>
+            </div>
+        </div>      
+    </div>
+</div>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static_file('assets/verificationCenter.css', include_version=True) }}">
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript" src="{{ static_file('assets/verificationCenter.js', include_version=True) }}"></script>
+{% endblock %}

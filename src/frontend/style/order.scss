@@ -1,0 +1,95 @@
+.OrderDetails {
+
+  &__header {
+    height: 143px;
+    background-color: #f7f7f7;
+  }
+
+  &__header-inner {
+    max-width: 1116px;
+    margin: 0 auto;
+    height: 100%;
+    display: flex;
+    align-items: center;
+  }
+
+  &__progress-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 680px;
+    margin-left: 60px;
+  }
+
+  &__progress-bar-step {
+    display: flex;
+    flex-direction: column;
+    width: 33.33%;
+    position: relative
+  }
+
+  &__progress-bar-step-indicator {
+    border: 1px solid #bababa;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all .35s ease;
+
+    &:after {
+      content: "";
+      width: 0;
+      height: 1px;
+      background-color: #0681cd;
+      display: block;
+      position: absolute;
+      top: 50%;
+      left: 36px;
+      transition: width .6s ease;
+    }
+
+    &:before {
+      content: "";
+      width: calc(100% - 48px);
+      height: 1px;
+      background-color: #bababa;
+      display: block;
+      position: absolute;
+      top: 50%;
+      left: 36px;
+    }
+  }
+
+  &__progress-bar-step:last-of-type &__progress-bar-step-indicator:after,
+  &__progress-bar-step:last-of-type &__progress-bar-step-indicator:before {
+    display: none;
+  }
+
+  &__progress-bar-step.current &__progress-bar-step-indicator{
+    border-color: #8cc63f;
+    background-color: #ffffff;
+  }
+
+  &__progress-bar-step.done &__progress-bar-step-indicator{
+    border-color: #0681cd;
+    background-color: #0681cd;
+
+    &:after {
+      width: calc(100% - 48px);
+    }
+  }
+
+  &__progress-bar-step-label {
+    color: #858585;
+    padding-top: 3px;
+    position: absolute;
+    top: 30px;
+    left: -50%;
+    width: 100%;
+    text-align: center;
+  }
+
+  &__progress-bar-step.current &__progress-bar-step-label {
+    font-weight: 600;
+  }
+}

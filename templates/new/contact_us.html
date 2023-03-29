@@ -1,0 +1,54 @@
+{% extends "new/layout.html" %}
+
+{% block title %}Contact Us{% endblock %}
+
+{% block body %}
+<main id="sm-contact-us">
+  <div class="content">
+    <section class="callback-form">
+      <div class="sectioned-wrapper" v-cloak>
+        <h1>Contact Us</h1>
+        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut
+          laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation
+          ullamcorper suscipit lobortis nisl </p>
+        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut
+          laoreet dolore magna aliquam erat volutpat. Ut wisi enim ad minim veniam, quis nostrud exerci tation
+          ullamcorper suscipit lobortis nisl </p>
+
+        <label for="">Reason:</label>
+        <select v-model="reason">
+          <option value="" disabled>-select a reason for the contact-</option>
+          <option value="other">Other questions</option>
+          <option value="bug">Raport bug</option>
+        </select>
+
+        <label for="">Your Email:</label>
+        <input type="text" placeholder="example@domain.com" v-model="email">
+
+        <label for="">Comment:</label>
+        <textarea name="" id="" cols="30" rows="8" placeholder="Write down your comments" v-model="comments"></textarea>
+
+        <button class="button button-blue upper" v-show="!sent" @click="handleSendClick" v-bind:disabled="loading || !reason.length || !email.length || !comments.length">send question</button>
+        <button v-show="sent" class="button button-green upper" disabled>question sent</button>
+      </div>
+    </section>
+    <section class="faq">
+      <div class="sectioned-wrapper">
+        <h1>FAQs</h1>
+        <p>Read our General FAQs for answers to common questions about JobDone.</p>
+
+        <h3>Lorem ipsum dolor sit amet?</h3>
+        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut
+          laoreet dolore magna ...</p>
+        <h3>Lorem ipsum dolor sit amet?</h3>
+        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut
+          laoreet dolore magna ...</p>
+        <h3>Lorem ipsum dolor sit amet?</h3>
+        <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut
+          laoreet dolore magna ...</p>
+        <button class="button button-transparent">read more in our FAQ center</button>
+      </div>
+    </section>
+  </div>
+</main>
+{% endblock %}

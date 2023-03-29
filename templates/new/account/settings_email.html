@@ -1,0 +1,37 @@
+{% extends "new/account/layout.html" %}
+
+{% block body %}
+<div class="container standard" id="sm-account-settings">
+  <div class="row">
+    <div class="col-md-3">
+      <div class="design-box">
+        <h1>Settings</h1>
+        <ul class="nav">
+          <li class="active"><a href="{{ url_for('account.settings') }}">Account</a></li>
+          <li class="active"><a href="{{ url_for('account.settings_email') }}">Notifications</a></li>
+          <li class="active"><a href="{{ url_for('account.settings_payment') }}">Payment & Financials</a></li>
+          <li class="active"><a href="{{ url_for('account.settings_verification') }}">Trust & Verification</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="col-md-9">
+      <div class="design-box inner">
+        <span class="setemail">{{ g.user.email }}</span>
+        <h2>Notifications options</h2>
+        <div class="checkbox">
+          <label><input type="checkbox" value="">Option 1</label>
+        </div>
+        <div class="checkbox">
+          <label><input type="checkbox" value="">Option 2</label>
+        </div>
+        <div class="checkbox disabled">
+          <label><input type="checkbox" value="" disabled>Option 3</label>
+        </div>
+        <a href="#" class="btn btn-primary">SAVE SETTINGS</a>
+      </div>
+    </div>
+  </div>
+
+
+</div>
+{% endblock %}

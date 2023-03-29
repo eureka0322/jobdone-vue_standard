@@ -1,0 +1,30 @@
+{% extends "new/layout.html" %}
+
+{% block title %}Not Found{% endblock %}
+
+{% block body %}
+<main id="sm-404">
+  <div class="main-block block-wrapper">
+    <div class="block">
+      <h3>404 page not found</h3>
+      <p>
+        The page you are looking for might have been removed, had its name changed,
+        or is temporarily unavailable.
+      </p>
+    </div>
+  </div>
+  <div class="sub-block block-wrapper">
+    <div class="block">
+      <p>Meanwhile try to find a service using our search bar</p>
+
+      <form action="/" method="GET">
+        <div class="search-bar">
+          <i class="icon-search">🔍</i>
+          <input type="text" name="query" placeholder="Find service: eg 'Logo Design'">
+          <button class="go">go</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</main>
+{% endblock %}

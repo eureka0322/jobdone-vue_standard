@@ -1,0 +1,87 @@
+{% set tab = 'buyer' %}
+{% set header_hide_navigation_bar = 'true' %}
+
+{% extends "new/account/layout.html" %}
+
+{% block body %}
+<div id="sm-account-order-requirements">
+  <div class="Order">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-9">
+          
+          {% include "new/account/components/order/summary.html" %}
+
+          <div class="order_req_ar text-center">
+            <img src="{{ static_file('images/account/write-req.png') }}" alt="write req">
+            <h3>ORDER REQUIREMENTS</h3>
+            <p>This seller requires some information in order to get started</p>
+          </div>
+          
+          <div class="project_dtails margin_btm_30" v-cloak>
+            <div class="sng_pdt_mesage">
+              <div class="pr_profile">
+                <a href="#">
+                  <img v-bind:src="sellerPhoto" alt="profile picture" />
+                </a>
+              </div>
+              <div class="pr_ab_desc">
+                <p>Before <b v-text="sellerDisplayName"></b> starts working on this order he needs to receive the following details:</p>
+                <p class="pr_time_ago" v-text="orderCreatedDate"></p>
+                <div class="repaly_content">
+                  <ol>
+                    <li v-for="requirement in sharedState.extra.product_requirements" v-text="requirement.text"></li>
+                  </ol>
+                  <button class="reply_now" @click="showReplyForm = true">Reply Now</button>
+                </div>
+              </div>
+            </div>
+
+            <div class="order_req_form" v-show="showReplyForm">
+              <div v-if="sharedState.extra.product_requirements && sharedState.extra.product_requirements.length" v-cloak>
+                <div class="slr_msg_response" v-for="(requirement, idx) in requirements">
+                  <div class="client_qus">
+                    <h4>Requirement <span v-text="idx + 1"></span> <span class="required" v-if="requirement.required">*</span></h4>
+                    <p v-text="requirement.text"></p>
+                  </div>
+                  <div v-if="requirement.type === 'text'">
+                    <textarea class="rs_client" placeholder="type your answer here" maxlength="500" v-model="requirement.reply"></textarea>
+                    <p><span v-text="requirement.reply.length"></span> / 500</p>
+                  </div>
+                  <div v-if="requirement.type === 'files'">
+                    <label class="atach_file">
+                      <img src="{{ static_file('images/account/file_link.png') }}" />
+                      <file-upload title="Drop files here or click to open dialog" name="file" post-action="/api/account/buyer/attachments/upload" :multiple="true" :files="requirement._attachUploads" :events="requirement._attachUploadEvents">
+                      </file-upload>
+                    </label>
+
+                    <div class="attachment_list">
+                      <ul>
+                        <li v-for="upload in requirement._attachUploads">
+                          <span v-text="upload.name"></span> &mdash; <span class="delete" v-if="!upload.active" @click="handleAttachDelete(idx, upload)">delete</span><span v-else>uploading...</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+    
+              <div class="alert alert-danger" v-if="error" v-text="error" v-cloak></div>
+
+              <div class="text-center clearfix">
+                <button class="str_order" v-bind:disabled="isLoading" @click="handleStartOrderClick">Start order</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3" v-if="order" v-cloak>
+          <div class="order_issue" v-if="order.state === 'new'">
+            <p>Having issues with the order?</p>
+            <a href="{{ url_for('account.buyer_order_resolution', order_id=order.id) }}" class="btn btn-primary" v-bind:disabled="isLoading">RESOLVE NOW</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

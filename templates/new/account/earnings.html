@@ -1,0 +1,118 @@
+{% set tab = 'seller' %}
+
+{% extends "new/account/layout.html" %}
+
+{% block body %}
+<div class="container" id="sm-account-earnings">
+  <div class="row">
+    <div class="col-md-12 content">
+      <div class="transparent holder">
+        <div class="head_mes">
+          <h1>Earnings</h1>
+          <div class="pull-right">
+            <p>Active orders: <b>${{ seller_statistics.active_orders|format_price }}</b></p> 
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-12">
+            <div class="renues_menus">
+              <ul>
+                <li class="active">
+                  <p>TOTAL INCOME</p>
+                  <span>${{ seller_statistics.total_income|format_price }}</span>
+                </li>
+                <li>
+                  <p>WITHDRAWN</p>
+                  <span>${{ seller_statistics.withdrawn|format_price }}</span>
+                </li>
+                <li>
+                  <p>USED FOR PURCHASES</p>
+                  <span>${{ seller_statistics.purchases|format_price }}</span>
+                </li>
+                <li>
+                  <p>PENDING CLEARANCE</p>
+                  <span>${{ seller_statistics.pending_clearance|format_price }}</span>
+                </li>
+                <li>
+                  <p>AVAILABLE FOR WITHDRAWAL</p>
+                  <span>${{ g.user.get_credit_pp() }}</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="order-list table">
+        <div class="order-list-top">
+            <div class="show_cat_renues">
+            <label for="">show</label>
+            <select class="slc_control">
+              <option selected>Everything</option>
+            </select>
+            <select class="slc_control" v-model="month" v-bind:disabled="year == '-1'">
+              <option value="-1" selected>All year</option>
+              {% for month in combo_months %}
+              <option value="{{ loop.index }}">{{ month }}</option>
+              {% endfor %}
+            </select>
+            <select class="slc_control" v-model="year">
+              <option value="-1" selected>All time</option>
+              {% for year in combo_years %}
+              <option value="{{ year }}">{{ year }}</option>
+              {% endfor %}
+            </select>
+            <a href="#" class="pull-right" @click.prevent="handleExportClick">EXPORT TO CSV</a>
+          </div>
+        </div>
+        <table width="100%" border="0">
+          <tbody>
+            <tr>
+              <th scope="col">DATE</th>
+              <th scope="col">ORDER</th>
+              <th scope="col">AMOUNT</th>
+            </tr>
+            <tr v-for="transaction in transactions" v-cloak>
+              <td v-text="transaction.created_on"></td>
+              <td>
+                <div class="chart-icon" v-if="transaction.type == 'order_prerelease'" v-bind:title="'Released on ' + transaction.release_on">
+                  <svg width="20" height="20">
+                    <circle r="10" cx="10" cy="10" v-bind:style="{ strokeDasharray: (transaction._release_on_left_percents / 100 * 63) + ' 63' }" />
+                  </svg>
+                </div>
+                <div>
+                  <span v-text="transaction._transaction"></span><br />
+                  <a v-if="transaction._order_url" v-bind:href="transaction._order_url" class="blue">View order</a>
+                </div>
+              </td>
+              <td><span v-bind:class="{ 'text-danger': transaction.direction === 'out', 'text-success': transaction.direction === 'in' }" v-text="(transaction.direction === 'out' ? '-' : '') + (transaction.amount / 100).toFixed(2) + ' USD'"></span></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="pagination-table">
+          <div class="col-md-6">
+            <div class="pagination-list" v-show="!transactionsLoading && totalResults > 0" v-cloak>
+              <ul class="pagination">
+                <li v-bind:class="{ disabled: currentPage <= 1 }"><a href="#" @click.prevent="handlePageSelect(currentPage - 1)">&laquo;</a></li>
+                <li v-for="page in pages" v-bind:class="{ active: currentPage === page }">
+                  <a href="#" @click.prevent="handlePageSelect(page)" v-text="page">2</a>
+                </li>
+                <li v-bind:class="{ disabled: currentPage >= pages[pages.length - 1] }"><a href="#" @click.prevent="handlePageSelect(currentPage + 1)">&raquo;</a></li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="gotopage">
+              <span class="fileds">
+                <label for="gotopage">Go To Page</label>
+                <input type="number" name="gotopage" v-model="gotoPage" @keypress.enter="handlePageSelect(+gotoPage)">
+                <a href="#" class="btn" @click.prevent="handlePageSelect(+gotoPage)">GO</a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>  
+    </div>
+  </div>
+</div>
+{% endblock %}

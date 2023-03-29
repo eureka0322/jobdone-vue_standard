@@ -1,0 +1,459 @@
+{% extends "new/layout.html" %}
+
+{% if displayed_category and displayed_category.seo_description %}
+{% set meta_description = displayed_category.seo_description %}
+{% endif %}
+
+{% block body %}
+<main id="sm-main">
+  {% if displayed_category %}
+  <div class="top-panel explore">
+    <div class="wrapper">
+      <div class="left">
+        <div class="title">{{ displayed_category.title }}</div>
+        {% if displayed_category.description %}
+          <p class="description">{{ displayed_category.description }}</p>
+        {% endif %}
+        <div class="breadcrumbs">
+          <a href="{{ url_for('explore') }}">browse</a>
+          <span> > </span>
+          <a href="{{ url_for('category', category_id=top_category.id, category_title=top_category.get_title_seofied()) }}">{{ top_category.title }}</a>
+          {% if category %}
+          <span> > </span>
+          <a href="{{ url_for('category', category_id=category.id, category_title=category.get_title_seofied()) }}">{{ category.title }}</a>
+          {% endif %}
+        </div>
+      </div>
+      <div class="right">
+        <div class="item">
+          <svg class="icon icon-profile-j">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#profile-j"></use>
+          </svg>
+          <strong>{{ displayed_category_statistics.sellers_count }}</strong>
+          <span>FREELANCERS<br>OFFERING</span>
+        </div>
+        <div class="item">
+          <svg class="icon icon-edit">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#edit"></use>
+          </svg>
+          <strong>{{ displayed_category_statistics.products_count }}</strong>
+          <span>SERVICES<br>AVAILABLE</span>
+        </div>
+        <div class="item">
+          <svg class="icon icon-play">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#play"></use>
+          </svg>
+          <strong>QUESTIONS?</strong>
+          <span>CHECK HOW<br>THIS WORKS</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  {% endif %}
+
+  <div class="content">
+    <div class="filter" v-bind:class="{ opened: isFilterOpened }">
+      <div class="filter-toggler" @click="isFilterOpened = !isFilterOpened">
+        filter
+        <span class="filter-state off">off</span>
+        <span class="filter-state on">on</span>
+        <svg class="icon icon-ar-down off">
+          <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-down"></use>
+        </svg>
+        <svg class="icon icon-ar-up on">
+          <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-up"></use>
+        </svg>
+      </div>
+      {# <!--
+      <div class="filter-section section-label ">
+        <div class="filter-section--title">
+          filter
+          <svg class="icon icon-filter">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#filter"></use>
+          </svg>
+        </div>
+        <div class="filter-section--controls">
+          <ul>
+            <li class="control-item">
+              <label>
+                <span class="checkbox">
+                  <input type="checkbox" >
+                  <svg class="icon icon-checkbox">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#checkbox"></use>
+                  </svg>
+                  <svg class="icon icon-checked">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#checked"></use>
+                  </svg>
+                </span>
+                <span class="option">
+                  <svg class="icon icon-download">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#download"></use>
+                  </svg>
+                  Instant Download
+                </span>
+              </label>
+            </li>
+            <li>
+              <label>
+                <span class="checkbox">
+                  <input type="checkbox" >
+                  <svg class="icon icon-checkbox">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#checkbox"></use>
+                  </svg>
+                  <svg class="icon icon-checked">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#checked"></use>
+                  </svg>
+                </span>
+                <span class="option">
+                  <svg class="icon icon-star">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#star"></use>
+                  </svg>
+                  Bestseller
+                </span>
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div>
+      --> #}
+      <div class="filter-section section-category">
+        <div class="filter-section--title">
+          category
+        </div>
+        <div class="filter-section--controls">
+          <ul>
+            {% if not top_category %}
+            <li v-for="category in sharedState.categories">
+              <label>
+                <span class="checkbox">
+                  <input type="checkbox" v-bind:value="category.id" v-bind:checked="topCategoryId === category.id" @click="handleSelectTopCategory(category)">
+                  <svg class="icon icon-checkbox">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#checkbox"></use>
+                  </svg>
+                  <svg class="icon icon-checked">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#checked"></use>
+                  </svg>
+                </span>
+                <span class="option" v-html="category.title"></span>
+              </label>
+            </li>
+            {% else %}
+            <li>
+              <label>
+                <span class="checkbox">
+                  <input type="checkbox" checked readonly>
+                  <svg class="icon icon-checkbox">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#checkbox"></use>
+                  </svg>
+                  <svg class="icon icon-checked">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#checked"></use>
+                  </svg>
+                </span>
+                <span class="option">{{ top_category.title }}</span>
+              </label>
+
+              <ul class="subcategories" v-if="topCategory">
+                <li v-for="subcategory in topCategory.subcategories">
+                  <label>
+                    <span class="checkbox">
+                      <input type="checkbox" v-bind:value="subcategory.id" v-model="selectedCategories" v-on:change="handleCategoriesChange()">
+                      <svg class="icon icon-checkbox">
+                        <use xlink:href="{{ static_file('images/sprite.svg') }}#checkbox"></use>
+                      </svg>
+                      <svg class="icon icon-checked">
+                        <use xlink:href="{{ static_file('images/sprite.svg') }}#checked"></use>
+                      </svg>
+                    </span>
+                    <span class="option" v-html="subcategory.title"></span>
+                  </label>
+                </li>
+              </ul>
+            </li>
+            {% endif %}
+          </ul>
+          
+          {% if top_category %}
+          <div class="show-more">
+            <a href="{{ url_for('index') }}">show more categories</a>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div class="filter-section section-tags" v-if="tags && tags.length">
+        <div class="filter-section--title">
+          tags
+          <svg class="icon icon-tag">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#tag"></use>
+          </svg>
+        </div>
+        <div class="filter-section--controls">
+          <ul ref="tagsFilter">
+            <li v-for="tag in tags" v-bind:class="{ active: (tag.tag in selectedTagsObject) }" v-text="tag.tag" @click="handleTagToggle(tag.tag)"></li>
+          </ul>
+          <div class="show-more">
+            <a @click.prevent="handleTagWindowOpen">show more tags</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="filter-section section-price">
+        <div class="filter-section--title">
+          price
+          <svg class="icon icon-price">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#price"></use>
+          </svg>
+
+        </div>
+        <div class="filter-section--controls">
+          <input type="hidden" name="price-range-from">
+          <input type="hidden" name="price-range-to">
+          <input type="hidden" name="price-range">
+          <div class="slider" id="sm-main-price-range"></div>
+        </div>
+      </div>
+      <!--
+      <div class="filter-section section-status">
+        <div class="filter-section--title">
+          available
+          <svg class="icon icon-profile">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#profile"></use>
+          </svg>
+
+        </div>
+        <div class="filter-section--controls">
+          <ul>
+            <li>
+              <label>
+                <span class="checkbox">
+                  <input type="checkbox" v-model="selectedIsOnline">
+                  <svg class="icon icon-checkbox">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#checkbox"></use>
+                  </svg>
+                  <svg class="icon icon-checked">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#checked"></use>
+                  </svg>
+                </span>
+                <span class="option">
+                  <span class="status online"></span>
+                  Online
+                </span>
+              </label>
+            </li>
+          </ul>
+        </div>
+      </div> -->
+
+      <div class="filter-section section-rating">
+        <div class="filter-section--title">
+          rating
+          <svg class="icon icon-star-solid">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#star-solid"></use>
+          </svg>
+        </div>
+        <div class="controls-desc">Minimum rating</div>
+        <div class="filter-section--controls">
+          <div class="stars">
+            <svg class="star icon icon-star-solid" v-for="n in 5" v-bind:class="{ active: selectedRating >= n }" @click="handleRatingSelect(n)">
+              <use xlink:href="{{ static_file('images/sprite.svg') }}#star-solid"></use>
+            </svg>
+          </div>
+          <div class="rating-slider" id="sm-main-rating-range"></div>
+        </div>
+      </div>
+
+      <a class="filter-btn--reset" @click="handleResetFilters" v-bind:class="{ active: isFiltersModified }">
+        reset filters
+      </a>
+    </div>
+
+    {# <!-- *************** CATALOG *************** --> #}
+
+    <div class="catalog" v-cloak>
+      {# <!-- <div class="search-bar">
+        <svg class="icon icon-magnifier">
+          <use xlink:href="{{ static_file('images/sprite.svg') }}#magnifier"></use>
+        </svg>
+        <input type="text" placeholder="Find a service: eg. ‘Logo Design’" v-model="query" v-on:keyup.enter="handleQuerySubmit()">
+
+        <button class="btn-favorite-search" title="Favorite Search" v-show="sharedState.user && lastQuery && lastQuery === query" @click="handleFavoriteSearchToggleClick" v-bind:class="{ active: lastQueryFavorite }">
+          <svg class="icon icon-heart">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#heart"></use>
+          </svg>
+        </button>
+      </div> --> #}
+
+      <div class="header">
+    {# <!-- <div class="title" v-if="!isLoading">Showing <strong v-html="totalResults"></strong> results</div> --> #}
+        <div class="sorting">
+          <button class="btn-favorite-search"
+            title="Favorite Search"
+            v-show="sharedState.user && lastQuery && lastQuery === query"
+            @click="handleFavoriteSearchToggleClick"
+            :class="{ active: lastQueryFavorite }">
+            <!--<svg class="icon icon-heart">
+              <use xlink:href="{{ static_file('images/sprite.svg') }}#heart"></use>
+            </svg>-->
+            Save Search
+          </button>
+
+          <sort-selector
+            :options="possibleSortingOptions"
+            :model.sync="selectedSorting"
+            :changed="handleSortingChange">
+          </sort-selector>
+
+          <!--<select class="sorting-select" v-model="selectedSorting" @change="handleSortingChange">
+            <option value="recommended">Recommended</option>
+            <option value="-date">Date Added</option>
+            <option value="price">Lower price</option>
+            <option value="-price">Higher price</option>
+            <option value="-orders">Best Sellers</option>
+          </select>-->
+        </div>
+      </div>
+
+      <div class="no-results" v-if="!isLoading && !results.length">
+        <div class="text">
+          <div class="couldnt-find">We couldn't find any results for your search.</div>
+
+         <!-- {% if not g.user.is_authenticated or not g.user.premium_member %}
+          <div class="become-premium-text">Become a premium member for view all private services</div>
+          <a href="{{ url_for('account.become_premium') }}" class="btn become-premium-btn">BECOME A PREMIUM MEMBER</a>
+          {% endif %} -->
+
+        </div>
+      </div>
+
+      <transition name="fade" mode="out-in">
+
+        <div class="catalog-processing"
+             v-if="isLoading"
+             key="processingOn">
+          <spinner></spinner>
+          <span class="catalog-processing-text">Loading Results...</span>
+        </div>
+
+        <div class="catalog-content"
+             v-else
+             key="processingOff">
+          <div class="list" v-if="results.length">
+            <div class="catalog--list--item" v-for="result in results">
+              <div class="catalog--list--item--inner">
+                <div class="catalog--list--item--card">
+                  <a class="catalog--list--item--image-container" v-bind:href="result._url">
+                    <img v-bind:src="result._primary_photo_url">
+                  </a>
+                  <div class="catalog--list--item--info-container">
+                    <div class="catalog--list--item--user-info">
+                      <div class="catalog--list--item--user-icon">
+                        <img :src="result._seller_photo_url" v-if="result._seller_photo_url">
+                        <div class="user-with-out-avatar" v-else></div>
+                      </div>
+                      <div class="catalog--list--item--user-name">
+                        <span class="catalog--list--item--user-name-inner">
+                          by <a v-bind:href="result._seller_url"><span v-text="result._seller"></span></a>
+                        </span>
+                        </div>
+                      <div class="catalog--list--item--user-status" v-bind:class="{ online: result._seller_is_online, offline: !result._seller_is_online }"></div>
+                    </div>
+                    <a class="catalog--list--item--description" v-bind:href="result._url">
+                      <span v-text="'I will ' + result.title"></span></a>
+                    <div class="catalog--list--item--star-container">
+                      <img :src="imagesLinks.ratingIcon" @click="addToFavorite(result.id)">
+                      <div class="catalog--list--item--star-number">(<span v-text="result._completed_count"></span>)</div>
+                      <div class="catalog--list--item--pro-mark" v-if="result._is_pro">
+                        <div class="catalog--list--item--pro-mark-outer">
+                          <div class="catalog--list--item--pro-mark-inner-left"></div>
+                          <div class="catalog--list--item--pro-mark-inner-bottom"></div>
+                          <div class="catalog--list--item--pro-mark-text">
+                            <span>PRO</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="catalog--list--item--price-container">
+                    <a class="catalog--list--item--heart-icon"
+                       :class="{'favourite':result._is_favorite}"
+                      @click="toggleFavorite(result)">
+                      <svg class="icon icon-heart">
+                        <use xlink:href="{{ static_file('images/sprite.svg') }}#heart"></use>
+                      </svg>
+                    </a>
+                    <div class="catalog--list--item--price">
+                      <div class="catalog--list--item--price-old strikeout" v-if="result.price_offer"><span v-text="(result.price / 100).toFixed(2)"></span></div>
+                      <div class="catalog--list--item--price-current"><span v-text="((result.price_offer ? result.price_offer : result.price) / 100).toFixed(2)"></span></div>
+                    </div>
+                  </div>
+                  <div class="catalog--list--item--mark">
+                    <div class="catalog--list--item--mark-new catalog--list--item--mark-element"
+                         v-if="result._is_new">
+                      <div class="catalog--list--item--mark-element-container">
+                        <img :src="imagesLinks.markNewIcon">
+                        <span>NEW</span>
+                      </div>
+                    </div>
+                    <div class="catalog--list--item--mark-featured catalog--list--item--mark-element"
+                         v-if="result.is_highlighted">
+                      <div class="catalog--list--item--mark-element-container">
+                        <img :src="imagesLinks.markFeaturedIcon">
+                        <span>FEATURED</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!--<div class="catalog&#45;&#45;list&#45;&#45;item&#45;&#45;tags-container">
+                  <div class="catalog&#45;&#45;list&#45;&#45;item&#45;&#45;tag-element"
+                        v-for="tag in result._tags">
+                    <div class="catalog&#45;&#45;list&#45;&#45;item&#45;&#45;tag-element-icon">
+                      <img :src="imagesLinks.tagIcon">
+                    </div>
+                    <div class="catalog&#45;&#45;list&#45;&#45;item&#45;&#45;tag-element-text">
+                      <span v-text="tag"></span>
+                    </div>
+                  </div>
+                </div>-->
+              </div>
+            </div>
+          </div>
+
+          <div class="paginator" v-show="totalResults > 0">
+            <span class="prev" v-bind:class="{ disabled: currentPage <= 1 }" @click="handlePageSelect(currentPage - 1)">
+              <svg class="icon icon-ar-left">
+                <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-left"></use>
+              </svg>
+            </span>
+            <span v-for="page in pages" v-text="page" v-bind:class="{ active: currentPage === page }" @click="handlePageSelect(page)"></span>
+            <span class="next" v-bind:class="{ disabled: currentPage >= pages[pages.length - 1] }" @click="handlePageSelect(currentPage + 1)">
+              <svg class="icon icon-ar-right">
+                <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-right"></use>
+              </svg>
+            </span>
+          </div>
+        </div>
+      </transition>
+    </div>
+
+    <div class="tags-dialog" ref="filterWindow" v-show="tagWindowOpened" v-bind:style="{ top: tagWindowOffset + 'px' }" v-cloak>
+      <div class="search-bar">
+        <label>Search for a tag: </label>
+        <div class="input-field">
+          <input type="text" />
+        </div>
+      </div>
+      <ul>
+        <li v-for="tag in tags">
+          <span class="tag" v-bind:class="{ active: (tag.tag in selectedTagsObject) }" v-text="tag.tag" @click="handleTagToggle(tag.tag)"></span>
+          <span class="line"></span>
+          <span class="count" v-text="tag.count || '0'"></span>
+        </li>
+      </ul>
+      <div class="actions">
+        <a href="#" class="show-more">show more tags</a>
+        <div class="btn btn-done" @click="tagWindowOpened = false">DONE</div>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}

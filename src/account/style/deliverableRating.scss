@@ -1,0 +1,189 @@
+.star-rating {
+    float:left;
+}
+
+
+/* :not(:checked) is a filter, so that browsers that don’t support :checked don’t 
+   follow these rules. Every browser that supports :checked also supports :not(), so
+   it doesn’t make the test unnecessarily selective */
+.star-rating:not(:checked) > input {
+    position:absolute;
+    top: 0;
+    left: 0;
+    clip:rect(0,0,0,0);
+}
+
+.star-rating:not(:checked) > label {
+    float:right;
+    width:1em;
+    height: 1em;
+    padding:0 .1em;
+    overflow:hidden;
+    white-space:nowrap;
+    cursor:pointer;
+    line-height:1.2;
+    color:#ddd;
+    position: relative;
+}
+
+.star-rating:not(:checked) > label:before {
+    content: '★ ';
+    position: absolute;
+    color: white;
+    top: 0;
+    left: 0;
+}
+.star-rating:not(:checked) > label:after {
+    content: '\2606 ';
+    position: absolute;
+    font-size: 102%;
+    color: #ddd;
+    top: 0;
+    left: 0;
+}
+
+.star-rating > input:checked ~ label:before {
+    color: orange;
+}
+
+.star-rating > input:checked ~ label:after {
+    color: orange;
+}
+
+.star-rating:not(:checked) > label:hover:before,
+.star-rating:not(:checked) > label:hover:before ~ label {
+    color: orange;
+}
+
+.star-rating:not(:checked) > label:hover:after,
+.star-rating:not(:checked) > label:hover:after ~ label {
+    color: orange;
+}
+
+.star-rating > input:checked + label:hover:before,
+.star-rating > input:checked + label:hover:before ~ label,
+.star-rating > input:checked ~ label:hover:before,
+.star-rating > input:checked ~ label:hover:before ~ label,
+.star-rating > label:hover:before ~ input:checked ~ label,
+.star-rating > input:checked + label:hover:after,
+.star-rating > input:checked + label:hover:after ~ label,
+.star-rating > input:checked ~ label:hover:after,
+.star-rating > input:checked ~ label:hover:after ~ label,
+.star-rating > label:hover:after ~ input:checked ~ label {
+    color: orange;
+}
+
+.star-rating > label:active {
+    position:relative;
+    top:2px;
+    left:2px;
+}
+
+.selected-rate-1 {
+
+    label:nth-child(5):after {
+        color: orange;
+    }
+
+    label:nth-child(5):before {
+        color: orange;
+    }
+}
+
+.selected-rate-3 {
+    
+    label:nth-child(4):after {
+        color: orange;
+    }
+    label:nth-child(5):after {
+        color: orange;
+    }
+    label:nth-child(3):after {
+        color: orange;
+    }
+    label:nth-child(3):before {
+        color: orange;
+    }
+    label:nth-child(4):before {
+        color: orange;
+    }
+    label:nth-child(5):before {
+        color: orange;
+    }
+}
+
+.selected-rate-4 {
+
+    label:nth-child(4):after {
+        color: orange;
+    }
+    label:nth-child(5):after {
+        color: orange;
+    }
+    label:nth-child(3):after {
+        color: orange;
+    }
+    label:nth-child(2):after {
+        color: orange;
+    }
+    label:nth-child(2):before {
+        color: orange;
+    }
+    label:nth-child(3):before {
+        color: orange;
+    }
+    label:nth-child(4):before {
+        color: orange;
+    }
+    label:nth-child(5):before {
+        color: orange;
+    }
+}
+
+.selected-rate-5 {
+    label:nth-child(4):after {
+        color: orange;
+    }
+    label:nth-child(5):after {
+        color: orange;
+    }
+    label:nth-child(3):after {
+        color: orange;
+    }
+    label:nth-child(2):after {
+        color: orange;
+    }
+    label:nth-child(1):after {
+        color: orange;
+    }
+    label:nth-child(1):before {
+        color: orange;
+    }
+    label:nth-child(2):before {
+        color: orange;
+    }
+    label:nth-child(3):before {
+        color: orange;
+    }
+    label:nth-child(4):before {
+        color: orange;
+    }
+    label:nth-child(5):before {
+        color: orange;
+    }
+}
+
+.selected-rate-2 {
+    label:nth-child(4):after {
+        color: orange;
+    }
+    label:nth-child(5):after {
+        color: orange;
+    }
+    label:nth-child(4):before {
+        color: orange;
+    }
+    label:nth-child(5):before {
+        color: orange;
+    }
+}

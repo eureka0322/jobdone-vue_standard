@@ -1,0 +1,81 @@
+<div class="text_area">
+  <textarea placeholder="Type your message here" v-model="newMessage" maxlength="500"></textarea>
+
+  <div class="clearfix">
+    <div class="offer-extra" v-if="sharedState.extra.mode == 'seller' && order.state === 'accepted'">
+      <a class="offer-extra-toggle" href="#" @click.prevent="sellerOfferExtra = !sellerOfferExtra">
+        <span v-if="!sellerOfferExtra">Offer More Extras</span>
+        <span v-else>Cancel</span>
+      </a>
+    </div>
+
+    <div class="emotica">
+      <div class="attachment-items" v-if="attachUploads.length">
+        <div class="attachment-item" v-for="attachment in attachUploads">
+          <span class="attachment-name" v-text="attachment.name">
+          </span>
+          <div class="attachment-delete" v-if="!attachment.active" @click="handleAttachDelete(attachment)">&times;</div>
+          <div class="attachment-loading" v-else>
+            <span class="attachment-loading-dot">.</span>
+            <span class="attachment-loading-dot">.</span>
+            <span class="attachment-loading-dot">.</span>
+          </div>
+        </div>
+      </div>
+
+      <label>
+        <span class="icon attachements">
+          <file-upload title="" name="file" post-action="/api/account/messaging/upload" :multiple="true" :files="attachUploads" :events="attachUploadEvents" ref="uploader">
+          </file-upload>
+        </span>
+      </label>   
+    </div>
+  </div>
+
+  <div class="offer-extra-wrapper" v-show="sellerOfferExtra">
+    <ul>
+      <li v-for="(extra, idx) in sellerOfferExtras">
+        <label>
+          <input type="checkbox" v-model="extra.selected" @change="handleExtraSelectionChange">
+          <span v-text="extra.text"></span>
+          <span class="price pull-right" v-text="'$' + (extra.price / 100).toFixed(2)"></span>
+        </label>
+      </li>
+      <li class="custom" :class="{ selected: sellerOfferCustomExtra.selected }">
+        <label>
+          <input type="checkbox" v-model="sellerOfferCustomExtra.selected">
+          <span>Add Custom Extra</span>
+        </label>
+
+        <div class="offer-extra-custom" v-if="sellerOfferCustomExtra.selected">
+          <input v-model="sellerOfferCustomExtra.text" class="text" placeholder="Title of extra offer" />
+          <input v-model="sellerOfferCustomExtra.price" class="price" placeholder="Price" @input="handleExtraSelectionChange" />
+          <div>USD</div>
+        </div>
+      </li>
+    </ul>
+
+    <div class="offer-extra-bottom clearfix">
+      <div class="pull-left">
+        Delivery time:
+        <select v-model="sellerOfferDeliveryTime">
+          <option v-for="i in 14" :value="i" v-text="i"></option>
+        </select>
+        day(s)
+      </div>
+      <div class="pull-right">Total: <span v-text="'$' + (sellerOfferExtraTotal / 100).toFixed(2)"></span></div>
+    </div>
+  </div>
+</div>
+
+<div class="alert alert-danger" v-if="messageIncludedBlockWord.pay || messageIncludedBlockWord.skype || messageIncludedBlockWord.phone || newMessageError">
+  <span v-if="messageIncludedBlockWord.pay">Reminder: Never accept or ask for direct payments. Doing so may get your account restricted.</span>      
+  <span v-if="messageIncludedBlockWord.skype || messageIncludedBlockWord.phone">Terms of Service reminder: Providing email, Skype, or phone number is only allowed if it is needed as part of the service. Otherwise, all communication must go through Jobdone.net</span>
+  <span v-if="newMessageError" v-text="newMessageError"></span>
+</div>
+
+<div class="texarea_send text-right">
+  <span class="pull-left"><span v-text="newMessage.length"></span> / 500</span>
+  {# <!-- <a href="#" class="creat_offer" data-toggle="modal" data-target="#myModal">Create an offer</a> --> #}
+  <button type="button" class="send__msg" @click="handleMessageSend" v-bind:disabled="newMessageLoading || messagesLoading">Send</button>
+</div>

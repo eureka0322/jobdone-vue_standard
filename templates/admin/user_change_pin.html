@@ -1,0 +1,34 @@
+{% extends "admin/layout.html" %}
+
+{% block admin_title %}{{ user.username }}{% endblock %}
+
+{% block admin_body %}
+
+<div class="panel-body">
+
+<h2>Change PIN</h2>
+
+<form action="{{ url_for('admin.user_change_pin', user_id=user.id) }}" method="POST" class="form-horizontal">
+  {{ form.csrf_token }}
+
+  <div class="control-group">
+    <div class="controls">
+      <label for="pincode">{{ form.pincode.label }}</label><br />
+      {{ form.pincode(class='input-xlarge') }}
+      {% for error in form.pincode.errors %}
+      <p class="text-danger">{{ error }}</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="control-group">
+    <div class="controls">
+      <button type="submit" class="btn btn-success">Change</button>
+    </div>
+  </div>
+
+</form>
+
+</div>
+
+{% endblock %}

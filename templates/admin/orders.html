@@ -1,0 +1,63 @@
+{% extends "admin/layout.html" %}
+{% import "admin/macros.html" as macros with context %}
+
+{% block admin_title %}Orders{% endblock %}
+
+{% block admin_body %}
+
+<div class="panel-body">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <p class="alert alert-danger">
+        {% for message in messages %}
+          {{ message }}<br />
+        {% endfor %}
+        </p>
+      {% endif %}
+    {% endwith %}
+</div>
+
+<table class="table table-condensed">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Status</th>
+      <th>Product</th>
+      <th>Price</th>
+      <th>Seller</th>
+      <th>Buyer</th>
+      <th>Order date</th>
+      <th>Info</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for order in pagination.items %}
+    <tr>
+      <td>{{ order.id }}</td>
+      <td>{{ order.state }}</td>
+      <td><a href="{{ macros.product_url(order.product) }}">{{ order.product.title }}</a></td>
+      <td>${{ order.price / 100.0 }}</td>
+      <td><a href="{{ url_for('admin.user', user_id=order.product.seller_id) }}">{{ order.product.seller.username }}</a></td>
+      <td>{{ order.buyer.username }}</td>
+      <td>{{ order.created_on }}</td>
+      <td>
+          {% with extra = order.get_data('extra') %}
+            {% if extra.method == 'stripe' %}
+                Stripe
+            {% else %}
+                Balance
+            {% endif %}
+          {% endwith %}
+      </td>
+    </tr>
+    {% else %}
+      <td colspan="8">No orders</td>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="panel-body">
+  {{ macros.pagination(pagination) }}
+</div>
+
+{% endblock %}

@@ -1,0 +1,231 @@
+.header-dropdown {
+  display: none;
+  position: absolute;
+  top: 40px;
+  z-index: 1010;
+  margin: 0px -120px 0;
+  float: none;
+  text-align: left;
+  width: 280px;
+  padding-top: 10px;
+
+  &:before {
+    content: "";
+    position: absolute;
+    background-color: #F5F5F5;
+    left: calc(50% - 8px);
+    top: 7px;
+    border: 10px solid #F5F5F5;
+    border-radius: 5px;
+    transform: rotate(45deg) skew(30deg) rotate(17deg) skew(-30deg) skew(30deg);
+  }
+
+  .nav-notification-container{
+    position: relative;
+    border-radius: 5px;
+    overflow: hidden;
+    background: #F2F2F2;
+    box-shadow: 0px 3px 5px rgba(0, 0, 0, 0.11);
+  }
+}
+
+.nav-notification-container {
+  .notification-header {
+    display: flex;
+    height: 40px;
+    align-items: center;
+    text-align: center;
+    padding-bottom: 2px;
+  }
+
+  a:hover {
+    text-decoration: none;
+  }
+
+  .notifications-tab {
+    display: flex;
+    width: 50%;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    background-color: #DDD;
+    color: #707070;
+    font-family: 'Lato', sans-serif;
+    font-size: 11px;
+
+    &.tab-opened {
+      background-color: #F2F2F2;
+      color: #2C2C2C;
+      font-weight: 700;
+    }
+
+    .unread-counter {margin-left: 10px;
+      margin-top: -10px;
+      background: #0480CF;
+      min-width: 11px;
+      padding: 0 2px;
+      width: auto;
+      box-sizing: content-box;
+      height: 15px;
+      border-radius: 50%;
+      color: #fff;
+      justify-self: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-weight: 500;
+
+      &-text {
+        display: flex;
+      }
+    }
+  }
+
+  .notifications-list-container {
+    max-height: 315px;
+  }
+
+  .notifications-container,
+  .notifications-messages-container {
+    display: flex;
+    height: 55px;
+    color: #000;
+    padding: 0 10px;
+    font-family: "Raleway", sans-serif;
+
+    &.unread {
+      background-color: #fff;
+
+      .notifications-unread-status {
+        border: 1px solid #1682cc;
+        background-color: #1682cc;
+
+      }
+    }
+  }
+
+  .notifications-info {
+    width: 180px;
+  }
+
+  .notifications-unread-status {
+    width: 10px;
+    height: 10px;
+    border: 1px solid #cfcfcf;
+    border-radius: 50%;
+    margin-right: 10px;
+    margin-left: auto;
+  }
+
+  .notifications-text {
+    font-size: 12px;
+    max-height: 36px;
+  }
+
+  .notifications-messages-list-inner {
+    max-height: 275px;
+  }
+
+  .notifications-inner,
+  .notifications-messages-inner {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    width: 100%;
+    border-bottom: 1px solid #e8e8e8;
+  }
+
+  .notifications-img-container,
+  .notifications-messages-img-container {
+    margin-right: 10px;
+  }
+
+  .notifications-img,
+  .notifications-messages-img {
+    height: 32px;
+    border-radius: 5px;
+    overflow: hidden;
+
+    img {
+      width: 32px;
+      height: 32px;
+    }
+
+    &-empty {
+      width: 32px;
+      height: 32px;
+      background-color: #d6d6d6;
+    }
+  }
+
+  .notifications-info {
+    font-family: "Lato", sans-serif;
+    font-size: 13px;
+  }
+
+  .notifications-messages-info {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .notifications-messages-user-info {
+    display: flex;
+    align-items: center;
+    margin-bottom: 5px;
+  }
+
+  .notifications-messages-user-name {
+    max-width: 135px;
+    font-size: 14px;
+    font-weight: 700;
+    max-height: 42px;
+    overflow-y: hidden;
+  }
+
+  .notifications-messages-user-status {
+    width: 6px;
+    height: 6px;
+    border: 3px solid #808080;
+    border-radius: 50%;
+    margin-left: 15px;
+
+    &.online {
+      border: 3px solid #87b94d;
+    }
+  }
+
+  .notifications-messages-user-text {
+    width: 140px;
+    font-size: 11px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .notifications-footer,
+  .notifications-messages-footer {
+    height: 40px;
+    width: 100%;
+    background-color: #E3E3E3;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding-left: 15px;
+    padding-right: 20px;
+    font-family: "Raleway", sans-serif;
+    font-size: 11px;
+
+    &-config-btn {
+      height: 20px;
+
+      img {
+        width: 20px;
+      }
+    }
+
+    &-action-btn {
+      color: #29ABE2;
+    }
+  }
+
+}

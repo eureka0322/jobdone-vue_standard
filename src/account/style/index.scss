@@ -1,0 +1,19 @@
+@import "~bootstrap/dist/css/bootstrap.css";
+@import "~font-awesome/css/font-awesome.css";
+
+@import "../../shared/style/global.scss";
+@import "../../shared/style/header.scss";
+@import "../../shared/style/headerDropdown.scss";
+
+@import "./webStyles.css";
+@import "./webStylesOverrides.css";
+@import "./order.scss";
+
+@import "./service.scss";
+@import "./favourites.scss";
+
+
+/* Hide VUE application while it's being loaded */
+[v-cloak] {
+    display:none;
+}

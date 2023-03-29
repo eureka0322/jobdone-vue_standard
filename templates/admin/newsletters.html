@@ -1,0 +1,43 @@
+{% extends "admin/layout.html" %}
+{% import "admin/macros.html" as macros with context %}
+
+{% block admin_title %}Products{% endblock %}
+
+{% block admin_body %}
+
+<table class="table table-condensed">
+    <thead>
+    <tr>
+      <th>Subject</th>
+      <th>Seller</th>
+      <th>Status</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for newsletter in pagination.items %}
+    <tr>
+      <td>
+        {{ newsletter.subject }}
+      </td>
+      <td><a href="{{ url_for('admin.user', user_id=newsletter.seller_id) }}">{{ newsletter.get_seller().username }}</a></td>
+      <td>
+        {% if newsletter.is_sent %}
+          Sent to {{ newsletter.recipients_count }} recipients
+        {% else %}
+          Waiting for moderation
+        {% endif %}
+      </td>
+      <td>
+        <a class="btn btn-xs btn-default" href="{{ url_for('admin.newsletter', newsletter_id=newsletter.id) }}">View</a>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<div class="panel-body">
+  {{ macros.pagination(pagination) }}
+</div>
+
+{% endblock %}

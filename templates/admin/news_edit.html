@@ -1,0 +1,51 @@
+{% if not content %}
+  {% set action = url_for('admin.news_add') %}
+  {% set action_text = 'Add' %}
+{% else %}
+  {% set action = url_for('admin.news_edit', content_id=content.id) %}
+  {% set action_text = 'Edit' %}
+{% endif %}
+
+{% extends "layout.html" %}
+{% block body %}
+
+<h2>{{ action_text }} news item</h2>
+
+<form action="{{ action }}" method="POST" class="form-horizontal">
+  {{ form.csrf_token }}
+
+  <div class="control-group">
+    <div class="controls">
+      <label for="title">{{ form.title.label }}</label><br />
+      {{ form.title() }}
+      {% for error in form.title.errors %}
+      <p class="text-danger">{{ error }}</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="control-group">
+    <div class="controls">
+      <label for="text">{{ form.text.label }}</label><br />
+      {{ form.text(cols='40', rows='10') }}
+      {% for error in form.text.errors %}
+      <p class="text-danger">{{ error }}</p>
+      {% endfor %}
+    </div>
+  </div>
+
+  <div class="control-group">
+    <div class="controls">
+      {{ form.is_published(class='input-xlarge') }} <label for="is_published">{{ form.is_published.label }}</label>
+    </div>
+  </div>
+
+  <div class="control-group">
+    <div class="controls">
+      <button type="submit" class="btn btn-success">{{ action_text }}</button>
+    </div>
+  </div>
+
+</form>
+
+{% endblock %}

@@ -1,0 +1,8 @@
+{% extends "email/layout.txt" %}
+
+{% block content %}Looks like {{ seller }} is failed to deliver order #{{ order_id }} ({{ product_title }}) on time.
+
+We recommend you to contact {{ seller }} to check current progress of this order, or use the resolution center for any issues.
+
+View order: {{ link }}
+{% endblock %}

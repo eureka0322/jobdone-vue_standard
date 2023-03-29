@@ -1,0 +1,5 @@
+{% extends "email/layout.txt" %}
+
+{% block content %}Please follow the link below in order to activate your account:
+{{ link }}
+{% endblock %}

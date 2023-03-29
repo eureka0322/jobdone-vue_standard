@@ -1,0 +1,110 @@
+{% extends "admin/layout.html" %}
+{% import "admin/macros.html" as macros with context %}
+
+{% block admin_title %}
+    Affiliate Links
+{% endblock %}
+
+{% block admin_body %}
+
+<div class="panel-body">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <p class="alert alert-success">
+        {% for message in messages %}
+          {{ message }}<br />
+        {% endfor %}
+        </p>
+      {% endif %}
+    {% endwith %}
+
+    <button type="button" class="btn btn-primary pull-right" data-toggle="modal" data-target="#addAffiliateLinkModal"><span class="glyphicon glyphicon-plus"></span> Add affiliate link</button>
+</div>
+
+<table class="table table-condensed">
+    <thead>
+    <tr>
+        <th width="33%">Title / Description</th>
+        <th>Target URL</th>
+        <th>URL</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for affiliate_link in pagination.items %}
+    <tr>
+        <td>
+          <p>
+            <img class="pull-left" src="{{ affiliate_link.get_image_url('w_100,h_100,c_pad,g_center') }}"></p>
+            <strong>{{ affiliate_link.title }}</strong><br />
+            <em>{{ affiliate_link.description|nl2br }}</em>
+          </p>
+        </td>
+        <td>
+          <a href="{{ affiliate_link.url }}">{{ affiliate_link.url }}</a>
+        </td>
+        <td>
+          <a href="{{ url_for('affiliate_link', unique_url_id=affiliate_link.unique_url_id, _external=True) }}">{{ url_for('affiliate_link', unique_url_id=affiliate_link.unique_url_id, _external=True) }}</a>
+        </td>
+        <td>
+            <a href="{{ url_for('admin.affiliate_link_delete', affiliate_link_id=affiliate_link.id) }}" class="btn btn-danger btn-xs">Delete</a>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<div class="panel-body">
+  {{ macros.pagination(pagination) }}
+</div>
+
+<div class="modal fade" id="addAffiliateLinkModal">
+<div class="modal-dialog">
+<form action="{{ url_for(request.endpoint) }}" method="POST" enctype="multipart/form-data" class="form-horizontal">
+<div class="modal-content">
+  <div class="modal-header">
+    <h4 class="modal-title">Add affiliate link</h4>
+  </div>
+  <div class="modal-body">
+    {{ form.csrf_token }}
+    
+    {% for el in form if not el.name == 'csrf_token' %}
+    <div class="control-group">
+      <div class="controls">
+        <label for="{{ el.id }}">{{ el.label }}</label><br />
+        {{ el(class='input-xlarge', style='width: 100%') }}
+
+        {% for error in el.errors %}
+        <p class="text-danger">{{ error }}</p>
+        {% endfor %}
+
+        <br />
+      </div>
+    </div>
+    {% endfor %}
+
+    </form>
+  </div>
+  <div class="modal-footer">
+    {% if form.errors %}
+      <a class="btn btn-default" href="{{ url_for(request.endpoint) }}">Close</a>
+    {% else %}
+      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    {% endif %}
+    <button type="submit" class="btn btn-primary">Apply</button>
+  </div>
+</div><!-- /.modal-content -->
+</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->  
+
+{% endblock %}
+
+{% block scripts %}
+{% if form.errors %}
+<script type="text/javascript">
+  $(function() {
+    $('#addAffiliateLinkModal').modal('show');
+  });
+</script>
+{% endif %}
+{% endblock %}

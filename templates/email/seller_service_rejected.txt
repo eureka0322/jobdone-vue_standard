@@ -1,0 +1,9 @@
+{% extends "email/layout.txt" %}
+
+{% block content %}Hey {{ seller }}!
+
+Thank you for posting your Job on JobDone!
+Before we put it live on the site and promoted to all the JobDone talent we would just like to ask you to edit your Job to make sure that it meets our Jobs posting policy.
+
+Click to edit your Job: {{ link }}
+{% endblock %}

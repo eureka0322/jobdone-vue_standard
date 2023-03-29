@@ -1,0 +1,274 @@
+$box-size: 56px;
+$line-width: 2;
+$max-days: 30;
+$max-hours: 24;
+$max-minutes: 60;
+
+.Countdown {
+
+    &__wrapper {
+        bottom: 0;
+        display: flex;
+        justify-content: center;
+        align-items: baseline;
+        left: 0;
+        right: 0;
+        top:0;
+    }
+
+    &__section {
+        display: flex;
+        flex-direction: column;
+        margin: 15px 5px;
+        position: relative;
+    }
+
+    &__label {
+        color: #999999;
+        font-size: 12px;
+        margin-bottom: 10px;
+        text-align: center;
+        text-transform: uppercase;
+    }
+
+    &__indicator {
+        width: $box-size;
+        height: $box-size;
+        margin: 5px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        border-radius: 999px;
+        box-shadow: inset 0 0 0 $line-width+px #E6E6E6;
+    }
+
+    &__digit {
+        color: #666666;
+        font-size: 23px;
+        font-weight: 400;
+    }
+
+    &__digits-divider {
+        color: rgb(157, 157, 157);
+        font-size: 26px;
+    }
+
+    &__indicator-left-half,
+    &__indicator-right-half {
+        position: absolute;
+        width: 50%;
+        height: 100%;
+        overflow: hidden;
+
+        &:before {
+            content: "";
+            display: block;
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            border: $line-width+px solid #29ABE2;
+        }
+    }
+
+    &__indicator-left-half {
+        left: 0;
+    }
+
+    &__indicator-right-half {
+        right: 0;
+    }
+
+    &__indicator-left-half:before {
+        border-right: none;
+        border-top-left-radius: 999px;
+        border-bottom-left-radius: 999px;
+        transform-origin: center right;
+    }
+
+    &__indicator-right-half:before {
+        border-left: none;
+        border-top-right-radius: 999px;
+        border-bottom-right-radius: 999px;
+        transform-origin: center left;
+    }
+
+    &__indicator-point {
+        width: $box-size;
+        height: $box-size;
+        position: absolute;
+        top: 0;
+        left: 0;
+        transition: transform 1s linear;
+
+        &:before {
+            content: "";
+            border: 2px solid #29ABE2;
+            border-radius: 50px;
+            position: absolute;
+            top: -1px;
+            left: calc(50% - 2px);
+            box-shadow: 0 0 1px #29ABE2;
+        }
+    }
+
+    &__wrapper.negative &__indicator-point:before {
+        border-color: rgba(255, 13, 0, .5);
+        box-shadow: 0 0 1px rgba(255, 13, 0, .5);
+    }
+
+    &__wrapper.negative &__indicator {
+        box-shadow: inset 0 0 0 $line-width+px rgba(255, 13, 0, .2);
+    }
+
+    @for $i from 0 through $max-minutes {
+        &__indicator-minutes[data="#{$i}"] &__indicator-point,
+        &__indicator-seconds[data="#{$i}"] &__indicator-point {
+            transform: rotate(#{360 - (360 / $max-minutes * $i)}deg);
+        }
+
+        @if $i == 0 {
+            &__indicator-minutes[data="#{$i}"] &__indicator-right-half:before,
+            &__indicator-seconds[data="#{$i}"] &__indicator-right-half:before {
+                transform: rotate(180deg);
+            }
+
+            &__indicator-minutes[data="#{$i}"] &__indicator-left-half:before,
+            &__indicator-seconds[data="#{$i}"] &__indicator-left-half:before {
+                transform: rotate(180deg);
+            }
+        } @else if $i == $max-minutes - 1 {
+            &__indicator-minutes[data="#{$i}"] &__indicator-point,
+            &__indicator-seconds[data="#{$i}"] &__indicator-point {
+                transition: transform .01s linear;
+            }
+
+            &__indicator-minutes[data="#{$i}"] &__indicator-right-half:before,
+            &__indicator-seconds[data="#{$i}"] &__indicator-right-half:before {
+                transform: rotate(#{180 - (360 / $max-minutes) * ($i - $max-minutes / 2)}deg);
+            }
+
+            &__indicator-minutes[data="#{$i}"] &__indicator-left-half:before,
+            &__indicator-seconds[data="#{$i}"] &__indicator-left-half:before {
+                transform: rotate(0deg);
+            }
+        } @else if $i > $max-minutes / 2 {
+            &__indicator-minutes[data="#{$i}"] &__indicator-right-half:before,
+            &__indicator-seconds[data="#{$i}"] &__indicator-right-half:before {
+                transform: rotate(#{180 - (360 / $max-minutes) * ($i - $max-minutes / 2)}deg);
+                transition: transform 1s linear;
+            }
+
+            &__indicator-minutes[data="#{$i}"] &__indicator-left-half:before,
+            &__indicator-seconds[data="#{$i}"] &__indicator-left-half:before {
+                transform: rotate(0deg);
+            }
+        } @else {
+            &__indicator-minutes[data="#{$i}"] &__indicator-right-half:before,
+            &__indicator-seconds[data="#{$i}"] &__indicator-right-half:before {
+                transform: rotate(180deg);
+            }
+
+            &__indicator-minutes[data="#{$i}"] &__indicator-left-half:before,
+            &__indicator-seconds[data="#{$i}"] &__indicator-left-half:before {
+                transform: rotate(#{180 - (360 / $max-minutes) * $i}deg);
+                transition: transform 1s linear;
+            }
+        }
+
+    }
+
+    @for $i from 0 through $max-hours {
+        &__indicator-hours[data="#{$i}"] &__indicator-point {
+            transform: rotate(#{360 - (360 / $max-hours * $i)}deg);
+        }
+
+        @if $i == 0 {
+            &__indicator-hours[data="#{$i}"] &__indicator-right-half:before {
+                transform: rotate(180deg);
+            }
+
+            &__indicator-hours[data="#{$i}"] &__indicator-left-half:before {
+                transform: rotate(180deg);
+            }
+        } @else if $i == $max-hours - 1 {
+            &__indicator-hours[data="#{$i}"] &__indicator-point {
+                transition: transform .01s linear;
+            }
+
+            &__indicator-hours[data="#{$i}"] &__indicator-right-half:before {
+                transform: rotate(#{180 - (360 / $max-hours) * ($i - $max-hours / 2)}deg);
+            }
+
+            &__indicator-hours[data="#{$i}"] &__indicator-left-half:before {
+                transform: rotate(0deg);
+            }
+        } @else if $i > $max-hours / 2 {
+            &__indicator-hours[data="#{$i}"] &__indicator-right-half:before {
+                transform: rotate(#{180 - (360 / $max-hours) * ($i - $max-hours / 2)}deg);
+                transition: transform 1s linear;
+            }
+
+            &__indicator-hours[data="#{$i}"] &__indicator-left-half:before {
+                transform: rotate(0deg);
+            }
+        } @else {
+            &__indicator-hours[data="#{$i}"] &__indicator-right-half:before {
+                transform: rotate(180deg);
+            }
+
+            &__indicator-hours[data="#{$i}"] &__indicator-left-half:before {
+                transform: rotate(#{180 - (360 / $max-hours) * $i}deg);
+                transition: transform 1s linear;
+            }
+        }
+
+    }
+
+    @for $i from 0 through $max-days {
+        &__indicator-days[data="#{$i}"] &__indicator-point {
+            transform: rotate(#{360 - (360 / $max-days * $i)}deg);
+        }
+
+        @if $i == 0 {
+            &__indicator-days[data="#{$i}"] &__indicator-right-half:before {
+                transform: rotate(180deg);
+            }
+
+            &__indicator-days[data="#{$i}"] &__indicator-left-half:before {
+                transform: rotate(180deg);
+            }
+        } @else if $i == $max-days - 1 {
+            &__indicator-days[data="#{$i}"] &__indicator-point {
+                transition: transform .01s linear;
+            }
+
+            &__indicator-days[data="#{$i}"] &__indicator-right-half:before {
+                transform: rotate(#{180 - (360 / $max-days) * ($i - $max-days / 2)}deg);
+            }
+
+            &__indicator-days[data="#{$i}"] &__indicator-left-half:before {
+                transform: rotate(0deg);
+            }
+        } @else if $i > $max-days / 2 {
+            &__indicator-days[data="#{$i}"] &__indicator-right-half:before {
+                transform: rotate(#{180 - (360 / $max-days) * ($i - $max-days / 2)}deg);
+                transition: transform 1s linear;
+            }
+
+            &__indicator-days[data="#{$i}"] &__indicator-left-half:before {
+                transform: rotate(0deg);
+            }
+        } @else {
+            &__indicator-days[data="#{$i}"] &__indicator-right-half:before {
+                transform: rotate(180deg);
+            }
+
+            &__indicator-days[data="#{$i}"] &__indicator-left-half:before {
+                transform: rotate(#{180 - (360 / $max-days) * $i}deg);
+                transition: transform 1s linear;
+            }
+        }
+
+    }
+}

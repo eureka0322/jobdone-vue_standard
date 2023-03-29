@@ -1,0 +1,15 @@
+{% extends "email/layout.html" %}
+
+{% block heading %}Welcome to JobDone{% endblock %}
+
+{% block content %}
+
+<p>We’re so happy to have you with us. You’re one click away from working<br />
+with the world’s top freelance talents...</p>
+
+<p>Please follow the link below in order to activate your account:<br />
+<a href="{{ link }}">Verify my email</a></p>
+<br/>
+
+<p>Kind Regards, </p>
+{% endblock %}

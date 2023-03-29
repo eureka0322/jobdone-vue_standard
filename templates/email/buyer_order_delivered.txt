@@ -1,0 +1,6 @@
+{% extends "email/layout.txt" %}
+
+{% block content %}{{ seller }} has just delivered your order #{{ order_id }} of {{ product_title }} and is waiting for your review.
+
+Review order: {{ link }}
+{% endblock %}

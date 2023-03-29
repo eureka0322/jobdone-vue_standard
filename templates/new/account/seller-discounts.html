@@ -1,0 +1,218 @@
+{% set tab = 'seller' %}
+
+{% extends "new/account/layout.html" %}
+
+{% block body %}
+<div class="container" id="sm-account-discounts">
+  <h1>My Discounts</h1>
+  <div class="transparent holder">
+    <div class="row topbar">
+      <ul class="funds-menu nav navbar-nav col-sm-8">
+        <li><a href="#" class="btn btn-primary" @click.prevent="handleAddDiscountClick">ADD DISCOUNT CODE</a></li>
+        <li><a href="#" class="btn btn-primary" @click.prevent="handleCreateOfferClick">CREATE SPECIAL OFFER</a></li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="row order-list table">
+    <div class="col-md-12">
+
+      <div class="tabs-holder row">
+        <ul class="nav nav-tabs left-position col-md-11">
+          <li role="presentation" class="active-tab" v-bind:class="{ active: mode === 'codes' }">
+            <a href="#" @click.prevent="setMode('codes')">Discount Codes{% if tab_counts['codes'] %}<span class="badge">{{ tab_counts['codes'] }}</span>{% endif %}</a>
+          </li>
+          <li role="presentation" class="draft" v-bind:class="{ active: mode === 'offers' }">
+            <a href="#" @click.prevent="setMode('offers')">Special Offers{% if tab_counts['offers'] %}<span class="badge">{{ tab_counts['offers'] }}</span>{% endif %}</a>
+          </li>
+        </ul>
+        {# <!-- <ul class="search right-position col-md-1">
+          <li><select class="form-control" name="" id="" style="width: 150px; margin: 6px 6px 0 0;">
+            <option value="">LAST 30 DAYS</option>
+            <option value="">LAST 10 DAYS</option>
+          </select></li>
+          <li><a href="#" class="btn searchbutton"></a></li>
+          <li class="searchform"><input type="text" placeholder="Find in table"><input type="button" value="Search"></li>
+        </ul> --> #}
+      </div>
+
+      <transition name="fade" mode="out-in">
+
+        <div class="tabs-processing"
+             v-if="itemsLoading"
+             key="processingOn">
+          <spinner/>
+        </div>
+
+        <div class="tabs-content"
+             v-else
+             key="processingOff">
+          <div v-if="mode === 'codes'" v-cloak>
+            <table width="100%" border="0" class="margin">
+              <tbody>
+                <tr>
+                  <th scope="col">CODE</th>
+                  <th scope="col">PRODUCT</th>
+                  <th scope="col">VALUE</th>
+                  <th scope="col">STATUS</th>
+                  {# <!-- <th scope="col">USERNAME</th> --> #}
+                  <th scope="col">&nbsp;</th>
+                </tr>
+                <tr v-for="item in items" v-cloak>
+                  <td><pre v-text="item.code"></pre></td>
+                  <td v-text="item._product_title"></td>
+                  <td>
+                    <p v-if="item.type === 'relative'" v-text="item.value.toFixed(0) + '%'"></p>
+                    <p v-else v-text="'USD ' + (item.value / 100).toFixed(2)"></p>
+                  </td>
+                  <td><span v-if="item.used_on || item.is_hold" class="text-danger">Used</span><span v-else class="text-success">Available</span></td>
+                  {# <!-- <td><span v-if="item.used_on" class="text-danger">Used</span></td> --> #}
+                  <td>
+                    <dropdown v-if="!item.used_on && !is_hold">
+                      <ul slot="dropdown-menu" class="dropdown-menu dropdown-menu-right">
+                        <li><a href="#" @click.prevent="handleDeleteDiscountClick(item)">DELETE</a></li>
+                      </ul>
+                    </dropdown>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div v-else v-cloak>
+            <table width="100%" border="0" class="margin">
+              <tbody>
+                <tr>
+                  <th scope="col">PRODUCT</th>
+                  <th scope="col">START</th>
+                  <th scope="col">END</th>
+                  <th scope="col">VALUE</th>
+                  <th scope="col">&nbsp;</th>
+                </tr>
+                <tr v-for="item in items" v-cloak>
+                  <td v-text="item._product_title"></td>
+                  <td v-text="item._start_date_display"></td>
+                  <td v-text="item._end_date_display"></td>
+                  <td v-text="'USD ' + (item.value / 100).toFixed(2)"></td>
+                  <td>
+                    <dropdown>
+                      <ul slot="dropdown-menu" class="dropdown-menu dropdown-menu-right">
+                        <li><a href="#" @click.prevent="handleEditOfferClick(item)">EDIT</a></li>
+                        <li><a href="#" @click.prevent="handleDeleteOfferClick(item)">DELETE</a></li>
+                      </ul>
+                    </dropdown>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="pagination-table">
+            <div class="col-md-6">
+              <div class="pagination-list" v-show="!itemsLoading && totalResults > 0" v-cloak>
+                <ul class="pagination">
+                  <li v-bind:class="{ disabled: currentPage <= 1 }"><a href="#" @click.prevent="handlePageSelect(currentPage - 1)">&laquo;</a></li>
+                  <li v-for="page in pages" v-bind:class="{ active: currentPage === page }">
+                    <a href="#" @click.prevent="handlePageSelect(page)" v-text="page">2</a>
+                  </li>
+                  <li v-bind:class="{ disabled: currentPage >= pages[pages.length - 1] }"><a href="#" @click.prevent="handlePageSelect(currentPage + 1)">&raquo;</a></li>
+                </ul>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="gotopage">
+                <span class="fileds">
+                  <label for="gotopage">Go To Page</label>
+                  <input type="number" name="gotopage" v-model="gotoPage" @keypress.enter="handlePageSelect(+gotoPage)">
+                  <a href="#" class="btn" @click.prevent="handlePageSelect(+gotoPage)">GO</a>
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </transition>
+    </div>
+  </div>
+
+  <modal effect="fade" v-model="discountModal.show" class="modal-custom" v-cloak>
+    <div slot="modal-header" class="modal-header">
+      <button type="button" class="close" @click="discountModal.show = false"><span>&times;</span></button>
+      <h4 class="modal-title">Add Discount Code</h4>
+    </div>
+    <div slot="modal-body" class="modal-body">
+      <div class="request-form" v-if="!discountModal.response">
+        <div class="alert alert-danger" v-if="discountModal.error" v-text="discountModal.error"></div>
+
+        <div class="field multiselect-field-full-tag">
+          <v-select
+            v-model="discountModal.product"
+            :debounce="250"
+            :on-search="fetchSelectProducts"
+            :options="selectProducts"
+            placeholder="Start typing to search for product"
+            label="title">
+          </v-select>
+        </div>
+
+        <p>Choose your discount value either in USD or percents:</p>
+        <div class="field"><span class="label">Discount Value: </span><input v-model="discountModal.value" type="text" placeholder="0.00"></div>
+        <hr />
+      </div>
+      <div v-else>
+        <p class="alert alert-success">Your new discount code is: <br /><strong v-text="discountModal.response.code"></strong></p>
+      </div>
+    </div>
+    <div slot="modal-footer" class="modal-footer">
+      <a v-if="!discountModal.response" href="#" class="btn btn-warning" v-bind:disabled="discountModal.loading" style="width: 220px; margin: 0 auto; display: block;" @click.prevent="handleAddDiscount">ADD DISCOUNT CODE</a>
+    </div>
+  </modal>
+
+  <modal effect="fade" v-model="offerModal.show" class="modal-custom" v-cloak>
+    <div slot="modal-header" class="modal-header">
+      <button type="button" class="close" @click="offerModal.show = false"><span>&times;</span></button>
+      <h4 class="modal-title" v-if="!offerModal.id">Create Special Offer</h4>
+      <h4 class="modal-title" v-else>Edit Special Offer</h4>
+    </div>
+    <div slot="modal-body" class="modal-body">
+      <div class="request-form" v-if="!offerModal.success">
+        <div class="alert alert-danger" v-if="offerModal.error" v-text="offerModal.error"></div>
+
+        <div class="field multiselect-field-full-tag" v-if="!offerModal.id">
+          <v-select
+            v-model="offerModal.product"
+            :debounce="250"
+            :on-search="fetchSelectProducts"
+            :options="selectProducts"
+            placeholder="Start typing to search for product"
+            label="title">
+          </v-select>
+        </div>
+        <div v-else>
+          <div class="field">
+            <span class="label">Product: </span>
+            <input v-model="offerModal.product" type="text" readonly />
+          </div><br />
+        </div>
+
+        <p>Choose your discount value in USD:</p>
+        <div class="field"><span class="label">Discount Value: </span><input v-model="offerModal.value" type="text" placeholder="0.00"></div><br />
+
+        <div class="field">
+          <span class="label">Start Date: </span>
+          <datepicker v-model="offerModal.start_date" format="dd-MM-yyyy" placeholder="Start Date"></datepicker>
+        </div><br />
+
+        <div class="field">
+          <span class="label">End Date: </span>
+          <datepicker v-model="offerModal.end_date" format="dd-MM-yyyy" placeholder="End Date"></datepicker>
+        </div>
+
+        <hr />
+      </div>
+    </div>
+    <div slot="modal-footer" class="modal-footer">
+      <a href="#" class="btn btn-warning" v-bind:disabled="offerModal.loading" style="width: 220px; margin: 0 auto; display: block;" @click.prevent="handleCreateOffer"><span v-if="!offerModal.id">CREATE OFFER</span><span v-else>EDIT OFFER</span></a>
+    </div>
+  </modal>
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+{% extends "admin/layout.html" %}
+{% import "admin/macros.html" as macros with context %}
+
+{% block admin_title %}
+    Vouchers
+{% endblock %}
+
+{% block admin_body %}
+
+<div class="panel-body">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <p class="alert alert-success">
+        {% for message in messages %}
+          {{ message }}<br />
+        {% endfor %}
+        </p>
+      {% endif %}
+    {% endwith %}
+
+    <button type="button" class="btn btn-primary pull-right" data-toggle="modal" data-target="#addVoucherModal"><span class="glyphicon glyphicon-plus"></span> Add voucher code</button>
+</div>
+
+<table class="table table-condensed">
+    <thead>
+    <tr>
+        <th>Voucher code</th>
+        <th>Freebie</th>
+        <th>Status</th>
+        <th>Action</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for voucher in pagination.items %}
+    <tr>
+        <td>{{ voucher.code }}</td>
+        <td>
+            {% if voucher.type == voucher.PREMIUM_MEMBER %}
+            Premium member
+            {% endif %}
+            {% if voucher.type == voucher.SELLER %}
+            Free seller
+            {% endif %}
+        </td>
+        <td>
+          {{ voucher.used_count }} / {{ voucher.total_count }} used
+        </td>
+        <td>
+            <a href="{{ url_for('admin.voucher_delete', voucher_id=voucher.id) }}" class="btn btn-danger btn-xs">Delete</a>
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<div class="panel-body">
+  {{ macros.pagination(pagination) }}
+</div>
+
+<div class="modal fade" id="addVoucherModal">
+<div class="modal-dialog">
+<form action="{{ url_for(request.endpoint) }}" method="POST" class="form-horizontal">
+<div class="modal-content">
+  <div class="modal-header">
+    <h4 class="modal-title">Add voucher</h4>
+  </div>
+  <div class="modal-body">
+    {{ form.csrf_token }}
+
+    <div class="control-group">
+      <div class="controls">
+        <label for="type">{{ form.type.label }}</label><br />
+        {{ form.type(class='input-xlarge') }}
+      </div>
+    </div>
+
+    <div class="control-group">
+        <div class="controls">
+          <label for="text">{{ form.total_count.label }}</label><br />
+          {{ form.total_count() }}
+          {% for error in form.total_count.errors %}
+          <p class="text-danger">{{ error }}</p>
+          {% endfor %}
+        </div>
+    </div>
+
+    </form>
+  </div>
+  <div class="modal-footer">
+    {% if form.errors %}
+      <a class="btn btn-default" href="{{ url_for(request.endpoint) }}">Close</a>
+    {% else %}
+      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    {% endif %}
+    <button type="submit" class="btn btn-primary">Apply</button>
+  </div>
+</div><!-- /.modal-content -->
+</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->  
+
+{% endblock %}
+
+{% block scripts %}
+{% if form.errors %}
+<script type="text/javascript">
+  $(function() {
+    $('#addVoucherModal').modal('show');
+  });
+</script>
+{% endif %}
+{% endblock %}

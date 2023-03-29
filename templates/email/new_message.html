@@ -1,0 +1,11 @@
+{% extends "email/layout.html" %}
+
+{% block heading %}Dear {{ recipient.username }}!{% endblock %}
+
+{% block content %}
+<p>You've got {% if count > 1 %}{{ count }} {% endif %}new message{% if count > 1 %}s{% endif %} from {{ sender.username }}</p>
+
+{% if link %}
+<a href="{{ link }}" style="background: #0472b8; border-radius: 4px; color: #fff; padding: 16px; margin-top: 10px; text-decoration: none; display: block; width: 200px; text-align: center; margin: 20px auto 0;">Read messages</a>
+{% endif %}
+{% endblock %}

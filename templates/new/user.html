@@ -1,0 +1,555 @@
+{% extends "new/layout.html" %}
+
+{% block title %}{{ user.username }} public profile on jobdone{% endblock %}
+
+{% block head %}
+
+<meta property="og:site_name" content="jobdone.net">
+<meta property="og:locale" content="en_US">
+<meta prefix="og: http://ogp.me/ns#" property="og:title" content="{{ user.username }}&#39;s public profile on jobdone">
+<meta prefix="og: http://ogp.me/ns#" property="og:image" content="{{ user.get_photo_url() }}">
+{% if user.profile_description %}
+<meta prefix="og: http://ogp.me/ns#" property="og:description" content="{{ user.profile_description }}">
+{% else %}
+<meta prefix="og: http://ogp.me/ns#" property="og:description"
+      content="{{ user.username }} is freelancer on jobdone.net">
+{% endif %}
+<meta prefix="og: http://ogp.me/ns#" property="og:url" content="{{ url_for('user', username=user.username) }}">
+<meta prefix="og: http://ogp.me/ns#" property="og:type" content="article">
+
+{% endblock %}
+
+
+{% block body %}
+<main id="sm-user">
+    {% with cover_url = user.get_cover_url('w_1000,h_160,c_fill,g_center,q_95') %}
+    <div class="top-panel">
+        <div v-if="!newCoverURL" class="background"
+             style="background-image: url({{ cover_url if cover_url else static_file('images/top-panel.jpg') }})"></div>
+        <div v-else class="background" v-bind:style="{ backgroundImage: 'url(' + newCoverURL + ')' }"></div>
+        {% if g.user.id == user.id %}
+        <div class="uploader">
+            <file-upload v-bind:title="coverUploading ? 'Loading...' : 'Change Cover Picture'" name="cover"
+                         :drop="false" post-action="/api/account/settings/cover" :multiple="false" :file="coverUpload"
+                         :events="coverUploadEvents">
+            </file-upload>
+        </div>
+        {% endif %}
+    </div>
+    {% endwith %}
+
+    <div class="seller-detail">
+        <div class="floating-username">{{ user.username }}</div>
+        <div class="product-actions">
+            <div class="user-info">
+                <div class="avatar {% if g.user.id == user.id %} myavatar {% endif %}">
+                    <!--<div class="avatar-hexagon-background"></div>-->
+                    <a href="{{ url_for('user', username=user.username) }}">
+                        <img src="{{ user.get_photo_url('h_100,w_100,c_thumb,g_face')}}" v-if="!newPhotoURL"/>
+                        <img v-bind:src="newPhotoURL" v-else/>
+                    </a>
+                    <!-- img src="{{ user.get_photo_url('h_100,w_100,c_thumb,g_face,bo_2px_solid_white,r_max') }}" v-if="!newPhotoURL" /-->
+
+                    {% if g.user.id == user.id %}
+                    <div class="uploader">
+                        <!--file-upload v-bind:title="photoUploading ? 'Loading...' : 'Change Profile Picture'" name="photo" :drop="false" post-action="/api/account/settings/photo" :multiple="false" :file="photoUpload" :events="photoUploadEvents"-->
+                        <file-upload title="" name="photo" :drop="false" post-action="/api/account/settings/photo"
+                                     :multiple="false" :file="photoUpload" :events="photoUploadEvents"/>
+                    </div>
+                    {% endif %}
+                </div>
+                {% if user_statistics.feedbacks_rating > 0 %}
+                <div class="rating" title="{{ user_statistics.feedbacks_rating }}">
+                    <span class="rating-stars" data-stars="{{ user_statistics.feedbacks_rating_int }}"></span>
+                </div>
+                {% endif %}
+
+                <div class="name">
+                    <a href="{{ url_for('user', username=user.username) }}">{{ user.username }}</a>
+                </div>
+                <div class="status-row">
+                    {% if user.is_online %}
+                    <span class="status online"></span>
+                    Online
+                    {% else %}
+                    <span class="status offline"></span>
+                    Last seen {{ user.last_logged_on|timedelta_from_now }}
+                    {% endif %}
+                </div>
+                <div class="location">
+                    <div class="from">
+                        {{ user.get_country_printable() }}
+                        {% if user.country %}
+                        <span class="icon f16"><span class="flag {{ user.country.lower() }}"></span></span>
+                        {% endif %}
+                    </div>
+                    <div class="joined">Joined: {{ user.registered_on.strftime('%b %Y') }}</div>
+                </div>
+            </div>
+            <div class="user-progress">
+                <div class="line">
+                    <div class="icon-block">
+                        <svg class="icon icon-checkmark">
+                            <use xlink:href="{{ static_file('images/sprite.svg') }}#checkmark"></use>
+                        </svg>
+                    </div>
+                    <div class="text">
+                        <strong>{{ user_statistics.orders_completed }}</strong>
+                        Jobs Done
+                    </div>
+                </div>
+
+                {# <!-- <div class="line">
+          <div class="icon-block">
+            <svg class="icon icon-fav">
+              <use xlink:href="{{ static_file('images/sprite.svg') }}#fav"></use>
+            </svg>
+          </div>
+          <div class="text">
+            <strong>TODO% (TODO/TODO)</strong>
+            Recommended
+          </div>
+        </div> --> #}
+
+                <div class="line">
+                    <div class="icon-block">
+                        <svg class="icon icon-profile">
+                            <use xlink:href="{{ static_file('images/sprite.svg') }}#profile"></use>
+                        </svg>
+                    </div>
+                    <div class="text">
+                        <strong>{{ user_statistics.order_repeat }}</strong>
+                        Repeat Clients
+                    </div>
+                </div>
+
+                {% if user_statistics.response_time %}
+                <div class="line">
+                    <div class="icon-block">
+                        <svg class="icon icon-chat">
+                            <use xlink:href="{{ static_file('images/sprite.svg') }}#chat"></use>
+                        </svg>
+                    </div>
+                    <div class="text">
+                        <strong>{{ user_statistics.response_time|timedelta_pretty_print }}</strong>
+                        Avg. Response Time
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {# <!-- <a href="#" class="btn contact-me">
+        <svg class="icon icon-chat">
+          <use xlink:href="{{ static_file('images/sprite.svg') }}#chat"></use>
+        </svg>
+        contact me
+      </a> --> #}
+
+            <!--{% if g.user.is_authenticated and user.seller_fee_paid %}-->
+            <!--<a href="#" class="btn contact-me" @click.prevent="showEnquiryModal = true">-->
+            <!--<svg class="icon icon-chat">-->
+            <!--<use xlink:href="{{ static_file('images/sprite.svg') }}#chat"></use>-->
+            <!--</svg>-->
+            <!--contact me-->
+            <!--</a>-->
+            <!--{% else %}-->
+            <!--<a href="#" class="btn contact-me" @click.prevent="openLoginWindow">-->
+            <!--<svg class="icon icon-chat">-->
+            <!--<use xlink:href="{{ static_file('images/sprite.svg') }}#chat"></use>-->
+            <!--</svg>-->
+            <!--contact me-->
+            <!--</a>-->
+            <!--{% endif %}-->
+
+
+
+            <!--<div class="social">-->
+                <!--<a href="#" class="social-item env">-->
+                    <!--<svg class="icon icon-envelope">-->
+                        <!--<use xlink:href="{{ static_file('images/sprite.svg') }}#envelope"></use>-->
+                    <!--</svg>-->
+                <!--</a>-->
+                <!--<a href="#" class="social-item fb">-->
+                    <!--<svg class="icon icon-fb">-->
+                        <!--<use xlink:href="{{ static_file('images/sprite.svg') }}#fb"></use>-->
+                    <!--</svg>-->
+                <!--</a>-->
+                <!--<a href="#ert" class="social-item tw">-->
+                    <!--<svg class="icon icon-tw">ertert-->
+                        <!--<use xlink:href="{{ static_file('images/sprite.svg') }}#tw"></use>-->
+                    <!--</svg>-->
+                <!--</a>-->
+                <!--<a href="" class="social-item google">-->
+                    <!--<svg class="icon icon-google">-->
+                        <!--<use xlink:href="{{ static_file('images/sprite.svg') }}#google"></use>-->
+                    <!--</svg>-->
+                <!--</a>-->
+                <!--<a href="" class="social-item pin">-->
+                    <!--<svg class="icon icon-p">-->
+                        <!--<use xlink:href="{{ static_file('images/sprite.svg') }}#p"></use>-->
+                    <!--</svg>-->
+                <!--</a>-->
+            <!--</div>-->
+            <div class="social">
+                <h1>Linked Account</h1>
+                <div class="line">
+
+                    <div class="icon-block">
+                        <svg class="icon icon-checkmark">
+                            <use xlink:href="{{ static_file('images/sprite.svg') }}#checkmark"></use>
+                        </svg>
+                    </div>
+                    <div class="icon-block">
+                        <svg class="icon icon-checkmark">
+                            <use  xlink:href="{{ static_file('images/sprite.svg') }}#envelope"></use>
+                        </svg>
+                    </div>
+                    <div class="text">
+                        <strong>sprit</strong>
+                    </div>
+                    <span><icon class="glyphicon-plus"></icon></span>
+                    <span><icon class="glyphicon-ok"></icon></span>
+                </div>
+                <div class="line">
+                    <div class="icon-block">
+                        <svg class="icon icon-checkmark">
+                            <use  xlink:href="{{ static_file('images/sprite.svg') }}#fb"></use>
+                        </svg>
+                    </div>
+                    <div class="text">
+                        <strong>FaceBook</strong>
+                    </div>
+                </div>
+                <div class="line">
+                    <div class="icon-block">
+                        <a href="" class="social-item google">
+                        <svg class="icon icon-checkmark">
+                            <use xlink:href="{{ static_file('images/sprite.svg') }}#google"></use>
+                        </svg>
+                        </a>
+                    </div>
+                    <div class="text">
+                        <strong>Google</strong>
+                    </div>
+                </div>
+                <div class="line">
+                    <div class="icon-block">
+                        <svg class="icon icon-checkmark">
+                            <use xlink:href="{{ static_file('images/sprite.svg') }}#tw"></use>
+                        </svg>
+                    </div>
+                    <div class="text">
+                        <strong>Stack Overflow</strong>
+                    </div>
+                </div>
+                <div class="line">
+                    <div class="icon-block">
+                        <svg class="icon icon-checkmark">
+                            <use xlink:href="{{ static_file('images/sprite.svg') }}#p"></use>
+                        </svg>
+                    </div>
+                    <div class="text">
+                        <strong>dribbble</strong>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+        <div class="seller-info">
+            <div class="tab-nav-mob">
+                <span class="tab tab-description" @click="mobileNavigationTabSelected = 0"
+                      v-bind:class="{ active: mobileNavigationTabSelected === 0 }">Description</span>
+                <span class="tab tab-reviews" @click="mobileNavigationTabSelected = 1"
+                      v-bind:class="{ active: mobileNavigationTabSelected === 1 }"
+                      v-if="feedbacks.length">Reviews</span>
+            </div>
+
+            <div class="description info-block" v-bind:class="{ active: mobileNavigationTabSelected === 0 }">
+                {% if g.user.is_authenticated and g.user.id == user.id %}
+                <div class="description--title" v-show="!editDescription" v-cloak
+                     @click.prevent="editDescription = true">
+                    <p v-text="headline" v-if="headline"></p>
+                </div>
+
+                <div class="description--text" v-show="!editDescription" v-cloak
+                     @click.prevent="editDescription = true">
+                    <p v-text="description" v-if="description"></p>
+                    <p v-else>No information has been provided by the user</p>
+                </div>
+
+                <textarea v-model="headline" cols="12" rows="2" class="form-control" v-if="editDescription"
+                          placeholder="Specify title, e.g. Experienced Web Designer" v-cloak></textarea>
+                <textarea v-model="description" cols="12" rows="5" class="form-control" v-if="editDescription"
+                          v-cloak></textarea>
+                <button class="btn btn-primary btn--save" @click="handleSaveDescriptionClick" v-if="editDescription"
+                        v-bind:disabled="isDescriptionUpdating" v-cloak>Save Changes
+                </button>
+                <button class="btn btn-primary btn--cancel" @click="handleCancelDescriptionClick" v-if="editDescription"
+                        v-cloak>Cancel Changes
+                </button>
+                <!--<a class="edit" href="#" @click.prevent="editDescription = true" v-show="!editDescription">Edit description</a>-->
+                {% else %}
+                {% if user.profile_headline %}
+                <div class="description--title" @click.prevent="editDescription = true">
+                    <p>{{ user.profile_headline }}</p>
+                </div>
+                {% endif %}
+
+                <div class="description--text" @click.prevent="editDescription = true">
+                    <p>{{ user.profile_description if user.profile_description else 'No information has been provided by
+                        the user' }}</p>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="seller-services info-block" v-cloak>
+                <div class="seller-subtitle">Services</div>
+                <div class="seller--list services--list clearfix" v-if="userProducts.length">
+                    <div class="catalog--list--item" v-for="result in userProducts">
+                        <a class="item-image" v-bind:href="result._url">
+                            <div class="labels">
+                <span class="label cloud">
+                  <svg class="icon icon-download">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#download"></use>
+                  </svg>
+                </span>
+                                <span class="label star">
+                  <svg class="icon icon-star">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#star"></use>
+                  </svg>
+                </span>
+                            </div>
+                            <div class="favorite" v-if="result._is_favorite">
+                                <svg class="icon icon-heart">
+                                    <use xlink:href="{{ static_file('images/sprite.svg') }}#heart"></use>
+                                </svg>
+                            </div>
+                            <img v-bind:src="result._primary_photo_url_smaller" alt="">
+                            <div class="prices">
+                                <div class="old-price price" v-if="result.price_offer"
+                                     v-text="(result.price / 100).toFixed(2)"></div>
+                                <div class="current-price price"
+                                     v-text="((result.price_offer ? result.price_offer : result.price) / 100).toFixed(2)"></div>
+                            </div>
+                        </a>
+                        <a class="item-title" v-html="'I will ' + result.title" v-bind:href="result._url"></a>
+                        <div class="item-rating">
+                            <span class="rating-stars" v-bind:data-stars="result._feedbacks_rating_int"></span>
+                        </div>
+                    </div>
+
+                    <div class="seller--list--footer" v-if="showUserProductsLoadMore">
+                        <button class="button" v-if="userProductsLoading">
+                            Loading...
+                        </button>
+                        <button class="button" v-else @click="fetchMoreUserProducts">
+                            Load more
+                            <svg class="icon icon-ar-down">
+                                <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-down"></use>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div class="description--text" v-else>
+                    <p v-if="userProductsLoading">Loading services...</p>
+                    <p v-else>User has not published any services</p>
+                </div>
+            </div>
+
+            <div class="seller-comments info-block" v-bind:class="{ active: mobileNavigationTabSelected === 1 }"
+                 v-if="feedbacks.length" v-cloak>
+                <section class="comments">
+                    <div class="comments--header">
+                        Last Reviews From Customers
+                        <div class="rating">
+                            <span class="rating-stars stars-{{ user_statistics.feedbacks_rating_int }}"></span>
+                            <span class="rating-count">({{ user_statistics.feedbacks_rating }})</span>
+                        </div>
+                    </div>
+
+                    <div class="comments--list">
+                        <div class="comments--item" v-for="feedback in feedbacks">
+                            <div class="review-head">
+                                <div class="avatar"><img v-if="feedback._user_photo_url"
+                                                         v-bind:src="feedback._user_photo_url"/></div>
+                                <div class="review-author">
+                                    <a class="name" v-text="feedback._user_username"
+                                       v-bind:href="feedback._user_url"></a>
+                                    <div v-bind:class="'rating-stars stars-' + feedback._rating_int"></div>
+                                </div>
+                            </div>
+                            <div class="review">
+                                <p v-html="feedback.text"></p>
+                                <div class="review-foot">
+                                    <span class="date" v-text="feedback._created_on_printable"></span>
+                                </div>
+
+                                <div class="reply" v-if="feedback.reply">
+                                    <div class="comments--item review-replied">
+                                        <div class="review-head">
+                                            <div class="avatar">
+                                                <img v-if="sharedState.extra.user_photo_url"
+                                                     v-bind:src="sharedState.extra.user_photo_url"/>
+                                            </div>
+                                        </div>
+                                        <div class="review">
+                                            <p v-text="feedback.reply"></p>
+                                            <div class="review-foot">
+                                                <span v-text="sharedState.extra.user.username"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="comments--footer" v-if="isFeedbacksLoading || isMoreFeedbacksAvailable" v-cloak>
+                        <div class="more">
+                            <button class="button" v-if="isFeedbacksLoading">
+                                Loading reviews...
+                            </button>
+                            <button class="button" v-else @click="fetchFeedbacks">
+                                Show more reviews
+                                <svg class="icon icon-ar-down">
+                                    <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-down"></use>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+                {# <!--<a href="#" class="more-link">read full <strong>Joseph86</strong> reviews </a>--> #}
+            </div>
+        </div>
+    </div>
+
+    <div class="recently-viewed wrapper" v-bind:class="{ show: recentProducts.length, cleared: recentProductsCleared }"
+         v-cloak>
+        <div class="seller-subtitle" v-if="recentProducts.length">Your recently viewed services
+            <button class="button" @click="handleRecentProductsClear">Clear All</button>
+        </div>
+        <div class="additional-carousel">
+            <a class="additional-carousel-control left" href="#carousel-prod" role="button"
+               @click.prevent="handleAdditionalCarouselLeftClick" v-show="additionalCarouselShowArrows">
+                <svg class="icon icon-ar-left">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-left"></use>
+                </svg>
+            </a>
+            <a class="additional-carousel-control right" href="#carousel-prod" role="button"
+               @click.prevent="handleAdditionalCarouselRightClick" v-show="additionalCarouselShowArrows">
+                <svg class="icon icon-ar-right">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-right"></use>
+                </svg>
+            </a>
+            <div class="viewed--list services--list" ref="additionalCarousel">
+                <div class="catalog--list--item" v-for="result in recentProducts">
+                    <a class="item-image" v-bind:href="result._url">
+                        <div class="labels">
+              <span class="label cloud">
+                <svg class="icon icon-download">
+                  <use xlink:href="{{ static_file('images/sprite.svg') }}#download"></use>
+                </svg>
+              </span>
+                            <span class="label star">
+                <svg class="icon icon-star">
+                  <use xlink:href="{{ static_file('images/sprite.svg') }}#star"></use>
+                </svg>
+              </span>
+                        </div>
+                        <div class="favorite" v-if="result._is_favorite">
+                            <svg class="icon icon-heart">
+                                <use xlink:href="{{ static_file('images/sprite.svg') }}#heart"></use>
+                            </svg>
+                        </div>
+                        <img v-bind:src="result._primary_photo_url_smaller" alt="">
+                        <div class="prices">
+                            <div class="old-price price" v-if="result.price_offer"
+                                 v-text="(result.price / 100).toFixed(2)"></div>
+                            <div class="current-price price"
+                                 v-text="((result.price_offer ? result.price_offer : result.price) / 100).toFixed(2)"></div>
+                        </div>
+                    </a>
+                    <a class="item-title" v-html="'I will ' + result.title" v-bind:href="result._url"></a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% if g.user.is_authenticated and user.seller_fee_paid %}
+    <modal v-if="showEnquiryModal" v-cloak>
+        <div slot="body">
+            <div v-bind:style="{ visibility: enquiryPeer ? 'visible' : 'hidden' }" class="info-bar">
+                <div class="left" v-if="enquiryPeer">
+                    <img v-bind:src="enquiryPeer._photo_url"/>
+                </div>
+                <div class="right" v-if="enquiryPeer">
+                    <strong v-text="enquiryPeer.username"></strong><br/>
+                    <span>Local Time: <span v-text="enquiryPeer.local_time"></span></span><br/>
+                    {% if user_statistics.response_time %}
+                    <span>Avg. Response Time: {{ user_statistics.response_time|timedelta_pretty_print }}</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="modal-textarea-with-attachments">
+                <textarea class="enquiry-modal-textarea"
+                          v-bind:class="{ 'has-error': enquiryTextError.pay || enquiryTextError.skype || enquiryTextError.phone || enquiryTextError.email }"
+                          v-model="enquiryText" v-bind:disabled="enquirySent"
+                          placeholder="Type your question"></textarea>
+                <span class="warning glyphicon glyphicon-exclamation-sign"
+                      v-if="enquiryTextError.pay || enquiryTextError.skype || enquiryTextError.phone"></span>
+                <span class="warning" v-if="enquiryTextError.pay">Reminder: <br/> Never accept or ask for direct payments. Doing so may get your account restricted.</span>
+                <span class="warning"
+                      v-if="enquiryTextError.skype || enquiryTextError.phone || enquiryTextError.email ">Terms of Service reminder: <br/> Providing email, Skype, or phone number is only allowed if it is needed as part of the service. Otherwise, all communication must go through Jobdone.net</span>
+
+                <div class="attachment-items"
+                     v-if="attachUploads.length">
+                    <div class="attachment-item"
+                         v-for="attachment in attachUploads">
+            <span
+                    class="attachment-name"
+                    v-text="attachment.name">
+            </span>
+                        <div class="attachment-delete" v-if="!attachment.active"
+                             @click="handleAttachDelete(attachment)">&times;
+                        </div>
+                        <div class="attachment-loading" v-else>
+                            <span class="attachment-loading-dot">.</span>
+                            <span class="attachment-loading-dot">.</span>
+                            <span class="attachment-loading-dot">.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div slot="footer">
+            <div class="icon-attachment">
+                <file-upload
+                        title=""
+                        name="file"
+                        post-action="/api/account/messaging/upload"
+                        :multiple="true"
+                        :files="attachUploads"
+                        :events="attachUploadEvents"
+                        ref="uploader">
+                </file-upload>
+            </div>
+
+            <button
+                    v-show="!enquirySent"
+                    class="button button-grey"
+                    @click="showEnquiryModal = false"
+                    :disabled="enquiryLoading">
+                CANCEL
+            </button>
+
+            <button
+                    class="button button-blue"
+                    @click="handleEnquirySendClick"
+                    :disabled="enquirySent || enquiryLoading || !enquiryText.length || attachUploading || enquiryTextError.skype || enquiryTextError.phone || enquiryTextError.email ">
+                SEND
+            </button>
+        </div>
+    </modal>
+    {% endif %}
+</main>
+{% endblock %}

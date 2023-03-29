@@ -1,0 +1,307 @@
+{% extends "new/account/layout.html" %}
+
+{% block head %}
+<script src="https://js.stripe.com/v3/"></script>
+{% endblock %}
+
+{% block body %}
+<div class="container" id="sm-account-balance">
+  <div class="row">
+    <div class="col-md-12 content">
+      <div class="transparent holder">
+        <h1>Balance</h1>
+        <div class="row topbar">
+          <ul class="funds-menu nav navbar-nav col-sm-8">
+            <li>
+              <div class="btn-group">
+                <button class="btn btn-success">
+                  DEPOSIT
+                  <span class="caret"></span>
+                </button>
+
+                <ul class="dropdown-menu">
+                  <li><a href="#" @click.prevent="handleDepositCardClick">CREDIT CARD</a></li>
+                  <li><a href="#" @click.prevent="handleDepositBitcoinClick">BITCOIN</a></li>
+                </ul>
+              </div>
+            </li>
+            <li class="divider"></li>
+            <li>
+              <div class="btn-group">
+                <button class="btn btn-withdraw">
+                  WITHDRAW
+                  <span class="caret"></span>
+                </button>
+
+                <ul class="dropdown-menu">
+                  <li><a href="#" @click.prevent="handleWithdrawBitcoinClick">BITCOIN</a></li>
+                  <li><a href="#" @click.prevent="handleWithdrawPayPalClick">PAYPAL</a></li>
+                  <li><a href="#" @click.prevent="handleTransferFundsClick">TRANSFER FUNDS</a></li>
+                </ul>
+              </div>
+            </li>
+          </ul>
+          <div class="col-sm-4">
+            <span class="ammount"><span class="currency">USD</span>{{ g.user.get_credit_pp() }}</span>
+          </div>
+        </div>
+      </div>
+      <div class="order-list table">
+        <div class="order-list-top">
+          <select v-model="transactionType">
+            <option value="all">All</option>
+            <option value="withdrawals">Withdrawals</option>
+            <option value="purchases">Purchases</option>
+          </select>
+        </div>
+        <table width="100%" border="0">
+          <tbody>
+          <tr>
+            <th scope="col">ID</th>
+            <th scope="col">TRANSACTION</th>
+            <th scope="col">DATE</th>
+            <th scope="col">AMOUNT</th>
+            <th scope="col">STATUS</th>
+          </tr>
+          <tr v-for="transaction in transactions" v-cloak>
+            <td v-text="transaction.id"></td>
+            <td>
+              <span v-text="transaction._transaction"></span><br/>
+              <a v-if="transaction._order_url" v-bind:href="transaction._order_url" class="blue">View order</a>
+            </td>
+            <td v-text="transaction.created_on"></td>
+            <td><span
+                v-bind:class="{ 'text-danger': transaction.direction === 'out', 'text-success': transaction.direction === 'in' }"
+                v-text="(transaction.direction === 'out' ? '-' : '') + (transaction.amount / 100).toFixed(2) + ' USD'"></span>
+            </td>
+            <td>
+              <span v-if="transaction.is_hold" class="text-warning">Pending</span>
+              <span v-else>
+                  <span class="text-success" v-if="transaction.amount">Done</span>
+                  <span class="text-danger" v-else>Rejected</span>
+                </span>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+        <div class="pagination-table">
+          <div class="col-md-6">
+            <div class="pagination-list" v-show="!transactionsLoading && totalResults > 0" v-cloak>
+              <ul class="pagination">
+                <li v-bind:class="{ disabled: currentPage <= 1 }"><a href="#"
+                                                                     @click.prevent="handlePageSelect(currentPage - 1)">&laquo;</a>
+                </li>
+                <li v-for="page in pages" v-bind:class="{ active: currentPage === page }">
+                  <a href="#" @click.prevent="handlePageSelect(page)" v-text="page">2</a>
+                </li>
+                <li v-bind:class="{ disabled: currentPage >= pages[pages.length - 1] }"><a href="#"
+                                                                                           @click.prevent="handlePageSelect(currentPage + 1)">&raquo;</a>
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div class="col-md-6">
+            <div class="gotopage">
+              <span class="fileds">
+                <label for="gotopage">Go To Page</label>
+                <input type="number" name="gotopage" v-model="gotoPage" @keypress.enter="handlePageSelect(+gotoPage)">
+                <a href="#" class="btn" @click.prevent="handlePageSelect(+gotoPage)">GO</a>
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <modal effect="fade" v-model="transferModal.show" class="modal-custom" v-cloak>
+    <div slot="modal-header" class="modal-header">
+      <button type="button" class="close" @click="transferModal.show = false"><span>&times;</span></button>
+      <h4 class="modal-title">Transfer Funds</h4>
+    </div>
+    <div slot="modal-body" class="modal-body">
+      <div class="request-form" v-if="!transferModal.success">
+        <div class="alert alert-danger" v-if="transferModal.error" v-text="transferModal.error"></div>
+
+        <div class="field">
+          <input v-model="transferModal.recipient" type="text" placeholder="Username">
+        </div>
+        <p>What amount would you like to send (5.00% fee will be applied):</p>
+        <div class="field">
+          <span class="label">USD: </span><input v-model="transferModal.amount" type="text" placeholder="0.00">
+        </div>
+        <br/>
+        <div class="field">
+          <textarea v-model="transferModal.note" style="width: 100%" cols="30" rows="3" placeholder="Notes"></textarea>
+        </div>
+      </div>
+    </div>
+    <div slot="modal-footer" class="modal-footer">
+      <a v-if="!transferModal.success" href="#" class="btn btn-warning" v-bind:disabled="transferModal.loading"
+         style="width: 220px; margin: 0 auto; display: block;" @click.prevent="handleTransferFundsProcess">TRANSFER
+        FUNDS</a>
+      <a v-if="transferModal.success" href="#" class="btn btn-success" disabled
+         style="width: 220px; margin: 0 auto; display: block;">FUNDS HAVE BEEN SENT</a>
+    </div>
+  </modal>
+
+  <modal effect="fade" v-model="depositCardModal.show" class="modal-custom" v-cloak>
+    <div slot="modal-header" class="modal-header">
+      <button type="button" class="close" :disabled="depositCardModal.loading" @click="depositCardModal.show = false">
+        <span>&times;</span></button>
+      <h4 class="modal-title">Deposit using a credit card</h4>
+    </div>
+    <div slot="modal-body" class="modal-body">
+      <div class="flex deposit-form">
+        <div class="col-xs-8 form-group">
+          <label for="cradNumber">Card Number</label>
+          <input type="text" class="form-control" placeholder="XXX-XXX-XXX-0989" id="cradNumber">
+        </div>
+        <div class="col-xs-4 form-group">
+          <label for="CVV">CVV</label>
+          <input type="text" class="form-control" placeholder="XXX">
+        </div>
+        <div class="col-xs-6 form-group">
+          <label for="CVV">Expires</label>
+          <input type="text" class="form-control col-xs-6" placeholder="XXX"> - <input type="text" class="form-control" placeholder="XXX">
+        </div>
+        <div class="col-xs-6 form-group">
+
+        </div>
+        <div class="clearfix"></div>
+      </div>
+      <!--<div class="request-form" v-if="!depositCardModal.success">-->
+        <!--&lt;!&ndash; <div class="alert alert-danger" v-if="depositCardModal.error" v-text="depositCardModal.error"></div> &ndash;&gt;-->
+
+        <!--<ul class="card-selection" v-if="!depositCardModal.cardsLoading">-->
+          <!--<li v-for="card in depositCardModal.cards">-->
+            <!--<label><input type="radio" v-model="depositCardModal.selectedCard" :value="card.id"/> <span-->
+                <!--v-text="card.name"></span></label>-->
+          <!--</li>-->
+          <!--<li v-if="depositCardModal.cards.length">-->
+            <!--<label><input type="radio" v-model="depositCardModal.selectedCard" value="new"/> Use New Card</span></label>-->
+          <!--</li>-->
+        <!--</ul>-->
+        <!--<Spinner v-else></Spinner>-->
+
+        <!--<div class="field field-card" v-show="depositCardModal.selectedCard === 'new'">-->
+          <!--<div ref="stripeCardElement"></div>-->
+          <!--<label><input type="checkbox" v-model="depositCardModal.rememberNewCard">-->
+            <!--<span>Remember this card</span></label>-->
+        <!--</div>-->
+
+        <!--<p>What amount would you like to deposit?<br/><em>Note that currently there is a limit of 25 USD per week per-->
+          <!--user</em></p>-->
+        <!--<div class="field"><span class="label">USD: </span><input v-model="depositCardModal.amount" type="text"-->
+                                                                  <!--placeholder="0.00"></div>-->
+
+        <!--<div class="text-danger" v-if="depositCardModal.error" v-text="depositCardModal.error"></div>-->
+      <!--</div>-->
+    </div>
+    <div slot="modal-footer" class="modal-footer">
+      <a v-if="!depositCardModal.success" href="#" class="btn btn-warning"
+         v-bind:disabled="depositCardModal.loading || depositCardModal.cardsLoading || !depositCardModal.selectedCard"
+         style="width: 220px; margin: 0 auto; display: block;" @click.prevent="handleDepositCardProcess">DEPOSIT</a>
+      <a v-else href="#" class="btn btn-success" disabled
+         style="width: 300px; margin: 0 auto; display: block; color: #fff;">PAYMENT HAS BEEN DONE</a>
+    </div>
+  </modal>
+
+  <modal effect="fade" :large="true" v-model="depositBitcoinModal.show" class="modal-custom" v-cloak>
+    <div slot="modal-header" class="modal-header">
+      <button type="button" class="close" @click="depositBitcoinModal.show = false"><span>&times;</span></button>
+      <h4 class="modal-title">Deposit <img src="{{ static_file('images/account/bitcoin-logo.png') }}" alt="Bitcoin">
+      </h4>
+    </div>
+    <div slot="modal-body" class="modal-body">
+      <div class="col-md-7 info">
+        <div class="information-process">
+          <h4>EXCHANGE RATE</h4>
+          <p>{{ btc_exchange_rate }} USD for 1 BTC</p>
+          <h4>UNCONFIRMED BALANCE:</h4>
+          <p>{{ g.user.get_unconfirmed_credit_pp() }}</p>
+
+          <div v-if="!depositBitcoinModal.error">
+            <h4>Use the following address to deposit BTC into your account:</h4>
+            <p>
+              <span v-if="depositBitcoinModal.loading">Loading...</span>
+              <span v-text="depositBitcoinModal.address"></span>
+            </p>
+            <p><em>Please use it only once</em></p>
+          </div>
+          <div v-else class="alert alert-danger">Deposit via bitcoin is temporarily unavailable. Please try again
+            later
+          </div>
+        </div>
+      </div>
+      <div class="col-md-5 qr">
+        <div class="information-process">
+          <img v-if="depositBitcoinModal.address"
+               v-bind:src="'https://chart.googleapis.com/chart?chs=200x200&cht=qr&chl=bitcoin:' + depositBitcoinModal.address"
+               class="qr-code"/>
+        </div>
+      </div>
+    </div>
+    <div slot="modal-footer" class="modal-footer"></div>
+  </modal>
+
+  <modal effect="fade" v-model="withdrawBitcoinModal.show" class="modal-custom" v-cloak>
+    <div slot="modal-header" class="modal-header">
+      <button type="button" class="close" @click="withdrawBitcoinModal.show = false"><span>&times;</span></button>
+      <h4 class="modal-title">Withdraw <img src="{{ static_file('images/account/bitcoin-logo.png') }}" alt="Bitcoin">
+      </h4>
+    </div>
+    <div slot="modal-body" class="modal-body">
+      <div class="request-form" v-if="!withdrawBitcoinModal.success">
+        <div class="alert alert-danger" v-if="withdrawBitcoinModal.error" v-text="withdrawBitcoinModal.error"></div>
+
+        <div class="field">
+          <span class="label">BTC address:</span>
+          <input v-model="withdrawBitcoinModal.address" type="text">
+        </div>
+
+        <p>What amount would you like to withdraw (2.00% fee will be applied to the withdrawal):</p>
+        <div class="field"><span class="label">BTC: </span><input v-model="withdrawBitcoinModal.amount" type="text"
+                                                                  placeholder="0.000"></div>
+        <hr/>
+      </div>
+    </div>
+    <div slot="modal-footer" class="modal-footer">
+      <a v-if="!withdrawBitcoinModal.success" href="#" class="btn btn-warning"
+         v-bind:disabled="withdrawBitcoinModal.loading" style="width: 220px; margin: 0 auto; display: block;"
+         @click.prevent="handleWithdrawBitcoinProcess">WITHDRAW</a>
+      <a v-if="withdrawBitcoinModal.success" href="#" class="btn btn-success" disabled
+         style="width: 220px; margin: 0 auto; display: block; color: #fff;">REQUEST HAS BEEN SENT</a>
+    </div>
+  </modal>
+
+  <modal effect="fade" v-model="withdrawPayPalModal.show" class="modal-custom" v-cloak>
+    <div slot="modal-header" class="modal-header">
+      <button type="button" class="close" @click="withdrawPayPalModal.show = false"><span>&times;</span></button>
+      <h4 class="modal-title">Withdraw PayPal</h4>
+    </div>
+    <div slot="modal-body" class="modal-body">
+      <div class="request-form" v-if="!withdrawPayPalModal.success">
+        <div class="alert alert-danger" v-if="withdrawPayPalModal.error" v-text="withdrawPayPalModal.error"></div>
+
+        <div class="field">
+          <span class="label">PayPal email:</span>
+          <input v-model="withdrawPayPalModal.address" type="text">
+        </div>
+
+        <p>What amount would you like to withdraw (2.00% fee will be applied to the withdrawal):</p>
+        <div class="field"><span class="label">USD: </span><input v-model="withdrawPayPalModal.amount" type="text"
+                                                                  placeholder="0.00"></div>
+        <hr/>
+      </div>
+    </div>
+    <div slot="modal-footer" class="modal-footer">
+      <a v-if="!withdrawPayPalModal.success" href="#" class="btn btn-warning"
+         v-bind:disabled="withdrawPayPalModal.loading" style="width: 220px; margin: 0 auto; display: block;"
+         @click.prevent="handleWithdrawPayPalProcess">WITHDRAW</a>
+      <a v-if="withdrawPayPalModal.success" href="#" class="btn btn-success" disabled
+         style="width: 220px; margin: 0 auto; display: block; color: #fff;">REQUEST HAS BEEN SENT</a>
+    </div>
+  </modal>
+</div>
+{% endblock %}

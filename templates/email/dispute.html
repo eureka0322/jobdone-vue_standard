@@ -1,0 +1,9 @@
+{% extends "email/layout.html" %}
+
+{% block heading %}Important message{% endblock %}
+
+{% block content %}
+<p>{{ initiator_username }} has just opened a dispute for order #{{ order_id }} ({{ product_title }})</p>
+
+<a href="{{ link }}" style="background: #0472b8; border-radius: 4px; color: #fff; padding: 16px; margin-top: 10px; text-decoration: none; display: block; width: 200px; text-align: center; margin: 20px auto 0;">Review Order</a>
+{% endblock %}

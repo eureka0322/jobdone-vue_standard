@@ -1,0 +1,14 @@
+{% extends "email/layout.txt" %}
+
+{% block content %}Congratulations!
+You've just got new order from {{ buyer }}
+Below is a summary:
+{% for row in summary %}
+{{ row.title }}
+  {{ row.price|format_price }}
+
+{% endfor %}TOTAL
+  {{ total|format_price }}
+
+View order: {{ link }}
+{% endblock %}

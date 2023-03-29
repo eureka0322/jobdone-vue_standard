@@ -1,0 +1,112 @@
+{% set tab = 'seller' %}
+
+{% extends "new/account/layout.html" %}
+
+{% block body %}
+<div class="container" id="sm-account-seller">
+  <h1>My Orders</h1>
+  <div class="row order-list table">
+    <div class="col-md-12">
+      <div class="tabs-holder row">
+        <ul class="nav nav-tabs left-position col-md-11">
+          <li role="presentation" class="delivered" v-bind:class="{ active: ordersType === 'new' }">
+            <a href="#" @click.prevent="setOrderType('new')">New{% if tab_counts['new'] %}<span class="badge">{{ tab_counts['new'] }}</span>{% endif %}</a>
+          </li>
+          <li role="presentation" class="active-tab" v-bind:class="{ active: ordersType === 'active' }">
+            <a href="#" @click.prevent="setOrderType('active')">Active{% if tab_counts['active'] %}<span class="badge">{{ tab_counts['active'] }}</span>{% endif %}</a>
+          </li>
+          <li role="presentation" class="missing" v-bind:class="{ active: ordersType === 'needs_action' }">
+            <a href="#" @click.prevent="setOrderType('needs_action')">Needs Action{% if tab_counts['needs_action'] %}<span class="badge">{{ tab_counts['needs_action'] }}</span>{% endif %}</a>
+          </li>
+          <li role="presentation" class="awaiting" v-bind:class="{ active: ordersType === 'needs_review' }">
+            <a href="#" @click.prevent="setOrderType('needs_review')">Awaiting My Review{% if tab_counts['needs_review'] %}<span class="badge">{{ tab_counts['needs_review'] }}</span>{% endif %}</a>
+          </li>
+          <li role="presentation" class="completed" v-bind:class="{ active: ordersType === 'completed' }">
+            <a href="#" @click.prevent="setOrderType('completed')">Completed{% if tab_counts['completed'] %}<span class="badge">{{ tab_counts['completed'] }}</span>{% endif %}</a>
+          </li>
+          <li role="presentation" class="cancelled" v-bind:class="{ active: ordersType === 'cancelled' }">
+            <a href="#" @click.prevent="setOrderType('cancelled')">Cancelled{% if tab_counts['cancelled'] %}<span class="badge">{{ tab_counts['cancelled'] }}</span>{% endif %}</a>
+          </li>
+        </ul>
+        <ul class="search right-position col-md-1">
+          <li class="table-search-container">
+            <input ref="tableSearchInput" class="table-search-input" type="text" placeholder="Find in table"/>
+            <svg @click="$refs.tableSearchInput.focus()" class="icon icon-magnifier"><use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="/static/images/sprite.svg#magnifier"></use></svg>
+            <!--<a href="#" class="btn searchbutton" @click="showSearch = !showSearch">
+
+            </a>-->
+          </li>
+          <!--<li class="searchform" v-show="showSearch"><input type="text" placeholder="Find in table"><input type="button" @click="showSearch = false;" value="Search"></li>-->
+        </ul>
+      </div>
+
+      <transition name="fade" mode="out-in">
+
+        <div class="tabs-processing"
+             v-if="ordersLoading"
+             key="processingOn">
+          <spinner/>
+        </div>
+
+        <div class="tabs-content"
+             v-else
+             key="processingOff">
+
+          <table width="100%" border="0" class="margin">
+            <tbody>
+              <tr>
+                <th scope="col">USER</th>
+                <th scope="col">SERVICE</th>
+                <th scope="col">ORDERED</th>
+                <th scope="col">DUE ON</th>
+                <th scope="col">TOTAL</th>
+                <th scope="col">&nbsp;</th>
+              </tr>
+              <tr v-for="order in orders" v-cloak>
+                <td>
+                  <div class="infomracion-container"><img v-bind:src="order._buyer_photo_url" class="circle" /><div class="text-info"><a v-bind:href="order._url" class="title" v-text="order._buyer_username"></a></div>
+                </td>
+                <td>
+                  <div class="infomracion-container">
+                    <div class="text-info"><a v-bind:href="order._url" class="title" v-text="order._product_title"></a><br />Order #<span v-text="order.id"></span></div>
+                  </div>
+                </td>
+                <td v-text="order.created_on"></td>
+                <td v-text="order.delivery_on"></td>
+                <td v-text="(order.price / 100).toFixed(2) + ' USD'"></td>
+                <td>
+                  <a v-if="order.state === 'new' && !order.is_requirements_provided" class="btn warning" v-bind:href="order._url">AWAITING REQUIREMENTS</a>
+                  <a v-else class="btn success" v-bind:href="order._url">VIEW DETAILS</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="pagination-table">
+            <div class="col-md-6">
+              <div class="pagination-list" v-show="!ordersLoading && totalResults > 0" v-cloak>
+                <ul class="pagination">
+                  <li v-bind:class="{ disabled: currentPage <= 1 }"><a href="#" @click.prevent="handlePageSelect(currentPage - 1)">&laquo;</a></li>
+                  <li v-for="page in pages" v-bind:class="{ active: currentPage === page }">
+                    <a href="#" @click.prevent="handlePageSelect(page)" v-text="page">2</a>
+                  </li>
+                  <li v-bind:class="{ disabled: currentPage >= pages[pages.length - 1] }"><a href="#" @click.prevent="handlePageSelect(currentPage + 1)">&raquo;</a></li>
+                </ul>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="gotopage">
+                <span class="fileds">
+                  <label for="gotopage">Go To Page</label>
+                  <input type="number" name="gotopage" v-model="gotoPage" @keypress.enter="handlePageSelect(+gotoPage)">
+                  <a href="#" class="btn" @click.prevent="handlePageSelect(+gotoPage)">GO</a>
+                </span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </transition>
+    </div>
+  </div>
+</div>
+{% endblock %}

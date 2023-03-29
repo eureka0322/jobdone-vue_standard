@@ -1,0 +1,59 @@
+{% extends "admin/layout.html" %}
+{% block admin_title %}Categories{% endblock %}
+
+{% block admin_body %}
+
+<div class="panel-body">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <p class="alert alert-danger">
+        {% for message in messages %}
+          {{ message }}<br />
+        {% endfor %}
+        </p>
+      {% endif %}
+    {% endwith %}
+
+    <form action="{{ url_for('admin.categories_new') }}" method="POST" enctype="multipart/form-data">
+        <label>Title:</label><br />
+        <input type="text" name="title" /><br />
+        <label>Description:</label><br />
+        <input type="text" name="description" /><br />
+        <label>Parent category:</label><br />
+        <select name="parent_id">
+            <option value="0">-- Top level --</option>
+            {% for category in categories %}
+            <option value="{{ category.id }}">{{ category.title }}</option>
+            {% endfor %}
+        </select><br /><br />
+        <button type="submit" class="btn btn-xs btn-primary">Add category</button>
+    </form>
+
+    <p style="margin-top: 20px;"><small>Note: when category is deleted all the products within it will not be deleted</small></p>
+</div>
+
+<table class="table table-condensed">
+    <thead>
+    <tr>
+        <th colspan="2">Title</th>
+        <th>&nbsp;</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for category in categories %}
+    <tr>
+        <td colspan="2">{{ category.title }}</td>
+        <td><a class="btn btn-xs btn-danger" href="{{ url_for('admin.categories_delete', category_id=category.id) }}">Delete</a></td>
+    </tr>
+    {% for subcategory in category.query_subcategories() %}
+    <tr>
+        <td style="width: 20px;">&nbsp;</td>
+        <td>{{ subcategory.title }}</td>
+        <td><a class="btn btn-xs btn-danger" href="{{ url_for('admin.categories_delete', category_id=subcategory.id) }}">Delete</a></td>
+    </tr>
+    {% endfor %}
+    {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

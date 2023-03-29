@@ -1,0 +1,221 @@
+{% if mode == 'buyer' %}
+
+<div v-if="order" v-cloak>
+    <div class="OrderAlertBar" v-if="order.state == 'new'">
+        <div class="container">
+            <div class="OrderAlertBar__container">
+                <div class="OrderAlertBar__item OrderAlertBar__item-left">
+                    <div class="OrderAlertBar__largeinfo OrderAlertBar__largeinfo-orange">
+                        Awaiting confirmation
+                    </div>
+                    <div class="OrderAlertBar__info">
+                        We asked seller <br />
+                        to confirm your order
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="OrderAlertBar OrderAlertBar-green" v-if="order.state == 'sent'">
+        <div class="container">
+            <div class="OrderAlertBar__container">
+                <div class="OrderAlertBar__item OrderAlertBar__item-center">
+                    <div class="OrderAlertBar__success">
+                        Order delivered. <strong>Please review!</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="OrderAlertBar" v-if="order.state == 'accepted'">
+        <div class="container">
+            <div class="OrderAlertBar__container" v-if="order._revision_count > 1">
+                <div class="OrderAlertBar__item OrderAlertBar__item-left">
+                    <div class="OrderAlertBar__largeinfo OrderAlertBar__largeinfo-orange">
+                        Revision requested
+                    </div>
+                    <div class="OrderAlertBar__info">
+                        The seller will be reviewing your comments <br />
+                        and may submit revised work
+                    </div>
+                </div>
+            </div>
+            <div class="OrderAlertBar__container" v-else>
+                <div class="OrderAlertBar__item OrderAlertBar__item-left">
+                    <div class="OrderAlertBar__point">
+                        Order in progress <br />
+                        Expected delivery: <span v-text="order.delivery_on_display"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="OrderAlertBar OrderAlertBar-grey" v-if="order.state == 'closed_cancelled'">
+        <div class="container">
+            <div class="OrderAlertBar__container">
+                <div class="OrderAlertBar__item OrderAlertBar__item-left">
+                    <div class="OrderAlertBar__check OrderAlertBar__check-grey">
+                        Requirements <br />submitted
+                    </div>
+                    <div class="OrderAlertBar__check OrderAlertBar__check-grey-canceled">
+                        Order <br />canceled
+                    </div>
+                    <div class="OrderAlertBar__check OrderAlertBar__check-green">
+                        Payment refunded <br/> to your JobDone balance
+                    </div>
+                </div>
+                <div class="OrderAlertBar__item OrderAlertBar__item-right">
+                    <div class="OrderAlertBar__largeinfo OrderAlertBar__largeinfo-grey">
+                        Order <strong>canceled</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="OrderAlertBar OrderAlertBar-green" v-if="order.state == 'closed_completed'">
+        <div class="container">
+            <div class="OrderAlertBar__container">
+                <div class="OrderAlertBar__item OrderAlertBar__item-left">
+                    <div class="OrderAlertBar__check">
+                        Requirements <br />submitted
+                    </div>
+                    <div class="OrderAlertBar__check">
+                        Deliverables <br />submitted
+                    </div>
+                </div>
+                <div class="OrderAlertBar__item OrderAlertBar__item-right">
+                    <div class="OrderAlertBar__success">
+                        Order <strong>completed</strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+
+<div v-if="order" v-cloak>
+    <div class="OrderAlertBar" v-if="order.state == 'new' && !order.is_requirements_provided">
+        <div class="container">
+            <div class="OrderAlertBar__container">
+                <div class="OrderAlertBar__item OrderAlertBar__item-left">
+                    <div class="OrderAlertBar__largeinfo OrderAlertBar__largeinfo-orange">
+                        Awaiting requirements
+                    </div>
+                    <div class="OrderAlertBar__info">
+                        We asked buyer to provide <br />
+                        detailed information on this order
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="OrderAlertBar OrderAlertBar-orange" v-if="order.state == 'new' && order.is_requirements_provided">
+        <div class="container">
+            <div class="OrderAlertBar__container">
+                <div class="OrderAlertBar__item OrderAlertBar__item-left">
+                    <div class="OrderAlertBar__check">
+                        Buyer submitted <br />information
+                    </div>
+                </div>
+                <div class="OrderAlertBar__item OrderAlertBar__item-right">
+                    <button class="OrderAlertBar__button OrderAlertBar__button-red" type="button" :disabled="isLoading" @click="handleRejectOrderClick">Reject Order</button>
+                    <button class="OrderAlertBar__button" type="button" :disabled="isLoading" @click="handleAcceptOrderClick">Accept Order</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="OrderAlertBar" v-if="order.state == 'sent'">
+        <div class="container">
+            <div class="OrderAlertBar__container">
+                <div class="OrderAlertBar__item OrderAlertBar__item-left">
+                    <div class="OrderAlertBar__check OrderAlertBar__check-green">
+                        Work <br />delivered
+                    </div>
+                    <div class="OrderAlertBar__check OrderAlertBar__check-large-green">
+                        This order will be marked as <br />completed in <span v-text="order._sent_deadline_display"></span>
+                    </div>
+                </div>
+                <div class="OrderAlertBar__item OrderAlertBar__item-right">
+                    <button class="OrderAlertBar__button" type="button" :disabled="isLoading" @click="handleDeliverClick">Deliver Again</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="OrderAlertBar OrderAlertBar-red" v-if="order.state == 'accepted' && order._delivery_deadline_passed">
+        <div class="container">
+            <div class="OrderAlertBar__container">
+                <div class="OrderAlertBar__item OrderAlertBar__item-left">
+                    <div class="OrderAlertBar__check">
+                        Buyer submitted <br />information
+                    </div>
+                </div>
+                <div class="OrderAlertBar__item OrderAlertBar__item-center">
+                    <div class="OrderAlertBar__warning">
+                        Order late. <strong>Deliver!</strong>
+                    </div>
+                </div>
+                <div class="OrderAlertBar__item OrderAlertBar__item-right">
+                    <button class="OrderAlertBar__button" type="button" :disabled="isLoading" @click="handleDeliverClick">Deliver Now</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="OrderAlertBar OrderAlertBar-orange" v-if="order.state == 'accepted' && !order._delivery_deadline_passed && order._revision_count > 1">
+        <div class="container">
+            <div class="OrderAlertBar__container">
+                <div class="OrderAlertBar__item OrderAlertBar__item-left">
+                    <div class="OrderAlertBar__largeinfo">
+                        Your buyer requested a revision
+                    </div>
+                </div>
+                <div class="OrderAlertBar__item OrderAlertBar__item-right">
+                    <button class="OrderAlertBar__button" type="button" :disabled="isLoading" @click="handleDeliverClick">Deliver Modified Work</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="OrderAlertBar" v-if="order.state == 'accepted' && !order._delivery_deadline_passed && order._revision_count <= 1">
+        <div class="container">
+            <div class="OrderAlertBar__container">
+                <div class="OrderAlertBar__item OrderAlertBar__item-left">
+                    <div class="OrderAlertBar__point">
+                        Order in progress <br />
+                        Deliver soon
+                    </div>
+                </div>
+                <div class="OrderAlertBar__item OrderAlertBar__item-right">
+                    <button class="OrderAlertBar__button" type="button" :disabled="isLoading" @click="handleDeliverClick">Deliver Your Order</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="OrderAlertBar OrderAlertBar-green" v-if="order.state == 'closed_completed'">
+        <div class="container">
+            <div class="OrderAlertBar__container">
+                <div class="OrderAlertBar__item OrderAlertBar__item-left">
+                    <div class="OrderAlertBar__check">
+                        Work <br />delivered
+                    </div>
+                </div>
+                <div class="OrderAlertBar__item OrderAlertBar__item-right">
+                    <div class="OrderAlertBar__success">
+                        Order completed. <strong>You earned $<span v-text="(order._total_price / 100).toFixed(2)"></span></strong>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}

@@ -1,0 +1,4 @@
+{% extends "email/layout.txt" %}
+
+{% block content %}{{ alert }}
+{% endblock %}

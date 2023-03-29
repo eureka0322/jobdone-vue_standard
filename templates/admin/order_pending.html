@@ -1,0 +1,32 @@
+{% extends "admin/layout.html" %}
+
+{% block admin_title %}Order #{{ order.id }}{% endblock %}
+
+{% block admin_body %}
+
+<div class="panel-body">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+          <p class="alert alert-info">{{ message }}</p>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <a class="btn btn-primary" href="{{ url_for('user', username=order.buyer.username) }}">View buyer public page</a>
+    
+    <br /><br />
+
+    <label>Amount:</label><br />
+    ${{ '{0:.2f}'.format(order.price / 100.0) }}<br /><br />
+
+    <label>Meta info:</label><br />
+    {{ order.data_json }}<br /><br />
+
+    <a class="btn btn-danger" href="{{ url_for('admin.order_pending_reject', order_id=order.id) }}">Reject order</a>
+    <a class="btn btn-success" href="{{ url_for('admin.order_pending_accept', order_id=order.id) }}">Accept order</a>
+</div>
+
+
+{% endblock %}
+

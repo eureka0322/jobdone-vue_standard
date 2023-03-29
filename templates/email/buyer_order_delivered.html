@@ -1,0 +1,9 @@
+{% extends "email/layout.html" %}
+
+{% block heading %}Your order #{{ order_id }} has been delivered{% endblock %}
+
+{% block content %}
+<p>{{ seller }} has just delivered your order #{{ order_id }} of {{ product_title }} and is waiting for your review.</p>
+
+<a href="{{ link }}" style="background: #0472b8; border-radius: 4px; color: #fff; padding: 16px; margin-top: 10px; text-decoration: none; display: block; width: 200px; text-align: center; margin: 20px auto 0;">Review Order</a>
+{% endblock %}

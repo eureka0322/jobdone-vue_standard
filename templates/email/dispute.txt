@@ -1,0 +1,6 @@
+{% extends "email/layout.txt" %}
+
+{% block content %}{{ initiator_username }} has just opened a dispute for order #{{ order_id }} ({{ product_title }}).
+
+Review order: {{ link }}
+{% endblock %}

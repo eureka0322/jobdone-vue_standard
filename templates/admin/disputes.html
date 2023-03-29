@@ -1,0 +1,41 @@
+{% extends "admin/layout.html" %}
+{% import "admin/macros.html" as macros with context %}
+
+{% block admin_title %}Disputes{% endblock %}
+
+{% block admin_body %}
+
+<table class="table table-condensed">
+  <thead>
+    <tr>
+      <th>ID</th>
+      <th>Status</th>
+      <th>Seller</th>
+      <th>Buyer</th>
+      <th>Order date</th>
+      <th>Created on</th>
+      <th>Actions</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for dispute in pagination.items %}
+    <tr>
+      <td>{{ dispute.order.id }}</td>
+      <td>{% if dispute.is_closed %}Closed{% else %}Open{% endif %}</td>
+      <td><a href="{{ url_for('admin.user', user_id=dispute.order.product.seller_id) }}">{{ dispute.order.product.seller.username }}</a></td>
+      <td><a href="{{ url_for('admin.user', user_id=dispute.order.buyer_id) }}">{{ dispute.order.buyer.username }}</a></td>
+      <td>{{ dispute.order.created_on }}</td>
+      <td>{{ dispute.created_on }}</td>
+      <td><a class="btn btn-xs btn-default" href="{{ url_for('admin.dispute', dispute_id=dispute.id) }}">View</a></td>
+    </tr>
+    {% else %}
+      <td colspan="2">No disputes</td>
+    {% endfor %}
+  </tbody>
+</table>
+
+<div class="panel-body">
+  {{ macros.pagination(pagination) }}
+</div>
+
+{% endblock %}

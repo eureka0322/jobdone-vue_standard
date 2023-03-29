@@ -1,0 +1,20 @@
+@import "~bootstrap/dist/css/bootstrap.css";
+
+@import "../../shared/style/global.scss";
+@import "../../shared/style/header.scss";
+@import "../../shared/style/footer.scss";
+
+@import "./style.css";
+@import "./responsive.css";
+
+
+/** Override header to make it absolute and transparent **/
+
+header {
+    height: 88px;
+    background: transparent;
+    position: absolute !important;
+    width: 100%;
+    z-index: 10;
+    box-shadow: none !important;
+}

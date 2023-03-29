@@ -1,0 +1,232 @@
+{% set tab = 'dashboard' %}
+
+{% extends "new/account/layout.html" %}
+
+{% block body %}
+<div class="container standard" id="sm-account-dashboard">
+    <div class="design-box inner">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    {% if category and category != 'message' %}
+                    <div class="alert alert-{{ category }}">{{ message }}</div>
+                    {% endif %}
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+
+        <div class="row">
+            <div class="col-md-3">
+                <div class="profile_holder">
+                    <div class="image-profile">
+                        <a href="{{ url_for('user', username=g.user.username) }}">
+                            <img src="{{ g.user.get_photo_url('h_130,w_130,c_thumb,g_face') }}" class="profile" />
+                            <!-- img src="{{ g.user.get_photo_url('h_130,w_130,c_thumb,g_face,bo_2px_solid_white,r_max/w_130') }}" class="profile" /-->
+                        </a>
+                    </div>
+
+                    {% if seller_statistics %}
+                    <div class="ratingandrange">
+                        <p>ORDERS COMPLETED
+                            <strong>{{ seller_statistics.orders_completed }}</strong>
+                        </p>
+                        {# <!-- <p>RESPONSE TIME <strong>N/A</strong></p> --> #}
+                    </div>
+                    <div class="graphics">
+                        <div class="responserate bar_counter">
+                            <span class="rate">100%</span>
+                            <p>Response Rate</p>
+                            <div class="progress">
+                                <div class="progress-bar" style="width: 100%"></div>
+                            </div>
+                        </div>
+                        <div class="responserate bar_counter">
+                            <span class="rate">100%</span>
+                            <p>Orders Completed</p>
+                            <div class="progress">
+                                <div class="progress-bar" style="width: 100%"></div>
+                            </div>
+                        </div>
+                        <div class="responserate bar_counter">
+                            <span class="rate">100%</span>
+                            <p>Delivered on Time</p>
+                            <div class="progress">
+                                <div class="progress-bar" style="width: 100%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <div class="quickmenu">
+                        <ul class="nav">
+                            <li><a href="{{ url_for('account.favorites') }}">View Favorites</a></li>
+                        </ul>
+                    </div>
+                    {% endif %}
+
+                   <!-- {% if not g.user.premium_member %}
+                    <div class="quickmenu">
+                        <ul class="nav">
+                            <li><a href="{{ url_for('account.become_premium') }}">Become Premium Member</a></li>
+                        </ul>
+                    </div>
+                    {% endif %} -->
+
+                    <div class="quickmenu">
+                        <ul class="nav">
+                            <li><a href="{{ url_for('user', username=g.user.username) }}">Edit profile</a></li>
+                            {# <!--
+                            {% if not g.user.is_verification_completed %}
+                            <li><a href="{{ url_for('account.verification_center') }}">Verify My Identity</a></li>
+                            {% endif %}
+                            --> #}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-9">
+                <div class="resume stadistics">
+
+                    {% if seller_statistics %}
+                    <div class="row">
+                        <div class="col-md-3"><h3>NEW ORDERS</h3><span class="value">{{ seller_statistics.orders_new }}</span></div>
+                        <div class="col-md-3"><h3>ORDERS IN PROGRESS</h3><span class="value">{{ seller_statistics.orders_inprogress }}</span></div>
+                        <div class="col-md-3"><h3>BALANCE</h3><span class="value">${{ g.user.get_credit_pp() }}</span></div>
+                        <div class="col-md-3"><h3>EARNED IN {{ current_month }}</h3><span class="value">${{ seller_statistics.earned_month_pp }}</span></div>
+                    </div>
+                    {% endif %}
+
+                    <div class="row order-list inbox-list table" v-cloak>
+                        <div class="tabs-holder row">
+                            <ul class="nav nav-tabs left-position">
+                              <li role="presentation" class="missing" v-bind:class="{ active: mode === 'todos' }">
+                                <a href="#" @click.prevent="mode = 'todos', setMode()">TODOs<span class="badge" v-if="todos.length" v-text="todos.length"></span></a>
+                              </li>
+                              <li role="presentation" class="active-tab" v-bind:class="{ active: mode === 'notifications' }">
+                                <a href="#" @click.prevent="mode = 'notifications', setMode()">Notifications<span class="badge" v-if="notificationsUnread" v-text="notificationsUnread"></span></a>
+                              </li>
+                            </ul>
+                        </div>
+
+                        <transition name="fade" mode="out-in">
+
+                            <div class="tabs-processing"
+                                 v-if="processingTab"
+                                 key="processingOn">
+                                <spinner/>
+                            </div>
+
+                            <div class="tabs-content"
+                                 v-else
+                                 key="processingOff">
+
+                                <div v-if="mode === 'notifications'" v-cloak>
+                                    <table width="100%" border="0" class="inbox-table">
+                                      <thead>
+                                        <tr>
+                                          <th>NOTIFICATION</th>
+                                          <th>DATE</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        <tr v-for="notification in notifications" v-cloak>
+                                          <td class="inbox-table-subject">
+                                            <a v-bind:href="notification._url" v-text="notification._notification"></a>
+                                          </td>
+                                          <td>
+                                            <span v-text="notification._date_display"></span>
+                                          </td>
+                                        </tr>
+                                      </tbody>
+                                    </table>
+
+                                    <div class="pagination-table">
+                                      <div class="col-md-6">
+                                        <div class="pagination-list" v-show="!notificationsLoading && totalResults > 0" v-cloak>
+                                          <ul class="pagination">
+                                            <li v-bind:class="{ disabled: currentPage <= 1 }"><a href="#" @click.prevent="handlePageSelect(currentPage - 1)">&laquo;</a></li>
+                                            <li v-for="page in pages" v-bind:class="{ active: currentPage === page }">
+                                              <a href="#" @click.prevent="handlePageSelect(page)" v-text="page">2</a>
+                                            </li>
+                                            <li v-bind:class="{ disabled: currentPage >= pages[pages.length - 1] }"><a href="#" @click.prevent="handlePageSelect(currentPage + 1)">&raquo;</a></li>
+                                          </ul>
+                                        </div>
+                                      </div>
+                                      <div class="col-md-6">
+                                        <div class="gotopage">
+                                          <span class="fileds">
+                                            <label for="gotopage">Go To Page</label>
+                                            <input type="number" name="gotopage" v-model="gotoPage" @keypress.enter="handlePageSelect(+gotoPage)">
+                                            <a href="#" class="btn" @click.prevent="handlePageSelect(+gotoPage)">GO</a>
+                                          </span>
+                                        </div>
+                                      </div>
+                                    </div>
+                                </div>
+
+                                <div v-if="mode === 'todos'" v-cloak>
+                                    <div class="todoslist">
+                                      <ul class="list">
+                                        <li v-for="todo in todos">
+                                            <div v-if="todo.type === 'empty_password'">
+                                                <img src="{{ static_file('images/account/icons/profile.png') }}" class="icon" width="20px" />
+                                                <a href="{{ url_for('account.settings') }}">Please set up password for your JobDone account</a>
+                                            </div>
+                                            <div v-if="todo.type === 'profile_incomplete'">
+                                                <img src="{{ static_file('images/account/icons/profile.png') }}" class="icon" width="20px" />
+                                                <a href="{{ url_for('user', username=g.user.username) }}">Your user profile is incomplete. Please add some description and upload your avatar</a>
+                                            </div>
+                                            <div v-if="todo.type === 'become_seller'">
+                                                <div class="create-actions">
+                                                    <a href="{{ url_for('become_seller') }}" class="btn btn-primary">Become a Seller</a>
+                                                </div>
+
+                                                <img src="{{ static_file('images/account/icons/start-selling.png') }}" class="icon" width="21px" />
+                                                <a href="{{ url_for('become_seller') }}">You can start selling in minutes. You’d be crazy not to try!</a>
+                                            </div>
+                                            <div v-if="todo.type === 'order_pending_requirements'">
+                                                <div class="create-actions">
+                                                    <a v-bind:href="todo._url" class="btn btn-xs btn-primary">FIX THIS</a>
+                                                </div>
+
+                                                <img src="{{ static_file('images/account/icons/start-selling.png') }}" class="icon" width="21px" />
+                                                <a v-bind:href="todo._url">Provide requirements for order #<span v-text="todo.order_id"></span></a>
+                                            </div>
+                                            <div v-if="todo.type === 'orders_pending_feedback'">
+                                                <div class="create-actions">
+                                                    <a v-bind:href="todo._url" class="btn btn-primary">LEAVE FEEDBACK</a>
+                                                </div>
+
+                                                <img src="{{ static_file('images/account/icons/start-selling.png') }}" class="icon" width="21px" />
+                                                <a v-bind:href="todo._url">Leave feedback for order #<span v-text="todo.order_id"></span></a>
+                                            </div>
+
+                                            <div v-if="todo.type === 'become_premium'">
+                                                <img src="{{ static_file('images/account/icons/profile.png') }}" class="icon" width="20px" />
+                                                <a href="{{ url_for('account.become_premium') }}">Become Premium Member</a>
+                                            </div>
+
+                                            <div v-if="todo.type === 'add_service'">
+                                                <div class="create-actions">
+                                                    <a href="{{ url_for('account.service_create') }}" class="btn btn-primary">ADD</a>
+                                                </div>
+
+                                                <img src="{{ static_file('images/account/icons/start-selling.png') }}" class="icon" width="21px" />
+                                                <a href="{{ url_for('account.service_create') }}">
+                                                    <span v-if="!todo.count">Add your first service</span>
+                                                    <span v-else>Add more services</span>
+                                                </a>
+                                            </div>
+                                        </li>
+                                      </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </transition>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

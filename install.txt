@@ -1,0 +1,3 @@
+npm install
+gyp install cmd run as administrator.
+JOBDONE_DEV_KEY=c6349104-0e1d-4589-bb30-a67a35a6731c npm run dev

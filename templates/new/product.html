@@ -1,0 +1,682 @@
+{% extends "new/layout.html" %}
+
+{% set product_price = product_price_offer if product_offer else product.price %}
+
+{% block head %}
+  {% if product.is_private %}
+    <meta name="robots" content="noindex">
+  {% else %}
+    <link rel="canonical" href="{{ url_for('product', product_title=product.get_title_seofied(), product_id=product.unique_id, _external=True) }}"/>
+
+    <meta name="description" content="For only ${{ product_price|format_price }}, {{ product_seller.username }} will {{ product.title }} within {{ product.delivery_time|timedelta_pretty_print }}. | On JobDone.net">
+
+    <meta property="og:site_name" content="JobDone.net">
+    <meta property="og:locale" content="en_US">
+    <meta prefix="og: http://ogp.me/ns#" property="og:title" content="{{ product_seller.username }} : I will {{ product.title }} within {{ product.delivery_time|timedelta_pretty_print }} for ${{ product_price|format_price }} on jobdone.net">
+    <meta prefix="og: http://ogp.me/ns#" property="og:description" content="For only ${{ product_price|format_price }}, {{ product_seller.username }} will {{ product.title }} within {{ product.delivery_time|timedelta_pretty_print }}. | On JobDone.net">
+    <meta prefix="og: http://ogp.me/ns#" property="og:url" content="{{ url_for('product', product_title=product.get_title_seofied(), product_id=product.unique_id, _external=True) }}">
+    <meta prefix="og: http://ogp.me/ns#" property="og:type" content="article">
+
+    {% with photo = product.get_primary_photo() %}
+      {% if photo %}
+      <meta prefix="og: http://ogp.me/ns#" property="og:image" content="{{ photo }}">
+      {% endif %}
+    {% endwith %}
+
+    {% with video = product.get_primary_video_url('mp4') %}
+      {% if video %}
+        <meta prefix="og: http://ogp.me/ns#" property="og:video:url" content="{{ video }}">
+        <meta prefix="og: http://ogp.me/ns#" property="og:video:secure_url" content="{{ video }}">
+        <meta prefix="og: http://ogp.me/ns#" property="og:video:type" content="video/mp4">
+      {% endif %}
+    {% endwith %}
+  {% endif %}
+{% endblock %}
+
+{% block title %}{{ product.title }}{% endblock %}
+
+{% block body %}
+<main id="sm-product">
+  <div class="top-panel sm-product" style="position:relative;">
+    <div class="wrapper">
+      <h1 class="title">I will {{ product.title }}</h1>
+    </div>
+  </div>
+  <div class="product-detail">
+    <div class="product-info">
+      <div class="product-carousel " ref="carousel">
+        {% if product_photos_count > 0 %}
+        <div class="carousel-image-loading" v-show="!isCarouselImageLoaded">
+          <img src="{{ static_file('images/loading.gif') }}" />  
+        </div>
+        {% endif %}
+        <div class="carousel slide" id="carousel-prod" v-show="{{product_photos_count}} == 0 || isCarouselImageLoaded">
+          <div class="carousel-inner" ref="carousel_items">
+            {% for photo in product.get_photos('c_pad,g_center,h_400,w_670') %}            
+              <div class="item" v-bind:class="{ active: carouselCurrentIndex === {{ loop.index0 }} }">
+                <lightbox src="{{photo}}" caption="{{product.title}}" album="products">                  
+                  <img src="{{ photo }}" alt="{{ product.title }}" @load="loadCarouselImage({{ loop.index0 }})">
+                </lightbox>                
+              </div>
+            {% endfor %}
+
+            {% for video in product.get_videos() %}
+              <div class="item video" v-bind:class="{ active: carouselCurrentIndex === {{ loop.index0 + product_photos_count }} }">{{ video|safe }}</div>
+            {% endfor %}
+          </div>
+          <a class="carousel-control left" href="#carousel-prod" role="button" v-if="carouselTotalItems > 1" @click.prevent="carouselPreviousSlide">
+            <svg class="icon icon-ar-left">
+              <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-left"></use>
+            </svg>
+          </a>
+          <a class="carousel-control right" href="#carousel-prod" role="button" v-if="carouselTotalItems > 1" @click.prevent="carouselNextSlide">
+            <svg class="icon icon-ar-right">
+              <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-right"></use>
+            </svg>
+          </a>
+        </div>
+        
+        <div class="thumbs-wrapper" v-if="carouselTotalItems > 1 && isCarouselImageLoaded">
+          <div class="thumbs" ref="thumbs">
+          {% for photo in product.get_thumbnails('c_fill,g_center,w_145,h_70,q_90') %}
+            <div class="thumb-item" @click="handleThumbSelect({{ loop.index0 }})">
+              {% if photo %}<img src="{{ photo }}" alt="">{% else %}<div class="empty"></div>{% endif %}
+            </div>
+          {% endfor %}
+          </div>
+
+          <a class="thumbs-control left" v-if="carouselTotalItems > 4" href="#carousel-prod" role="button" v-if="carouselTotalItems > 1" @mouseover="handleThumbsScroll(-1)" @mouseleave="handleThumbsScrollStop" @click.prevent>
+            <svg class="icon icon-ar-left">
+              <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-left"></use>
+            </svg>
+          </a>
+
+          <a class="thumbs-control right" v-if="carouselTotalItems > 4" href="#carousel-prod" role="button" v-if="carouselTotalItems > 1" @mouseover="handleThumbsScroll(1)" @mouseleave="handleThumbsScrollStop" @click.prevent>
+            <svg class="icon icon-ar-right">
+              <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-right"></use>
+            </svg>
+          </a>
+        </div>
+      </div>
+      
+      <div class="description">
+        <div class="description--title">Description</div>
+        <div class="description--text">
+          {{ product_description }}
+        </div>
+      </div>
+
+      <div class="social-links-set" >
+        <button class="social-link-btn" @click="showSocialLinksBox" ></button>
+        <div class="arrow_box hidden" ref="socialLinksbox" >
+            <ul class="socialbuttons">
+              <li class="facebook"><a href="{{ url_for('product_share', product_id=product.unique_id, platform='facebook') }}" class="btn" target="popup" onclick="window.open(this.href, 'popup', 'width=600,height=600');"><span class="icon"></span></a></li>
+              <li class="twitter"><a href="{{ url_for('product_share', product_id=product.unique_id, platform='twitter') }}" class="btn" target="popup" onclick="window.open(this.href, 'popup', 'width=600,height=600');"><span class="icon"></span></a></li>
+              <li class="linkedin"><a href="{{ url_for('product_share', product_id=product.unique_id, platform='linkedin') }}" class="btn" target="_blank" onclick="window.open(this.href, 'popup', 'width=600,height=600');"><span class="icon"></span></a></li>
+              <li class="googleplus"><a href="{{ url_for('product_share', product_id=product.unique_id, platform='googleplus') }}" class="btn" target="_blank" onclick="window.open(this.href, 'popup', 'width=600,height=600');"><span class="icon"></span></a></li>      
+            </ul>
+            <div>
+              <input type="text" ref="selfLinkForSocial"  readonly />
+            </div>
+        </div>
+      </div>
+
+      {# <!--
+      {% if product_tags %}
+      <div class="product-tags">
+        <div class="title">Tags</div>
+        <div class="tags">
+          <ul>
+            {% for tag in product_tags %}
+            <li>{{ tag.tag }}</li>
+            {% endfor %}
+          </ul>
+        </div>
+      </div>
+      {% endif %} --> #}
+      
+      {% if product_faq %}
+      <section class="faq">
+        <div class="section-title">FAQs</div>
+        <div class="faq--list">
+        {% for item in product_faq %}
+          <div class="faq--list--item">
+            <div class="question" v-bind:class="{ opened: faqIndexesOpened[{{ loop.index0 }}] }" @click="toggleFaqItem({{ loop.index0 }})">{{ item.q }}</div>
+            <div class="answer collapse" v-bind:class="{ in: faqIndexesOpened[{{ loop.index0 }}] }"><p>{{ item.a|nl2br }}</p></div>
+          </div>
+        {% endfor %}
+        </div>
+      </section>
+      {% endif %}
+    </div>
+    
+    <div class="product-actions">
+      <div class="top">
+        <div class="labels">
+          <span class="label star">
+             <svg class="icon icon-star">
+                <use xlink:href="{{ static_file('images/sprite.svg') }}#star"></use>
+              </svg>
+            </span>
+        </div>
+        <div class="favorite" v-if="isFavorite" v-cloak>
+          <svg class="icon icon-heart">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#heart"></use>
+          </svg>
+        </div>
+        <div class="prices">
+          {% if product_offer %}<div class="old-price price">${{ product.price|format_price }}</div>{% endif %}
+          <div class="current-price price">${% if product_offer %}{{ product_price_offer|format_price }}{% else %}{{ product.price|format_price }}{% endif %}</div>
+
+          {% if product_offer %}
+          <div class="ends">
+            <svg class="icon icon-clock">
+              <use xlink:href="{{ static_file('images/sprite.svg') }}#clock"></use>
+            </svg>
+            {{ product_offer.get_days_remaining_printable() }}
+          </div>
+          {% endif %}
+        </div>
+
+        {% if product.is_approved %}
+          {% if g.user.is_authenticated %}
+          <div class="btn-group" v-bind:class="{ open: isOrderDropdownOpened }" @mouseleave="isOrderDropdownOpened = false">
+            {% if g.user.id == product.seller.id and not product.is_deleted %}
+            <a class="btn order" href="{{ url_for('account.service_edit', unique_id=product.unique_id) }}">EDIT SERVICE</a>
+            {% else %}
+            <a class="btn order {% if not can_order %}disabled{% endif %}" onclick="window.dataLayer && dataLayer.push({'event': 'addToCart','ecommerce': {'currencyCode': 'USD','add': {'products': [{'name': '{{ product.title }}','id': '{{ product.unique_id }}','price': '{{ product_price|format_price }}','brand': '{{ product_seller.username }}','category': '{{ product.category_id }}','quantity': 1 }] }}});" href="{{ product.get_url('product_order') }}">ORDER SERVICE</a>
+            {% endif %}
+
+            <button type="button" class="btn dropdown-toggle" @click="isOrderDropdownOpened = !isOrderDropdownOpened">
+              <span class="caret"></span>
+              <span class="sr-only">ORDER SERVICE</span>
+            </button>
+            <ul class="dropdown-menu">
+              {# <!-- <li><a href="#">Report abuse</a></li>
+              <li class="delimiter"></li> --> #}
+              <li><a href="#" @click.prevent="toggleFavorite" v-text="isFavorite ? 'Remove from favorites' : 'Add to favorites'"></a></li>
+              <li><a href="javascript:;" id="copy-affiliate-link" data-clipboard-text="{{ product.get_url(referer=g.user.username, _external=True) }}" @click="isOrderDropdownOpened = false">Copy affiliate link</a></li>
+            </ul>
+          </div>
+          {% else %}
+          <a class="btn order {% if not can_order %}disabled{% endif %}" href="{{ product.get_url('product_order') }}">ORDER SERVICE</a>
+          {% endif %}
+        {% else %}
+        <a class="btn order disabled" href="#">AWAITING VERIFICATION</a>
+        {% endif %}
+
+        {% if product.delivery_time %}
+        <div class="queue-block first">
+          <span class="status queue"></span>
+          delivered within {{ product.delivery_time|timedelta_pretty_print }}
+        </div>
+        {% endif %}
+
+        {% if product_statistics.queued > 0 %}
+        <div class="queue-block">
+          <span class="status queue"></span>
+          {{ product_statistics.queued }} order{% if product_statistics.queued > 1 %}s{% endif %} in queue
+        </div>
+        {% endif %}
+      </div>
+      <div class="user-info">
+        <div class="avatar">
+          <!--img src="{{ product_seller.get_photo_url('h_100,w_100,c_thumb,g_face,bo_2px_solid_white,r_max') }}" /-->
+          <!--<div class="avatar-hexagon-background"></div>-->
+          <a href="{{ url_for('user', username=product_seller.username) }}">
+            <img src="{{ product_seller.get_photo_url('h_100,w_100,c_thumb,g_face') }}" />
+          </a>
+        </div>
+
+        {% if product_seller_statistics.feedbacks_rating > 0 %}
+        <div class="rating" title="{{ product_seller_statistics.feedbacks_rating }}">
+          <span class="rating-stars" data-stars="{{ product_seller_statistics.feedbacks_rating_int }}"></span>
+        </div>
+        {% endif %}
+
+        <div class="name">
+          <a href="{{ url_for('user', username=product_seller.username) }}">{{ product_seller.username }}</a>
+        </div>
+        <div class="status-row">
+          {% if product_seller.is_online %}
+          <span class="status online"></span>
+          Online
+          {% else %}
+          <span class="status offline"></span>
+          Last seen {{ product_seller.last_logged_on|timedelta_from_now }}
+          {% endif %}
+        </div>
+        <div class="location">
+          <div class="from">
+            {{ product_seller.get_country_printable() }}
+            {% if product_seller.country %}
+              <span class="icon f16"><span class="flag {{ product_seller.country.lower() }}"></span></span>
+            {% endif %}
+          </div>
+          <div class="joined">Joined: {{ product_seller.registered_on.strftime('%b %Y') }}</div>
+        </div>
+      </div>
+      <div class="user-progress">
+        <div class="line">
+          <div class="icon-block">
+            <svg class="icon icon-checkmark">
+              <use xlink:href="{{ static_file('images/sprite.svg') }}#checkmark"></use>
+            </svg>
+          </div>
+          <div class="text">
+            <strong>{{ product_seller_statistics.orders_completed }}</strong>
+            Jobs Done
+          </div>
+        </div>
+        {# <!-- <div class="line">
+          <div class="icon-block">
+            <svg class="icon icon-fav">
+              <use xlink:href="{{ static_file('images/sprite.svg') }}#fav"></use>
+            </svg>
+          </div>
+          <div class="text">
+            <strong>TODO% (TODO/TODO)</strong>
+            Recommended
+          </div>
+        </div> --> #}
+        <div class="line">
+          <div class="icon-block">
+            <svg class="icon icon-profile">
+              <use xlink:href="{{ static_file('images/sprite.svg') }}#profile"></use>
+            </svg>
+          </div>
+          <div class="text">
+            <strong>{{ product_seller_statistics.order_repeat }}</strong>
+            Repeat Clients
+          </div>
+        </div>
+        
+        {% if product_seller_statistics.response_time %}
+        <div class="line">
+          <div class="icon-block">
+            <svg class="icon icon-chat">
+              <use xlink:href="{{ static_file('images/sprite.svg') }}#chat"></use>
+            </svg>
+          </div>
+          <div class="text">
+            <strong>{{ product_seller_statistics.response_time|timedelta_pretty_print }}</strong>
+            Avg. Response Time
+          </div>
+        </div>
+        {% endif %}
+      </div>
+      {% if g.user.is_authenticated %}
+      <a href="#" class="btn contact-me" @click.prevent="showEnquiryModal = true">
+        <svg class="icon icon-chat">
+          <use xlink:href="{{ static_file('images/sprite.svg') }}#chat"></use>
+        </svg>
+        contact me
+      </a>
+      {% else %}
+      <a href="#" class="btn contact-me" @click.prevent="openLoginWindow">
+        <svg class="icon icon-chat">
+          <use xlink:href="{{ static_file('images/sprite.svg') }}#chat"></use>
+        </svg>
+        contact me
+      </a>
+      {% endif %}
+{#  NO LIKE TO MUCH THIS
+      <!-- <div class="social" if="{{showSocial}}">
+        <a href="#" class="social-item env">
+          <svg class="icon icon-envelope">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#envelope"></use>
+          </svg>
+        </a>
+        <a href="#" class="social-item fb">
+          <svg class="icon icon-fb">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#fb"></use>
+          </svg>
+        </a>
+        <a href="#" class="social-item tw">
+          <svg class="icon icon-tw">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#tw"></use>
+          </svg>
+        </a>
+        <a href="" class="social-item google">
+          <svg class="icon icon-google">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#google"></use>
+          </svg>
+        </a>
+        <a href="" class="social-item pin">
+          <svg class="icon icon-p">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#p"></use>
+          </svg>
+        </a>
+      </div> -->
+#}
+      <div class="customized">
+        <a href="#" class="btn request-customized">
+          <svg class="icon icon-pencil">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#pencil"></use>
+          </svg>
+          Customized Service
+        </a>
+        <p>Click here to request a custom service and send you an estimate</p>
+      </div>
+    </div>
+  </div>
+{% if product_statistics.feedbacks_count > 0 %}
+  <div class="product-comments">
+    <section class="comments">
+      <div class="comments--header">
+        <span class="count">{{ product_statistics.feedbacks_count }}</span>
+        Reviews
+        <div class="rating">
+          <span class="rating-stars stars-{{ product_statistics.feedbacks_rating_int }}"></span>
+          <span class="rating-count">({{ product_statistics.feedbacks_rating }})</span>
+        </div>
+        <div class="sorting">
+          <sort-selector
+            :options="possibleFeedbackSortingOptions"
+            :model.sync="feedbacksSorting"
+            :changed="handleFeedbacksSortingChange">
+          </sort-selector>
+
+          <!--<select class="selectpicker" name="sorting" v-model="feedbacksSorting" @change="handleFeedbacksSortingChange">
+            <option value="desc" data-icon="icon-asc">Most recent</option>
+            <option value="asc" data-icon="icon-desc">Least recent</option>
+          </select>-->
+        </div>
+      </div>
+      
+      <div class="comments--list">
+        <div class="comments--item" v-for="feedback in feedbacks" v-cloak>
+          <div class="review-head">
+            <div class="avatar">
+              <!--<div class="avatar-hexagon-background"></div>-->
+              <a v-bind:href="feedback._user_url">
+                <img v-if="feedback._user_photo_url" v-bind:src="feedback._user_photo_url" />
+              </a>
+            </div>
+            <div class="review-author">
+              <a class="name" v-text="feedback._user_username" v-bind:href="feedback._user_url"></a>
+              <div v-bind:class="'rating-stars stars-' + feedback._rating_int"></div>
+            </div>
+          </div>
+          <div class="review">
+            <p v-html="feedback.text"></p>
+            <div class="review-foot">
+              <span class="date" v-text="feedback._created_on_printable"></span>
+              <span class="reply-btn reply-icon" v-if="!feedback.reply && sharedState.extra.user && sharedState.extra.product_seller.id === sharedState.extra.user.id && !feedbackReplies[feedback.id]" @click="handleFeedbackReplyClick(feedback.id)">
+                Reply Review
+              </span>
+
+              <span v-if="feedbackReplies[feedback.id] && !feedbackReplies[feedback.id].saved">
+                <span class="reply-btn" @click="handleFeedbackPublish(feedback.id)">
+                  <span v-if="feedbackReplies[feedback.id].loading">Publishing...</span>
+                  <span v-else>Publish Review</span>
+                </span>
+
+                <span class="reply-btn" @click="handleFeedbackDiscard(feedback.id)">
+                  Discard
+                </span>
+              </span>
+            </div>
+
+            <div class="reply" v-if="feedback.reply || (feedbackReplies[feedback.id] && feedbackReplies[feedback.id].saved)">
+              <div class="comments--item review-replied">
+                <div class="review-head">
+                  <div class="avatar">
+                    <img v-if="sharedState.extra.product_seller_photo_url" v-bind:src="sharedState.extra.product_seller_photo_url" />
+                  </div>
+                </div>
+                <div class="review">
+                  <p v-text="feedback.reply" v-if="feedback.reply"></p>
+                  <p v-text="feedbackReplies[feedback.id].text" v-else></p>
+                  <div class="review-foot">
+                    <span v-text="sharedState.extra.product_seller.username"></span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="reply write" v-if="feedbackReplies[feedback.id] && !feedbackReplies[feedback.id].saved">
+              <textarea v-model="feedbackReplies[feedback.id].text" rows="3"></textarea>
+              <p class="text-danger" v-if="feedbackReplies[feedback.id].error" v-text="feedbackReplies[feedback.id].error"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="comments--footer" v-if="isFeedbacksLoading || isMoreFeedbacksAvailable" v-cloak>
+        <div class="more">
+          <button class="button" v-if="isFeedbacksLoading">
+            Loading reviews...
+          </button>
+          <button class="button" v-else @click="fetchFeedbacks">
+            Show more reviews
+            <svg class="icon icon-ar-down">
+              <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-down"></use>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </section>
+    <div class="spacer"></div>
+  </div>
+{% endif %}
+
+  <div class="product-additional wrapper">
+    {# <!--<div class="additional-section custom">
+      <div class="custom-service catalog--list--item ">
+        <a href="#" class="item-image-custom">
+          <svg class="icon icon-edit">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#edit"></use>
+          </svg>
+        </a>
+        <div class="item-title">
+          Customized Service
+        </div>
+        <div class="item-description">
+          Click here to request a custom service and send you an estimate
+        </div>
+      </div>
+    </div>--> #}
+
+    <div class="additional-section more-services" v-if="extraProducts.length" v-cloak>
+      <div class="additional-title">
+        <span v-if="extraProductsType === 'more'">
+          More services by <a href="{{ url_for('user', username=product_seller.username) }}" class="more-services-author">{{ product_seller.username }}</a>
+        </span>
+        <span v-else>Similar services</span></div>
+      <div class="additional--wrapper additional-carousel">
+        <a class="additional-carousel-control left" href="#carousel-prod" role="button" @click.prevent="handleAdditionalCarouselLeftClick" v-show="additionalCarouselShowArrows">
+          <svg class="icon icon-ar-left">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-left"></use>
+          </svg>
+        </a>
+        <a class="additional-carousel-control right" href="#carousel-prod" role="button" @click.prevent="handleAdditionalCarouselRightClick" v-show="additionalCarouselShowArrows">
+          <svg class="icon icon-ar-right">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-right"></use>
+          </svg>
+        </a>
+        <div class="additional--list" ref="additionalCarousel">
+          <div class="catalog--list--item" v-for="result in extraProducts">
+            <a class="item-image" v-bind:href="result._url">
+              <div class="labels">
+                <span class="label cloud">
+                  <svg class="icon icon-download">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#download"></use>
+                  </svg>
+                </span>
+                <span class="label star">
+                  <svg class="icon icon-star">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#star"></use>
+                  </svg>
+                </span>
+              </div>
+              <div class="favorite" v-if="result._is_favorite">
+                <svg class="icon icon-heart">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#heart"></use>
+                </svg>
+              </div>
+              <img v-bind:src="result._primary_photo_url" alt="">
+              <div class="prices">
+                <div class="old-price price" v-if="result.price_offer" v-text="(result.price / 100).toFixed(2)"></div>
+                <div class="current-price price" v-text="((result.price_offer ? result.price_offer : result.price) / 100).toFixed(2)"></div>
+              </div>
+            </a>
+            <a class="item-title" v-html="'I will ' + result.title" v-bind:href="result._url"></a>
+
+
+          </div>
+
+         {#  <!--  <div class="custom-service catalog--list--item">
+            <a href="#" class="item-image-custom">
+              <svg class="icon icon-edit">
+                <use xlink:href="{{ static_file('images/sprite.svg') }}#edit"></use>
+              </svg>
+            </a>
+            <div class="item-title">
+              Customized Service
+            </div>
+            <div class="item-description">
+              Click here to request a custom service and send you an estimate
+            </div>
+          </div> --> #}
+
+        </div>
+      </div>
+    </div>
+
+    <div class="additional-section recently-viewed" v-show="recentProducts.length" v-bind:class="{ cleared: recentProductsCleared }" v-cloak>
+      <div class="additional-title">Your recently viewed services <button class="button" @click="handleRecentProductsClear">Clear All</button></div>
+      <div class="additional--wrapper additional-carousel">
+        <a class="additional-carousel-control left" href="#carousel-prod" role="button" @click.prevent="handleAdditionalCarousel2LeftClick" v-show="additionalCarousel2ShowArrows">
+          <svg class="icon icon-ar-left">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-left"></use>
+          </svg>
+        </a>
+        <a class="additional-carousel-control right" href="#carousel-prod" role="button" @click.prevent="handleAdditionalCarousel2RightClick" v-show="additionalCarousel2ShowArrows">
+          <svg class="icon icon-ar-right">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-right"></use>
+          </svg>
+        </a>
+        <div class="additional--list" ref="additionalCarousel2">
+          <div class="catalog--list--item" v-for="result in recentProducts">
+            <a class="item-image" v-bind:href="result._url">
+              <div class="labels">
+                <span class="label cloud">
+                  <svg class="icon icon-download">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#download"></use>
+                  </svg>
+                </span>
+                <span class="label star">
+                  <svg class="icon icon-star">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#star"></use>
+                  </svg>
+                </span>
+              </div>
+              <div class="favorite" v-if="result._is_favorite">
+                <svg class="icon icon-heart">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#heart"></use>
+                </svg>
+              </div>
+              <img v-bind:src="result._primary_photo_url_smaller" alt="">
+              <div class="prices">
+                <div class="old-price price" v-if="result.price_offer" v-text="(result.price / 100).toFixed(2)"></div>
+                <div class="current-price price" v-text="((result.price_offer ? result.price_offer : result.price) / 100).toFixed(2)"></div>
+              </div>
+            </a>
+            <a class="item-title" v-html="'I will ' + result.title" v-bind:href="result._url"></a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {% if g.user.is_authenticated %}
+  <modal v-if="showEnquiryModal" v-cloak>
+    <div slot="body">
+      <div v-bind:style="{ visibility: enquiryPeer ? 'visible' : 'hidden' }" class="info-bar">
+        <div class="left" v-if="enquiryPeer">
+          <img v-bind:src="enquiryPeer._photo_url" />
+        </div>
+        <div class="right" v-if="enquiryPeer">
+          <strong v-text="enquiryPeer.username"></strong><br />
+          <span>Local Time: <span v-text="enquiryPeer.local_time"></span></span><br />
+          {% if product_seller_statistics.response_time %}
+          <span>Avg. Response Time: {{ product_seller_statistics.response_time|timedelta_pretty_print }}</span>
+          {% endif %}
+        </div>
+      </div>
+      <div class="modal-textarea-with-attachments">
+        <textarea class="enquiry-modal-textarea" v-bind:class="{ 'has-error': enquiryTextError.pay || enquiryTextError.skype || enquiryTextError.phone || enquiryTextError.email }" v-model="enquiryText" v-bind:disabled="enquirySent" placeholder="Ask a question regarding the service «I will {{ product.title }}»"></textarea>
+        <span class="warning glyphicon glyphicon-exclamation-sign" v-if="enquiryTextError.pay || enquiryTextError.skype || enquiryTextError.phone"></span>
+        <span class="warning" v-if="enquiryTextError.pay">Reminder: <br/> Never accept or ask for direct payments. Doing so may get your account restricted.</span>
+        <span class="warning" v-if="enquiryTextError.skype || enquiryTextError.phone || enquiryTextError.email ">Terms of Service reminder: <br/> Providing email, Skype, or phone number is only allowed if it is needed as part of the service. Otherwise, all communication must go through Jobdone.net</span>
+
+        <div class="attachment-items"
+             v-if="attachUploads.length">
+          <div class="attachment-item"
+               v-for="attachment in attachUploads">
+            <span
+              class="attachment-name"
+              v-text="attachment.name">
+            </span>
+            <div class="attachment-delete" v-if="!attachment.active"
+              @click="handleAttachDelete(attachment)">&times;</div>
+            <div class="attachment-loading" v-else>
+              <span class="attachment-loading-dot">.</span>
+              <span class="attachment-loading-dot">.</span>
+              <span class="attachment-loading-dot">.</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div slot="footer">
+      <div class="icon-attachment">
+        <file-upload
+          title=""
+          name="file"
+          post-action="/api/account/messaging/upload"
+          :multiple="true"
+          :files="attachUploads"
+          :events="attachUploadEvents"
+          ref="uploader">
+        </file-upload>
+      </div>
+
+      <button
+        v-show="!enquirySent"
+        class="button button-grey"
+        @click="showEnquiryModal = false"
+        :disabled="enquiryLoading">
+        CANCEL
+      </button>
+
+      <button
+        class="button button-blue"
+        @click="handleEnquirySendClick"
+        :disabled="enquirySent || enquiryLoading || !enquiryText.length || attachUploading || enquiryTextError.skype || enquiryTextError.phone || enquiryTextError.email ">
+        SEND
+      </button>
+    </div>
+  </modal>
+  {% endif %}
+</main>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    window.dataLayer && dataLayer.push({
+      'event': 'productdetail',
+      'ecommerce': {
+        'detail': [
+         {
+           'name': '{{ product.title }}',
+           'id': '{{ product.unique_id }}',
+           'price': '{{ product.price|format_price }}',
+           'brand': '{{ product_seller.username }}',
+           'category': '{{ product.category_id }}'
+         }]
+      }
+    });
+</script>
+{% endblock %}

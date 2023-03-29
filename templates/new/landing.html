@@ -1,0 +1,136 @@
+{% extends "new/layout.html" %}
+
+{% block styles %}
+  <link rel="stylesheet" type="text/css" href="{{ static_file('assets/landing.css') }}">
+{% endblock %}
+
+{% block body %}
+<main class="splash" id="sm-landing">
+  <div class="header_area">
+    <img src="{{ static_file('images/landing/hm_header_bg.jpg') }}" alt="">
+    <div class="header_over_content">
+      <div class="hdr_bnr_content text-center">
+        <h1>GET YOUR JOB DONE NOW!</h1>
+        <p>Freelancer Services ready for your project</p>
+        <div class="search_frm landing_search_form" v-cloak >
+          <form action="{{ url_for('index') if g.user.is_authenticated else url_for('explore') }}" method="GET" enctype="text/plain">
+            <div class="Header__search-box">
+              <input
+                type="text"
+                autocomplete="off"
+                placeholder="Find a service"
+                name="query"
+                ref="searchInput"
+                v-on:input="onSearch"
+                v-model="query" />
+              <input type="submit" value="GET STARTED">
+              <transition name="fade-in">
+                <div class="Header__search-dropdown"
+                  :class="{'opened':searchIsOpen && suggestions.length}"
+                  v-on-click-outside="clearSearch"
+                  v-if="searchIsOpen && suggestions.length">
+                  <div class="Header__search-dropdown-header">
+                    <span>SEARCH SUGGESTIONS</span>
+                  </div>
+                  <a class="Header__search-suggestion"
+                    v-for="suggestion in suggestions.slice(0, 10)"
+                    :href="'{{ url_for('index') if g.user.is_authenticated else url_for('explore') }}?query='+suggestion"
+                    v-text="suggestion"></a>
+                </div>
+              </transition>
+            </div>
+          </form>
+          <span style="margin-top: 70px;" ><b>Trending Items:</b> <a href="/explore/psd-to-html-30.html">PSD TO HTML</a>, <a href="/explore/logo-design-10.html">Logo Design</a>, <a href="#">Voice Over</a></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="pr_built_area">
+    <div class="section_heading text-center">
+      <h1>EXPLORE THE MARKETPLACE</h1>
+      <p>Get inspired to build your project</p>
+    </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-3 col-xs-6 text-center sng_pr_blt">
+          <a href="/explore/developing-tech-2.html"><img src="{{ static_file('images/landing/wd_icn.png') }}" alt=""></a>
+          <h2><a href="/explore/developing-tech-2.html">Development</a></h2>
+        </div>
+        <div class="col-sm-3 col-xs-6 text-center sng_pr_blt">
+          <a href="/explore/design-graphics-1.html"><img src="{{ static_file('images/landing/gd_icn.png') }}" alt=""></a>
+          <h2><a href="/explore/design-graphics-1.html">Web Design</a></h2>
+        </div>
+        <div class="col-sm-3 col-xs-6 text-center sng_pr_blt">
+          <a href="/explore/internet-marketing-7.html"><img src="{{ static_file('images/landing/im_icn.png') }}" alt=""></a>
+          <h2><a href="/explore/internet-marketing-7.html">Internet Marketing</a></h2>
+        </div>
+        <div class="col-sm-3 col-xs-6 text-center sng_pr_blt">
+          <a href="/explore/developing-tech-2.html"><img src="{{ static_file('images/landing/ma_icn.png') }}" alt=""></a>
+          <h2><a href="/explore/developing-tech-2.html">Mobile App</a></h2>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col-sm-3 col-xs-6 text-center sng_pr_blt">
+          <a href="/explore/design-graphics-1.html"><img src="{{ static_file('images/landing/gag_icn.png') }}" alt=""></a>
+          <h2><a href="/explore/design-graphics-1.html">Grapics & Design</a></h2>
+        </div>
+        <div class="col-sm-3 col-xs-6 text-center sng_pr_blt">
+          <a href="/explore/video-audio-8.html"><img src="{{ static_file('images/landing/vaa_icn.png') }}" alt=""></a>
+          <h2><a href="/explore/video-audio-8.html">Video & Animation</a></h2>
+        </div>
+        <div class="col-sm-3 col-xs-6 text-center sng_pr_blt">
+          <a href="/explore/content-copywriting-5.html"><img src="{{ static_file('images/landing/wr_icn.png') }}" alt=""></a>
+          <h2><a href="/explore/content-copywriting-5.html">Content & Copywriting</a></h2>
+        </div>
+        <div class="col-sm-3 col-xs-6 text-center sng_pr_blt">
+          <a href="/explore/video-audio-8.html"><img src="{{ static_file('images/landing/maa_icn.png') }}" alt=""></a>
+          <h2><a href="/explore/video-audio-8.html">Music & Audio</a></h2>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="work_pr_area">
+    <div class="section_heading text-center">
+        <h1>HOW IT WORKS</h1>
+    </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-sm-3">
+          <div class="single_process">
+            <img src="{{ static_file('images/landing/so_icn.png') }}" alt="step one">
+            <sub>1</sub>
+            <h3>Find the service you need</h3>
+            <p>Compare prices, review, portfolios to select the service you are most excited to do.If you have a specific question, contact the freelancer before make order.</p>
+          </div>
+        </div>
+        <div class="col-sm-3">
+          <div class="single_process">
+            <img src="{{ static_file('images/landing/st_icn.png') }}" alt="step one">
+            <sup>2</sup>
+            <h3>Supply your brief</h3>
+            <p>Provide a job brief for the Talent to review. At this point jobdone takes payment, which is held until the job is completed and you are happy with the outcome.</p>
+          </div>
+        </div>
+        <div class="col-sm-3">
+          <div class="single_process">
+            <img src="{{ static_file('images/landing/str_icn.png') }}" alt="step one">
+            <sub>3</sub>
+            <h3>Collaborate with an freelancer on your project</h3>
+            <p>Share files and feedback easily with inbuilt messaging. Your freelancer will complete the job within the agreed turnaround time.</p>
+          </div>
+        </div>
+        <div class="col-sm-3">
+          <div class="single_process">
+            <img src="{{ static_file('images/landing/sf_icn.png') }}" alt="step one">
+            <sup>4</sup>
+            <h3>Approve Job</h3>
+            <p>Once you're happy with the work, approve the job. The freelancer will hand over all deliverables and you’re done. Too easy.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}

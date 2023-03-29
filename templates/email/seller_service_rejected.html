@@ -1,0 +1,12 @@
+{% extends "email/layout.html" %}
+
+{% block heading %}Hey {{ seller }}!{% endblock %}
+
+{% block content %}
+<p>Thank you for posting your Job on JobDone!</p>
+<p>Before we put it live on the site and promoted to all the JobDone talent we would just like to ask you to edit your Job to make sure that it meets our Jobs posting policy.</p>
+
+<a href="{{ link }}" style="background: rgba(247, 147, 30, 1); border-radius: 4px; color: #fff; padding: 16px; margin-top: 10px; text-decoration: none; display: block; width: 200px; text-align: center; margin: 20px auto 0;">EDIT MY JOB</a>
+
+<p>Lots of luck with your Job!</p>
+{% endblock %}

@@ -1,0 +1,11 @@
+{% extends "email/layout.html" %}
+
+{% block heading %}Important message{% endblock %}
+
+{% block content %}
+<p>Looks like {{ seller }} is failed to deliver order #{{ order_id }} ({{ product_title }}) on time.</p>
+
+<p>We recommend you to contact {{ seller }} to check current progress of this order, or use the resolution center for any issues.</p>
+
+<a href="{{ link }}" style="background: #0472b8; border-radius: 4px; color: #fff; padding: 16px; margin-top: 10px; text-decoration: none; display: block; width: 200px; text-align: center; margin: 20px auto 0;">View Order</a>
+{% endblock %}

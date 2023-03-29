@@ -1,0 +1,20 @@
+@import "~bootstrap/dist/css/bootstrap.css"; // TODO: Remove this
+@import '~world-flags-sprite/stylesheets/flags16.css';
+
+@import '../../shared/style/nouislider.css';
+@import '../../shared/style/sprite.scss';
+
+@import "../../shared/style/global.scss";
+@import "../../shared/style/header.scss";
+@import "../../shared/style/footer.scss";
+@import "../../shared/style/headerDropdown.scss";
+
+@import './main.scss';
+@import './become-seller.scss';
+@import './order.scss';
+
+
+/* Hide VUE application while it's being loaded */
+[v-cloak] {
+    display:none;
+}

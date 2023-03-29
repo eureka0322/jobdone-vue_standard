@@ -1,0 +1,10 @@
+{% extends "email/layout.txt" %}
+
+{% block content %}Warning!
+
+Only 1 day left to deliver your order #{{ order_id }} ({{ product_title }}).
+
+We recommend you to contact {{ buyer }} if you feel you are not able to deliver within the next 24 hours. Note that {{ buyer }} will be entitled to cancel this order.
+
+View order: {{ link }}
+{% endblock %}

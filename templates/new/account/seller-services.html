@@ -1,0 +1,122 @@
+{% set tab = 'seller' %}
+
+{% extends "new/account/layout.html" %}
+
+{% block body %}
+<div class="container" id="sm-account-services">
+  <h1>My Services</h1>
+  <div class="row order-list table">
+    <div class="col-md-12">
+      <div class="tabs-holder row">
+        <ul class="nav nav-tabs left-position col-md-11">
+          <li role="presentation" class="active-tab" v-bind:class="{ active: servicesType === 'active' }">
+            <a href="#" @click.prevent="setServicesType('active')">Active{% if tab_counts['active'] %}<span class="badge">{{ tab_counts['active'] }}</span>{% endif %}</a>
+          </li>
+          <li role="presentation" class="draft" v-bind:class="{ active: servicesType === 'drafts' }">
+            <a href="#" @click.prevent="setServicesType('drafts')">Drafts{% if tab_counts['drafts'] %}<span class="badge">{{ tab_counts['drafts'] }}</span>{% endif %}</a>
+          </li>
+          <li role="presentation" class="pendding" v-bind:class="{ active: servicesType === 'pending' }">
+            <a href="#" @click.prevent="setServicesType('pending')">Pending Approval{% if tab_counts['pending'] %}<span class="badge">{{ tab_counts['pending'] }}</span>{% endif %}</a>
+          </li>
+          {# <!-- <li role="presentation" class="modification"><a href="#">Requieres Modification</a></li> --> #}
+          <li role="presentation" class="denied" v-bind:class="{ active: servicesType === 'not_approved' }">
+            <a href="#" @click.prevent="setServicesType('not_approved')">Not Approved{% if tab_counts['not_approved'] %}<span class="badge">{{ tab_counts['not_approved'] }}</span>{% endif %}</a>
+          </li>
+          <li role="presentation" class="paused" v-bind:class="{ active: servicesType === 'not_published' }">
+            <a href="#" @click.prevent="setServicesType('not_published')">Paused{% if tab_counts['not_published'] %}<span class="badge">{{ tab_counts['not_published'] }}</span>{% endif %}</a>
+          </li>
+          <li role="presentation" class="paused" v-bind:class="{ active: servicesType === 'deleted' }">
+            <a href="#" @click.prevent="setServicesType('deleted')">Deleted</a>
+          </li>
+        </ul>
+        {# <!-- <ul class="search right-position col-md-1">
+          <li><select class="form-control" name="" id="" style="width: 150px; margin: 6px 6px 0 0;">
+            <option value="">LAST 30 DAYS</option>
+            <option value="">LAST 10 DAYS</option>
+          </select></li>
+          <li><a href="#" class="btn searchbutton"></a></li>
+          <li class="searchform"><input type="text" placeholder="Find in table"><input type="button" value="Search"></li>
+        </ul> --> #}
+      </div>
+
+      <transition name="fade" mode="out-in">
+
+        <div class="tabs-processing"
+             v-if="servicesLoading"
+             key="processingOn">
+          <spinner/>
+        </div>
+
+        <div class="tabs-content"
+             v-else
+             key="processingOff">
+          <div class="table-">
+            <table width="100%" border="0" class="margin">
+              <tbody>
+                <tr>
+                  <th scope="col">SERVICE</th>
+                  {# <!-- <th scope="col">IMPRESSIONS</th> -->
+                  <!-- <th scope="col">CLICKS</th> --> #}
+                  <th scope="col">PUBLISHED ON</th>
+                  <th scope="col">VIEWS</th>
+                  <th scope="col">ORDERS</th>
+                  <!-- <th scope="col">CANCELATIONS</th> -->
+                  <th scope="col">ACTIONS</th>
+                </tr>
+                <tr v-for="service in services" v-cloak>
+                  <td>
+                    <div class="infomracion-container"><img v-bind:src="service._primary_photo_url"><div class="text-info"><a v-bind:href="service._edit_url" class="title" v-text="service.title"></a><p></p></div>
+                  </td>
+                  {# <!-- <td>20 <span class="up icon"></span></td>
+                  <td>3 <span class="down icon"></span></td> --> #}
+                  <td v-text="service.published_on"></td>
+                  <td><span v-text="service.views"></span> <span class="up icon"></span></td>
+                  <td><span v-text="service._orders_count"></span> <span class="down icon"></span></td>
+                  <!-- <td>0%</td> -->
+                  <td>
+                    <dropdown>
+                      <ul slot="dropdown-menu" class="dropdown-menu dropdown-menu-right">
+                        <li><a v-bind:href="service._url" target="_blank">PREVIEW</a></li>
+                        <li><a v-bind:href="service._edit_url" v-if="!service.is_deleted">EDIT</a></li>
+                        <li v-if="!service.is_deleted">
+                          <a href="#" @click.prevent="handleServicePauseClick(service)" v-if="!service._is_paused">PAUSE</a>
+                          <a href="#" @click.prevent="handleServiceResumeClick(service)" v-else>PUBLISH</a>
+                        </li>
+                        <li v-if="!service.is_deleted"><a href="#" @click.prevent="handleServiceDeleteClick(service)">DELETE</a></li>
+                        {# <!-- <li><a href=""><div class="checkbox"> <label><input type="checkbox"> LIVE PORFOLIO</label></div></a></li> --> #}
+                      </ul>
+                    </dropdown>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination-table">
+            <div class="col-md-6">
+              <div class="pagination-list" v-show="!servicesLoading && totalResults > 0" v-cloak>
+                <ul class="pagination">
+                  <li v-bind:class="{ disabled: currentPage <= 1 }"><a href="#" @click.prevent="handlePageSelect(currentPage - 1)">&laquo;</a></li>
+                  <li v-for="page in pages" v-bind:class="{ active: currentPage === page }">
+                    <a href="#" @click.prevent="handlePageSelect(page)" v-text="page">2</a>
+                  </li>
+                  <li v-bind:class="{ disabled: currentPage >= pages[pages.length - 1] }"><a href="#" @click.prevent="handlePageSelect(currentPage + 1)">&raquo;</a></li>
+                </ul>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <div class="gotopage">
+                <span class="fileds">
+                  <label for="gotopage">Go To Page</label>
+                  <input type="number" name="gotopage" v-model="gotoPage" @keypress.enter="handlePageSelect(+gotoPage)">
+                  <a href="#" class="btn" @click.prevent="handlePageSelect(+gotoPage)">GO</a>
+                </span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </transition>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,300 @@
+<header class="header-account" id="sm-account-header">
+  <div class="header-wrap">
+    <a class="logo" href="{{ url_for('index') }}"></a>
+
+    {% if not header_hide_search %}
+    <div class="search">
+      <form action="{{ url_for('index') if g.user.is_authenticated else url_for('explore') }}" method="GET" enctype="text/plain">
+        <div class="Header__search-box">
+          <input
+            type="text"
+            autocomplete="off"
+            class="Header__search-input"
+            placeholder="Find a service"
+            name="query"
+            ref="searchInput"
+            v-on:input="onSearch"
+            v-model="query" />
+          <svg @click="$refs.searchInput.focus()" class="icon icon-magnifier Header__search-icon">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#magnifier"></use>
+          </svg>
+          <transition name="fade-in">
+            <div class="Header__search-dropdown"
+                 :class="{'opened':searchIsOpen && suggestions.length}"
+                 v-on-click-outside="clearSearch"
+                 v-if="searchIsOpen && suggestions.length">
+              <div class="Header__search-dropdown-header">
+                <span>SEARCH SUGGESTIONS</span>
+                <!--<div class="Header__search-clear"
+                  @click="clearRecentSearches">clear</div>-->
+              </div>
+              <a class="Header__search-suggestion"
+                v-for="suggestion in suggestions.slice(0, 10)"
+                :href="'{{ url_for('index') if g.user.is_authenticated else url_for('explore') }}?query='+suggestion"
+                v-text="suggestion"></a>
+            </div>
+          </transition>
+        </div>
+      </form>
+    </div>
+    {% endif %}
+
+    <div class="menu" v-bind:class="{ opened: isMenuOpened }">
+      <div class="menu-sandwich" @click="isMenuOpened = true">
+        <!-- <svg class="icon icon-sandwich">
+          <use xlink:href="{{ static_file('images/sprite.svg') }}#sandwich"></use>
+        </svg> -->
+        <div class="icon icon-sandwich"></div>
+      </div>
+
+      <div class="menu-greeting">
+        <!-- {% with photo_url = g.user.get_photo_url('h_100,w_100,c_thumb,g_face,bo_2px_solid_white,r_max/w_100') %}
+        <div class="avatar">
+          <img src="{{ photo_url }}" />
+        </div>
+        {% endwith %} -->
+        <div class="avatar">
+          <img src="{{ g.user.get_photo_url('h_100,w_100,c_thumb,g_face') }}" />
+        </div>
+
+        <span>Hello</span>
+        {{ g.user.username }}
+      </div>
+
+      <div class="menu-close" @click="isMenuOpened = false">
+        <svg class="icon icon-close">
+          <use xlink:href="{{ static_file('images/sprite.svg') }}#close"></use>
+        </svg>
+      </div>
+
+      <ul class="menu-list">
+        <li class="menu-list-item"><a href="{{ url_for('account.index') }}">Dashboard</a></li>
+        
+        <li class="menu-list-item expandable" v-bind:class="{ opened: expandedMenuItem === 0 }">
+          <a href="{{ url_for('account.buyer') }}" @click.prevent="expandedMenuItem = expandedMenuItem === 0 ? -1 : 0">Buying</a>
+          <ul class="sub-menu">
+            <li class="menu-list-item"><a href="{{ url_for('account.buyer') }}">My Orders</a></li>
+            <li class="menu-list-item"><a href="{{ url_for('account.favorites') }}">My Favorites</a></li>
+          </ul>
+        </li>
+
+        {% if g.user.seller_fee_paid %}
+        <li class="menu-list-item expandable" v-bind:class="{ opened: expandedMenuItem === 1 }">
+          <a href="{{ url_for('account.seller') }}" @click.prevent="expandedMenuItem = expandedMenuItem === 1 ? -1 : 1">Selling</a>
+          <ul class="sub-menu">
+            <li class="menu-list-item orange">
+              <a href="{{ url_for('account.service_create') }}">Add Service</a>
+            </li>
+            <li class="menu-list-item"><a href="{{ url_for('account.seller') }}">My Orders</a></li>
+            <li class="menu-list-item"><a href="{{ url_for('account.services') }}">My Services</a></li>
+            <li class="menu-list-item"><a href="{{ url_for('account.discounts') }}">My Discounts</a></li>
+            <li class="menu-list-item"><a href="{{ url_for('account.earnings') }}">My Earnings</a></li>
+          </ul>
+        </li>
+        {% else %}
+        <li class="menu-list-item"><a href="{{ url_for('become_seller') }}">Become a Seller</a></li>
+        {% endif %}
+
+        <li class="menu-list-item expandable" v-bind:class="{ opened: expandedMenuItem === 2 }">
+          <a href="{{ url_for('account.affiliate') }}" @click.prevent="expandedMenuItem = expandedMenuItem === 2 ? -1 : 2">Affiliate</a>
+          <ul class="sub-menu">
+            <li class="menu-list-item"><a href="{{ url_for('account.affiliate') }}#?tab=dashboard">Dashboard</a></li>
+            <li class="menu-list-item"><a href="{{ url_for('account.affiliate') }}#?tab=links">Links</a></li>
+            <li class="menu-list-item"><a href="{{ url_for('account.affiliate') }}#?tab=referrals">Referrals</a></li>
+          </ul>
+        </li>
+
+        <li class="menu-list-item"><a href="{{ url_for('account.inbox') }}">Inbox</a></li>
+
+        <li class="menu-list-item"><a href="{{ url_for('account.balance') }}">Balance</a></li>
+
+        <li class="menu-extra-item">
+          <a href="{{ url_for('account.settings') }}"><span class="icon icon-settings"></span> Settings</a>
+        </li>
+        {%  if g.user.is_admin %}
+        <li class="menu-extra-item">
+          <a href="{{ url_for('admin.index') }}"><span class="icon icon-settings"></span>Admin Panel</a>
+        </li>
+        {% endif %}
+
+        <li class="menu-extra-item">
+          <a href="{{ url_for('auth.logout') }}"><span class="icon icon-logout"></span> Logout</a>
+        </li>
+      </ul>
+    </div>
+    
+    <div class="right">
+      <ul class="icons">
+        <li class="icons-notifications" v-bind:class="{ new: notificationsUnread > 0 }">
+          <nav class="header-dropdown">
+            <div class="nav-notification-container">
+              <div class="notification-header">
+                <div class="notifications-tab" v-bind:class="{ 'tab-opened': notificationTab == 0 }" @click="selectTab(0)">
+                  <span>NOTIFICATIONS</span>
+                  <span class="unread-counter" v-if="notificationsUnread > 0">
+                    <span class="unread-counter-text" v-text="notificationsUnread"></span>
+                  </span>
+                </div>
+                <div class="notifications-tab" v-bind:class="{ 'tab-opened': notificationTab == 1 }" @click="selectTab(1)">
+                  <span>INBOX</span>
+                  <span class="unread-counter" v-if="messagesUnread > 0">
+                    <span class="unread-counter-text" v-text="messagesUnread"></span>
+                  </span>
+                </div>
+              </div>
+              <div class="notifications-list-container">
+                <div class="notifications-list" v-if="notificationTab == 0">
+                  <div class="notifications-list-inner">
+                    <div v-for="notification in notifications">
+                      <a class="notifications-container" v-bind:href="notification._url" v-bind:class="{ unread: notification.unread }">
+                        <div class="notifications-inner">
+                          <div class="notifications-img-container">
+                            <div class="notifications-img">
+                              <img :src="notification.__icon" v-if="notification.__icon">
+                              <div v-else class="notifications-img-empty"></div>
+                            </div>
+                          </div>
+                          <div class="notifications-info">
+                            <div class="notifications-text" v-text="notification._notification"></div>
+                          </div>
+                          <div class="notifications-unread-status"></div>
+                        </div>
+                      </a>
+                    </div>
+                  </div>
+                  <div class="notifications-footer">
+                    <div class="notifications-footer-config-btn">
+                      <img :src="notificationsImages.configMessages">
+                    </div>
+                    <div class="notifications-footer-action-btn">dismiss all</div>
+                  </div>
+                </div>
+                <div class="notifications-messages-list" v-else>
+                  <div class="notifications-messages-list-inner">
+                    <div v-for="message in messages">
+                      <a class="notifications-messages-container" v-bind:href="message._url" v-bind:class="{ unread: message.unread }">
+                        <div class="notifications-messages-inner">
+                          <div class="notifications-messages-img-container">
+                            <div class="notifications-messages-img">
+                              <img :src="message.__usericon">
+                            </div>
+                          </div>
+                          <div class="notifications-messages-info">
+                            <div class="notifications-messages-user-info">
+                              <div class="notifications-messages-user-name" v-text="message._display_name"></div>
+                              <div class="notifications-messages-user-status" v-bind:class="{ online: message.__online }"></div>
+                            </div>
+                            <div class="notifications-messages-user-text" v-text="message.__text"></div>
+                          </div>
+                          <div class="notifications-unread-status"></div>
+                        </div>
+                      </a>
+                    </div>
+                  </div>
+                  <div class="notifications-messages-footer">
+                    <div class="notifications-messages-footer-config-btn">
+                      <img :src="notificationsImages.configMessages">
+                    </div>
+                    <div class="notifications-messages-footer-action-btn">dismiss all</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </nav>
+        </li>
+      </ul>
+      <div class="profile">
+        <a href="{{ url_for('account.index') }}" class="profile-wrap">
+          <div class="balance">
+            <!--
+            {% with photo_url = g.user.get_photo_url('h_100,w_100,c_thumb,g_face,bo_2px_solid_white,r_max/w_100') %}
+            <div class="avatar">
+              <img src="{{ photo_url }}" />
+            </div>
+            {% endwith %} -->
+            <div class="avatar">
+              <img src="{{ g.user.get_photo_url('h_100,w_100,c_thumb,g_face') }}" />
+            </div>
+
+            <div class="text">
+              ${{ g.user.get_credit_pp() }}
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</header>
+
+{% if not header_hide_navigation_bar %}
+<div class="container account-tabs-container">
+  <nav class="navbar navbar-default">
+    <div class="container-fluid">
+      <!-- Collect the nav links, forms, and other content for toggling -->
+      <div class="" id="bs-example-navbar-collapse-1">
+        <ul class="nav navbar-nav">
+          <li{% if tab == "dashboard" %} class="active"{% endif %}><a href="{{ url_for('account.index') }}">Dashboard</a></li>
+
+          <li class="dropdown {% if tab == "buyer" %}active{% endif %}">
+            <a href="{{ url_for('account.buyer') }}">
+              Buying
+              <svg class="icon icon-ar-down">
+                <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-down"></use>
+              </svg>
+            </a>
+            <ul class="dropdown-menu">
+              <li><a href="{{ url_for('account.buyer') }}">My orders</a></li>
+              <li><a href="{{ url_for('account.favorites') }}">My favorites</a></li>
+            </ul>
+          </li>
+          
+          {% if g.user.seller_fee_paid %}
+          <li class="dropdown {% if tab == "seller" %}active{% endif %}">
+            <a href="{{ url_for('account.seller') }}" class="dropdown-toggle">
+              Selling
+              <svg class="icon icon-ar-down">
+                <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-down"></use>
+              </svg>
+            </a>
+            <ul class="dropdown-menu">
+              <li><a href="{{ url_for('account.seller') }}">My orders</a></li>
+              <li><a href="{{ url_for('account.services') }}">My services</a></li>
+              <li><a href="{{ url_for('account.discounts') }}">My discounts</a></li>
+              <li role="separator" class="divider"></li>
+              <li><a href="{{ url_for('account.earnings') }}">My earnings</a></li>
+            </ul>
+          </li>
+          {% endif %}
+
+          <li class="dropdown {% if tab == "affiliate" %}active{% endif %}">
+            <a href="{{ url_for('account.affiliate') }}" class="dropdown-toggle">
+              Affiliate
+              <svg class="icon icon-ar-down">
+                <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-down"></use>
+              </svg>
+            </a>
+            <ul class="dropdown-menu">
+              <li><a href="{{ url_for('account.affiliate') }}#?tab=dashboard">Dashboard</a></li>
+              <li><a href="{{ url_for('account.affiliate') }}#?tab=links">Links</a></li>
+              <li><a href="{{ url_for('account.affiliate') }}#?tab=referrals">Referrals</a></li>
+            </ul>
+          </li>
+
+          <li{% if tab == "inbox" %} class="active"{% endif %}><a href="{{ url_for('account.inbox') }}">Inbox</a></li>
+          
+        </ul>
+        {% if not header_hide_add_service %}
+        <ul class="nav navbar-nav navbar-right">
+          {% if g.user.seller_fee_paid %}
+          <li><a href="{{ url_for('account.service_create') }}">ADD SERVICE</a></li>
+          {% else %}
+          <li><a href="{{ url_for('become_seller') }}">BECOME A SELLER</a></li>
+          {% endif %}
+        </ul>
+        {% endif %}
+      </div><!-- /.navbar-collapse -->
+    </div><!-- /.container-fluid -->
+  </nav>
+</div>
+{% endif %}

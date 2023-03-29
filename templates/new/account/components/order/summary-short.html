@@ -1,0 +1,19 @@
+<div class="single_service clearfix">
+  <div class="service_photo">
+    <img src="{{ order.product.get_primary_photo(transform='w_100,h_100') }}" alt="{{ order.title }}" />
+  </div>
+  <div class="ser_des">
+    <h2>{{ order.product.title }}</h2>
+    <p>
+      <span class="total_order"><img src="{{ static_file('images/account/order-icon.png') }}" /> <b>ORDER</b> {{ order.id }}</span>
+      <span class="seller_uname">
+        {% if mode == 'buyer' %}
+        <img src="{{ static_file('images/account/user-icon.png') }}"> <b>PROVIDER</b> {{ order.product.seller.username }}
+        {% else %}
+        <img src="{{ static_file('images/account/user-icon.png') }}"> <b>USER</b> {{ order.buyer.username }}
+        {% endif %}
+      </span>
+    </p>
+  </div>
+  <button class="accepted" v-text="sharedState.extra.order._state_pretty_print" v-if="sharedState.extra.order" v-cloak></button>
+</div>

@@ -1,0 +1,167 @@
+{% extends "new/layout.html" %}
+{% set footer_hide = True %}
+{% set header_hide_elements = True %}
+
+{% block head %}
+  <meta name="robots" content="noindex, nofollow">
+{% endblock %}
+
+{% block title %}{{ product.title }}{% endblock %}
+
+{% block body %}
+<main id="sm-order-payment">
+  <div class="OrderDetails__header">
+    <div class="OrderDetails__header-inner">
+      <div class="OrderDetails__progress-bar">
+        <div class="OrderDetails__progress-bar-step done">
+          <div class="OrderDetails__progress-bar-step-indicator"></div>
+          <div class="OrderDetails__progress-bar-step-label">
+            Order Details
+          </div>
+        </div>
+        <div class="OrderDetails__progress-bar-step done current">
+          <div class="OrderDetails__progress-bar-step-indicator"></div>
+          <div class="OrderDetails__progress-bar-step-label">
+            Review &amp; Pay
+          </div>
+        </div>
+        <div class="OrderDetails__progress-bar-step">
+          <div class="OrderDetails__progress-bar-step-indicator"></div>
+          <div class="OrderDetails__progress-bar-step-label">
+            Submit Requirements &amp; Start Order
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="wrapper">
+    <section class="order-info">
+      <div class="left">
+        <h4>Order Details</h4>
+        <table>
+          <tr>
+            <td>Order ID:</td>
+            <td>{{ order.id }}</td>
+          </tr>
+          <tr>
+            <td>Service Name:</td>
+            <td>I will {{ product.title }}</td>
+          </tr>
+          <tr>
+            <td>Service Provider:</td>
+            <td>{{ product.seller.username }}</td>
+          </tr>
+          <tr>
+            <td>Turnaround:</td>
+            <td>
+              {% if product.delivery_time %}
+                {{ product.delivery_time.days }} day{{ 's' if product.delivery_time.days > 1 else '' }}
+              {% else %}
+                7 days
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td>Service Price:</td>
+            <td>
+              <strong>${{ product_price|format_price }}</strong>
+              {% if order_discount %}<strong>- ${{ order_discount|format_price }}</strong> (discount){% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td>Order fee:</td>
+            <td>${{ order_fee|format_price }}</td>
+          </tr>
+        </table>
+
+        <div class="extras readonly">
+          <h6>Extras added to your order</h6>
+          {% for extra in order_extras %}
+          <label>
+            <span class="checkbox">
+              <input type="checkbox" checked disabled>
+              <svg class="icon icon-checkbox">
+                <use xlink:href="{{ static_file('images/sprite.svg') }}#checkbox"></use>
+              </svg>
+              <svg class="icon icon-checked-solid">
+                <use xlink:href="{{ static_file('images/sprite.svg') }}#checked-solid"></use>
+              </svg>
+            </span>
+            <span class="option">
+              <span class="text">
+                <span>{{ extra.text }}</span>
+                <span class="description">{{ extra.description }}</span>
+              </span>
+              <span class="price">${{ extra.price|format_price }}</span>
+            </span>
+          </label>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="right clearfix">
+        <div class="catalog--list--item">
+          <a class="item-image" v-bind:href="sharedState.extra.product._url">
+            <div class="labels">
+              <span class="label cloud">
+                <svg class="icon icon-download">
+                  <use xlink:href="{{ static_file('images/sprite.svg') }}#download"></use>
+                </svg>
+              </span>
+              <span class="label star">
+                <svg class="icon icon-star">
+                  <use xlink:href="{{ static_file('images/sprite.svg') }}#star"></use>
+                </svg>
+              </span>
+            </div>
+            <div class="favorite" v-if="sharedState.extra.product._is_favorite" v-cloak>
+              <svg class="icon icon-heart">
+                  <use xlink:href="{{ static_file('images/sprite.svg') }}#heart"></use>
+              </svg>
+            </div>
+            <img v-bind:src="sharedState.extra.product._primary_photo_url" alt="">
+            <div class="prices">
+              <div class="old-price price" v-if="sharedState.extra.product.price_offer" v-text="(sharedState.extra.product.price / 100).toFixed(2)"></div>
+              <div class="current-price price" v-text="((sharedState.extra.product.price_offer ? sharedState.extra.product.price_offer : sharedState.extra.product.price) / 100).toFixed(2)"></div>
+            </div>
+          </a>
+          <a class="item-title" v-html="'I will ' + sharedState.extra.product.title" v-bind:href="sharedState.extra.product._url"></a>
+          <div class="item-rating">
+            <span class="rating-stars" v-bind:data-stars="sharedState.extra.product._feedbacks_rating_int"></span>
+          </div>
+          <div class="item-author">
+            <span class="status" v-bind:class="{ online: sharedState.extra.product._seller_is_online, offline: !sharedState.extra.product._seller_is_online }"></span>
+            by <strong v-html="sharedState.extra.product._seller"></strong>
+          </div>
+          <div class="item-tags">
+            <ul>
+              <li v-for="tag in sharedState.extra.product._tags"><span class="tag-label"></span> <span v-html="tag"></span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="order-sumbit" v-cloak>
+      <div class="price">
+        Total:
+        <strong>${{ (order.price + order_fee)|format_price }} USD</strong>
+      </div>
+
+      <div v-if="!success && !error" class="submit-info">
+        <div class="spinner-wrapper">
+          <spinner></spinner>
+        </div>
+        <span>Your order was received and is awaiting payment confirmation...</span>
+      </div>
+      <div v-else>
+        <div class="submit-success" v-if="success" v-text="success"></div>
+        <div class="submit-error" v-if="error" v-text="error"></div>
+
+        <a v-if="error" href="{{ order_url }}" class="btn submit">
+          Repeat your order
+        </a>
+      </div>
+    </section>
+  </div>
+</main>
+{% endblock %}

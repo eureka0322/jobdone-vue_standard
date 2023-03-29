@@ -1,0 +1,75 @@
+.AccountFavourites {
+
+    &__service-remove {
+        display: block;
+        width: 20px;
+        height: 20px;
+        border-radius: 50%;
+        background-color: #000000;
+        opacity: .8;
+        background-size: 10px !important;
+        background-repeat: no-repeat;
+        background-image:  url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABYAAAAWCAYAAADEtGw7AAAACXBIWXMAACE3AAAhNwEzWJ96AAAAjUlEQVQ4y8VV0QrAIAi02H+uT2tfensRNpltKhw7CKS609SqARAG+s2eOqqwfAACYOLC1LnMePC743lPRj6VY7HwGo18yQlvzIh6wlHxzz2VaEKnyuYvnKpsccLFlULlQx3ThYU/UkEpHqXdKBeEcqUpj1BF9JXr9fEhIiPRsUM5BtttURw7I27sxvpMT3+lX9GW6WoUAAAAAElFTkSuQmCC);
+        background-position: 5px 5px;
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        z-index: 10;
+    }
+
+    &__service {
+        display: block;
+        width: 208px;
+        float: left;
+        margin: 15px 10px;
+        position: relative;
+        box-sizing: content-box;
+    }
+
+    &__service-overlay {
+        height: 124px;
+        width: 208px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+    }
+
+    &__service-image {
+        max-width: 100%;
+        max-height: 100%;
+    }
+
+    &__service-price-block {
+        background: rgba(0, 0, 0, 0.35);
+        position: absolute;
+        color: white;
+        padding: 6px 10px;
+        bottom: 0;
+        right: 0;
+        font-size: 20px;
+        font-weight: 300;
+        overflow: hidden;
+
+        del {
+            font-size: 14px;
+            float: right;
+            opacity: .7;
+        }
+    }
+
+    &__service-title {
+        margin-top: 8px;
+        font: 300 16px "Lato", sans-serif;
+        color: #666666;
+    }
+
+    &__service-seller {
+        font: 300 16px "Lato", sans-serif;
+        color: #6bc3ea;
+        cursor: pointer;
+        &:hover {
+            color: #6bc3ea;
+        }
+    }
+}

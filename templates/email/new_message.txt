@@ -1,0 +1,8 @@
+{% extends "email/layout.txt" %}
+
+{% block content %}Dear {{ recipient.username }}!
+
+You've got {% if count > 1 %}{{ count }} {% endif %}new message{% if count > 1 %}s{% endif %} from {{ sender.username }}.
+
+{% if link %}Read messages: {{ link }}{% endif %}
+{% endblock %}

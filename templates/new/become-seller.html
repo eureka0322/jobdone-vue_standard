@@ -1,0 +1,230 @@
+{% extends "new/layout.html" %}
+
+{% block title %}Become a Seller{% endblock %}
+
+{% block body %}
+<main id="sm-become-seller">
+  <div class="header_area in_frinds">
+    <div class="header_bg_wto_thumb"></div>
+    <div class="header_over_content">
+      <div class="hdr_bnr_content text-center about_ys">
+        <h1>Become a Seller</h1>
+        <p>Tell us about yourself</p>
+      </div>
+    </div>
+  </div>
+  <div class="about_ys_area">
+    <div class="container">
+      <div class="row">
+        <div class="sng_inf_sec">
+          <h1>Introduce Yourself</h1>
+
+          <h3>Linked Accounts</h3>
+          <p>Linking to online social networks adds credibility to your profile.</p>
+
+          {% if oauth_error %}
+          <div class="alert alert-danger">{{ oauth_error }}</div>
+          {% endif %}
+
+          <div class="adt_content">
+            {% for account in accounts %}
+              {% if account.connected %}
+              <a href="#" role="button" class="social_btn linkedvr"><span class="glyphicon glyphicon-ok"></span>&nbsp;&nbsp;{{ account.provider_pp }}</a>
+              {% else %}
+              <a href="{{ url_for('auth.oauth_authorize', provider=account.provider, mode='become_seller') }}" role="button" class="social_btn" onclick="window.open(this.href, 'popup', 'width=600,height=600');" target="popup"> {{ account.provider_pp }}</a>
+              {% endif %}
+            {% endfor %}
+            
+            {# <!-- <a role="button" class="social_btn"><i class="fa fa-twitter"></i> Twitter</a>
+            <a role="button" class="social_btn"><i class="fa fa-linkedin"></i> Linked In</a>
+            <a role="button" class="social_btn"><i class="fa fa-stack-overflow"></i> Stack <b>overflow</b></a>
+            <a role="button" class="social_btn"><i class="fa fa-dribbble"></i> Dribble</a> --> #}
+          </div>
+        </div>
+
+        <div class="sng_inf_sec">
+          <h3>Profile Photo</h3>
+          <p>Adding your photo will also increase credibility</p>
+
+          <div class="profile_photo">
+            <img src="{{ g.user.get_photo_url('c_fill,h_150,w_150,c_thumb,g_face,bo_2px_solid_white,r_max/w_150') }}" v-if="!newPhotoURL" />
+            <img v-bind:src="newPhotoURL" v-else />
+            <span><file-upload title="CHANGE YOUR PICTURE" name="photo" :drop="false" post-action="/api/account/settings/photo" :multiple="false" :file="photoUpload" :events="photoUploadEvents">
+              </file-upload></span>
+          </div>
+        </div>
+        
+
+        {# <!-- <div class="sng_inf_sec">
+          <h3>Portfoliot</h3>
+          <p>Do you have a portfolio or a Website?</p>
+          <div class="table_content_abys">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>DESCRIPTION</th>
+                  <th>URL</th>
+                  <th><button class="add_nw">ADD NEW</button></th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>My Website</td>
+                  <td>http://sebas.portafoilio.com</td>
+                  <td><i class="fa fa-trash pull-right dlt_rwd"></i></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div> --> #}
+
+        <div class="sng_inf_sec">
+          <h3>Languages</h3>
+          <p>What languages do you speak?</p>
+          <div class="table_content_abys">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>LANGUAGE</th>
+                  <th>LEVEL</th>
+                  <th><button class="add_nw" @click="showAddLanguage = true">ADD NEW</button></th>
+                </tr>
+              </thead>
+              <tbody v-cloak>
+                <tr v-if="showAddLanguage">
+                  <td>
+                    <v-select
+                      v-model="addLanguageSelected"
+                      :options="addLanguageOptions"
+                      v-bind:placeholder="addLanguageLoading ? 'Loading...' : 'Select language'"
+                      :loading="addLanguageLoading"
+                      label="1">
+                    </v-select>
+                  </td>
+                  <td>
+                    <v-select
+                      v-model="addLanguageLevelSelected"
+                      :options="addLanguageLevelOptions"
+                      :loading="addLanguageLoading"
+                      v-bind:placeholder="addLanguageLoading ? 'Loading...' : 'Select level'"
+                      label="1">
+                    </v-select>
+                  </td>
+                  <td>
+                    <button class="add_nw" @click="handleAddLanguage" v-bind:disabled="!addLanguageSelected || !addLanguageLevelSelected">ADD</button>
+                    <button class="cancel_btn" @click="showAddLanguage = false">CANCEL</button>
+                    <div class="text-danger" v-if="addLanguageError" v-text="addLanguageError"></div>
+                  </td>
+                </tr>
+                <tr v-for="(item, idx) in languages">
+                  <td v-text="item.title"></td>
+                  <td v-text="item.level"></td>
+                  <td><button class="remove_btn" @click="handleLanguageItemRemove(item, idx)">REMOVE</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="sng_inf_sec">
+          <h3>Skills</h3>
+          <p>Do you have any skills?</p>
+          <div class="table_content_abys">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>SKILL</th>
+                  <th>LEVEL</th>
+                  <th><button class="add_nw" @click="showAddSkill = true">ADD NEW</button></th>
+                </tr>
+              </thead>
+              <tbody v-cloak>
+                <tr v-if="showAddSkill">
+                  <td>
+                    <v-select
+                      v-model="addSkillSelected"
+                      :options="addSkillOptions"
+                      v-bind:placeholder="addSkillLoading ? 'Loading...' : 'Select skill'"
+                      :loading="addSkillLoading"
+                      label="1">
+                    </v-select>
+                  </td>
+                  <td>
+                    <v-select
+                      v-model="addSkillLevelSelected"
+                      :options="addSkillLevelOptions"
+                      :loading="addSkillLoading"
+                      v-bind:placeholder="addSkillLoading ? 'Loading...' : 'Select level'"
+                      label="1">
+                    </v-select>
+                  </td>
+                  <td>
+                    <button class="add_nw" @click="handleAddSkill" v-bind:disabled="!addSkillSelected || !addSkillLevelSelected">ADD</button>
+                    <button class="cancel_btn" @click="showAddSkill = false">CANCEL</button>
+                    <div class="text-danger" v-if="addSkillError" v-text="addSkillError"></div>
+                  </td>
+                </tr>
+                <tr v-for="(item, idx) in skills">
+                  <td v-text="item.title"></td>
+                  <td v-text="item.level"></td>
+                  <td><button class="remove_btn" @click="handleSkillItemRemove(item, idx)">REMOVE</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="sng_inf_sec">
+          <h3>Description</h3>
+          <p>Tell us more about yourself. Buyers are also interested in learning about you as a person.</p>
+
+          <div class="form-group" v-bind:class="{ 'has-error': validationErrors.description }">
+            <textarea name="description" class="form-control" cols="12" rows="5" maxlength="1000" v-model="sharedState.extra.description" @focus="delete validationErrors.description"></textarea>
+            <p>Description between 120-1000 characters</p>
+          </div>
+        </div>
+
+        <div class="sng_inf_sec">
+          <h3>Phone Number</h3>
+          <p>In order to verify your account we need your phone number. In case you are experiencing some troubles with verifying your mobile phone number, you have an option to link your Facebook account in order to bypass this check</p>
+
+          <div class="phone_number form-inline" v-cloak>
+            <div class="alert alert-danger" v-if="phoneNumberError" v-text="phoneNumberError" v-cloak></div>
+
+            <select class="form-control" v-model="phoneNumberCountry" v-bind:disabled="verifyingPhoneNumber || loading">
+              <option disabled value="-1">Select Country</option>
+              {% for country in countries %}
+                <option value="{{ country[0] }},{{ country[2] }}">{{ country[1] }} ({{ country[2] }})</option>
+              {% endfor %}
+            </select>
+
+            <div class="form-group" v-bind:class="{ 'has-error': validationErrors.phone_number }">
+              <input type="text" class="form-control" v-model="phoneNumber" v-bind:disabled="verifyingPhoneNumber" placeholder="Your phone number" @focus="delete validationErrors.phone_number" />
+
+              <input type="text" class="form-control code" v-model="phoneNumberCode" v-bind:disabled="loading" v-if="verifyingPhoneNumberCode && !verifyingPhoneNumberCompleted" placeholder="Security code" />
+
+              <button class="btn btn-primary" v-bind:disabled="!phoneNumberValid || loading" v-if="!verifyingPhoneNumberCompleted" @click="handleVerifyClick">Verify phone number</button>
+              <button class="btn btn-success" disabled v-else>Phone number verified</button>
+
+              <button class="btn btn-primary" v-bind:disabled="!verifyingPhoneNumberResend || loading" v-if="!verifyingPhoneNumberCompleted && verifyingPhoneNumberCode" @click="handleResendClick">Resend code (in 2 minutes)</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="create_fs text-center">
+          <div class="alert alert-danger" v-if="error" v-cloak>
+            <div v-text="error"></div>
+            <ul><li v-for="error in validationErrorsList" v-text="error"></li></ul>
+          </div>
+
+          {% if not can_pay %}
+          <div class="alert alert-warning">We require one-time payment of ${{ seller_fee_pp }} to be paid in order to activate your account</div>
+          {% endif %}
+
+          <button type="button" {% if not can_pay %} class="disabled" disabled{% endif %} @click="handleContinueClick" v-bind:disabled="loading" v-bind:class="{ disabled: loading }">CONTINUE &amp; START CREATE YOUR FIRST SERVICE</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}

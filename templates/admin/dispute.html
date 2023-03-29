@@ -1,0 +1,84 @@
+{% extends "admin/layout.html" %}
+{% set conversation = dispute.conversation %}
+{% set product = dispute.order.product %}
+
+{% block admin_title %}View dispute{% endblock %}
+
+{% block admin_body %}
+
+<div class="panel-body">
+    <blockquote>
+      <p>Dispute on the order #{{ dispute.order_id }}</p>
+    </blockquote>
+
+    <div class="clearfix" style="margin-bottom: 20px">
+    {% with photo = product.product_photos.first() %}
+      {% if photo %}
+        <img src="{{ static_file(photo.get_thumb_url()) }}" class="img-thumbnail pull-left" style="width: 80px; margin-right: 10px;" />
+      {% endif %}
+    {% endwith %}
+    <p class="pull-left lead">{{ product.title }}</p>
+    </div>
+
+    <small>Sold by <a href="{{ url_for('admin.user', user_id=product.seller_id) }}">{{ product.seller.username }}</a></small><br />
+    <small>Opened on {{ dispute.created_on.strftime('%Y-%m-%d %H:%m') }} by <a href="{{ url_for('admin.user', user_id=dispute.order.buyer_id) }}">{{ dispute.order.buyer.username }}</a></small><br />
+
+    {% if not dispute.is_closed %}
+        <a class="btn btn-success" href="{{ url_for('admin.dispute_close', dispute_id=dispute.id) }}">Close dispute and release seller's money</a>
+        <a class="btn btn-danger" href="{{ url_for('admin.dispute_moneyback', dispute_id=dispute.id) }}">Close dispute and return money back to the buyer</a>
+    {% else %}
+        <strong>
+            {% if dispute.resolution == 'RESOLVED_BY_ADMIN' %}
+            Order {% if dispute.order.state == dispute.order.CLOSED_CANCELLED %}annulated by the admin{% else %}completed by the admin{% endif %}
+            {% else %}
+            Order {% if dispute.order.state == dispute.order.CLOSED_CANCELLED %}annulated by the seller{% else %}completed by the buyer{% endif %}
+            {% endif %}
+        </strong>
+    {% endif %}
+</div>
+
+<ul class="list-group" id="lst-messages">
+</ul>
+
+<ul class="list-group">
+    <li class="list-group-item">
+        <textarea id="txt-new-message" cols="50" rows="5"></textarea><br />
+        <button id="btn-new-message" class="btn btn-primary">Send</button>
+    </li>
+</ul>
+
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+    $(function() {
+        function appendMessage(msg) {
+            var text = msg.text.replace(/\n+/g, '<br />');
+            $('#lst-messages').append('<li class="list-group-item">' + text + '<br /><small>By ' + msg.user + ' on ' + msg.sent_on + '</small></li>');
+        }
+
+        $('#btn-new-message').click(function() {
+            var text = $('#txt-new-message').val();
+            if (!text) return;
+
+            $.ajax({
+                'url': '{{ url_for('admin.messages_json', conversation_id=conversation.id) }}',
+                'method': 'POST',
+                'data': {
+                    'text': text
+                }
+            }).done(function(data) {
+                $('#txt-new-message').val('');
+                appendMessage(data);
+            });
+        });
+
+        $.ajax({
+            'url': '{{ url_for('admin.messages_json', conversation_id=conversation.id) }}',
+            'method': 'GET'
+        }).done(function(data, d2) {
+            data.forEach(appendMessage);
+        });
+    });
+</script>
+{% endblock %}

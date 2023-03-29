@@ -1,0 +1,6 @@
+{% extends "email/layout.txt" %}
+
+{% block content %}{% for field in fields %}{{ field.title }}:
+{{ field.content }}
+
+{% endfor %}{% endblock %}

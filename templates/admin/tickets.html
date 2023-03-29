@@ -1,0 +1,27 @@
+{% extends "admin/layout.html" %}
+{% block admin_title %}Tickets{% endblock %}
+
+{% block admin_body %}
+
+<table class="table table-condensed">
+  <thead>
+    <tr>
+      <th>Sender</th>
+      <th>Status</th>
+      <th>Ticket</th>
+      <th>Sent on</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for ticket in tickets %}
+    <tr class="{% if not ticket.is_closed %}info{% endif %}">
+      <td>{{ ticket.get_user().username }}</td>
+      <td>{% if ticket.is_closed %}Closed{% else %}Open{% endif %}</td>
+      <td><a href="{{ url_for('admin.ticket', ticket_id=ticket.id) }}">{{ ticket.text[0:30] }}...</a></td>
+      <td>{{ ticket.created_on }}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

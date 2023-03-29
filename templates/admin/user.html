@@ -1,0 +1,144 @@
+ {% extends "admin/layout.html" %}
+
+{% block admin_title %}{{ user.username }}{% endblock %}
+
+{% block admin_body %}
+
+<div class="panel-body">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+          <p class="alert alert-info">{{ message }}</p>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+	<a class="btn btn-primary" href="{{ url_for('user', username=user.username) }}">View public page</a>
+    <a class="btn btn-default" href="{{ url_for('admin.user_change_email', user_id=user.id) }}">Change E-mail</a>
+    <a class="btn btn-default" href="{{ url_for('admin.user_deposit', user_id=user.id) }}">Deposit funds</a>
+	{% if user.is_disabled %}
+		<a class="btn btn-success" href="{{ url_for('admin.user_activate', user_id=user.id) }}">Enable user</a>
+	{% else %}
+		<a class="btn btn-danger" href="{{ url_for('admin.user_deactivate', user_id=user.id) }}">Disable user</a>
+	{% endif %}
+
+	{% if not user.is_verified %}
+		<a class="btn btn-success" href="{{ url_for('admin.user_verify_email', user_id=user.id) }}">Verify Email</a>
+	{% endif %}
+	
+	{% if not user.seller_fee_paid %}
+		<a class="btn btn-success" href="{{ url_for('admin.user_enable_seller', user_id=user.id) }}">Enable Sell</a>
+    {% else %}
+        <a class="btn btn-danger" href="{{ url_for('admin.user_disable_seller', user_id=user.id) }}">Disable Sell</a>
+	{% endif %}
+
+    <a class="btn btn-danger" data-toggle="modal" data-target="#changePasswordModal">Change Password</a>
+	<br /><br />
+
+    <label>Username:</label><br />
+    {{ user.username }}<br /><br />
+
+    <label>E-mail:</label><br />
+    {{ user.email }}<br /><br />
+
+    <label>Country:</label><br />
+    {{ user.get_country_pp() }}<br /><br />
+
+    {% if user.last_logged_on %}
+    <label>Last logged on:</label><br />
+    {{ user.last_logged_on.strftime('%Y-%m-%d %H:%m') }}<br /><br />
+    {% endif %}
+
+    <label>Registered on:</label><br />
+    {{ user.registered_on.strftime('%Y-%m-%d %H:%m') }}<br /><br />
+
+    <label>Credit:</label><br />
+    {{ user.get_credit_pp() }}<br /><br />
+
+    {% if user.private_description %}
+    <label>Private description:</label><br />
+    {{ user.private_description|nl2br }}<br /><br />
+    {% endif %}
+
+    <label>Total products on market:</label>
+    {{ user.get_active_products_count() }}<br /><br />
+
+    {% if user.is_deleted %}
+    <span class="label label-danger">Deleted</span><br />
+    <label>Reason:</label> {{ user.get_meta_data('delete_reason') }}<br />
+    <label>Notes:</label> {{ user.get_meta_data('delete_notes')|nl2br }}<br />
+    {% endif %}
+</div>
+
+<div class="modal fade" id="changePasswordModal">
+<div class="modal-dialog">
+{% with form = password_form %}
+<form action="{{ url_for('admin.user_change_password', user_id=user.id) }}" method="POST" class="form-horizontal">
+<div class="modal-content">
+  <div class="modal-header">
+    <h4 class="modal-title">Change password</h4>
+  </div>
+  <div class="modal-body">
+    {% if last_error %}<p class="alert alert-danger">{{ last_error }}</p>{% endif %}
+    {{ form.csrf_token }}
+
+    <div class="control-group">
+      <div class="controls">
+        <label for="password">{{ form.password.label }}</label><br />
+        {{ form.password(class='input-xlarge') }}
+      </div>
+    </div>
+
+    <div class="control-group">
+      <div class="controls">
+        <label for="password2">{{ form.password2.label }}</label><br />
+        {{ form.password2(class='input-xlarge') }}
+      </div>
+    </div>
+
+    </form>
+  </div>
+  <div class="modal-footer">
+    {% if last_error_type %}
+      <a class="btn btn-default" href="{{ url_for('admin.user', user_id=user.id) }}">Close</a>
+    {% else %}
+      <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+    {% endif %}
+    <button type="submit" class="btn btn-primary">Change password</button>
+  </div>
+</div><!-- /.modal-content -->
+{% endwith %}
+</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->  
+
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript" src="{{ static_file('js/jquery-1.11.2.js') }}"></script>
+<script type="text/javascript" src="{{ static_file('js/bootstrap.min.js') }}"></script>
+
+{% if last_error_type == 'change_password' %}
+<script type="text/javascript">
+  $(function() {
+    $('#changePasswordModal').modal('show');
+  });
+</script>
+{% endif %}
+
+{% if last_error_type == 'toggle_premium' %}
+<script type="text/javascript">
+  $(function() {
+    $('#togglePremiumMembershipModal').modal('show');
+  });
+</script>
+{% endif %}
+
+{% if last_error_type == 'toggle_seller' %}
+<script type="text/javascript">
+  $(function() {
+    $('#toggleSellerModal').modal('show');
+  });
+</script>
+{% endif %}
+
+{% endblock %}

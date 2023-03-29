@@ -1,0 +1,75 @@
+{% set tab = mode %}
+{% set header_hide_navigation_bar = 'true' %}
+
+{% extends "new/account/layout.html" %}
+
+{% block body %}
+<div id="sm-account-order-dispute">
+  <div class="content_area">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-9">
+          {% include "new/account/components/order/summary-short.html" %}
+
+          <div class="order_req_ar text-center">
+            <img src="{{ static_file('images/account/write-req.png') }}" />
+            <h3>RESOLUTION CENTER</h3>
+            <p>Please describe the problem you are experiencing with this order</p>
+          </div>
+          
+          <div class="project_dtails margin_btm_30 padding_15" v-cloak>
+            <!-- <div class="order_req_form">
+              <div class="slr_msg_response">
+                <div>
+                  <textarea class="rs_client" placeholder="type your answer here" maxlength="1000" v-model="dispute.text"></textarea>
+                  <p><span v-text="dispute.text.length"></span> / 1000</p>
+                </div>
+              </div>
+            </div> -->
+
+            <div class="resolution_list" v-if="step === 1">
+              <div class="client_qus">
+                <h4>What kind of the problem you are experiencing?</h4>
+              </div>
+
+              <label v-for="item in disputeKinds"><input type="radio" v-model="kind" v-bind:value="item" /> <span v-text="item.label"></span></label>
+            </div>
+
+            <div class="resolution_list" v-else>
+              <div class="client_qus">
+                <h4>What kind of the problem you are experiencing?</h4>
+              </div>
+
+              <label><input type="radio" checked /> <span v-text="kind.label"></span></label>
+
+              <div class="client_qus">
+                <h4>Please select resolution and provide an additional description to your problem</h4>
+              </div>
+
+              <label v-if="sharedState.extra.mode === 'buyer'"><input type="radio" checked /> Ask the seller to cancel this order</label>
+              <label v-else><input type="radio" checked /> Ask the buyer to cancel this order</label>
+
+              <textarea class="rs_client" placeholder="type an additional info regarding your issue" maxlength="1000" v-model="dispute.text"></textarea>
+              <p><span v-text="dispute.text.length"></span> / 1000</p>
+            </div>
+  
+            <div class="alert alert-danger" v-if="error" v-text="error" v-cloak></div>
+
+            <div class="text-center clearfix">
+              <a href="{{ url_for('account.order', order_id=order.id) }}" class="btn btn-primary" v-bind:disabled="loading" style="margin-right: 10px;">CANCEL</a>
+              <button v-if="step === 1" class="btn btn-primary" v-bind:disabled="!kind" @click="step = 2">NEXT</button>
+              <button v-else class="btn btn-danger" v-bind:disabled="loading || sent" @click="handleSendClick">PROCEED</button>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3" v-if="sharedState.extra.order && !sent" v-cloak>
+          <div class="order_issue">
+            <p>If you are not sure you can still return back without any modifications</p>
+            <a href="{{ url_for('account.order', order_id=order.id) }}" class="btn btn-primary" v-bind:disabled="loading">CANCEL</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

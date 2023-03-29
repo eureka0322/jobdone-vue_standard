@@ -1,0 +1,852 @@
+{% set tab = 'seller' %}
+{% set header_hide_add_service = 'true' %}
+{% set header_hide_navigation_bar = 'true' %}
+
+{% extends "new/account/layout.html" %}
+
+{% block body %}
+<main class="container" id="sm-account-service">
+  <nav class="AccountServiceApp__navbar navbar navbar-default noline" ref="navbar" :class="{ white: editMode }" v-cloak>
+    <div class="ss">
+      <div class="in" :class="{ 'add-service-steps-count AccountServiceApp__add-mode': !editMode, 'add-service-steps AccountServiceApp__edit-mode': editMode }">
+        <ul class="AccountServiceApp__navbar-steps nav navbar-nav steps">
+          <li class="AccountServiceApp__navbar-step"
+              :class="{ active: tab === 0, done: tab > 0 }">
+            <a href="#"
+               class="AccountServiceApp__navbar-step-link"
+               @click.prevent="handleTabChange(0)">
+              <span class="stepcounter">1</span> OVERVIEW</a>
+          </li>
+          <li class="AccountServiceApp__navbar-step"
+              :class="{ active: tab === 1, done: tab > 1, notallowed: allowedTab < 1 }">
+            <a href="#"
+               class="AccountServiceApp__navbar-step-link"
+               @click.prevent="handleTabChange(1)">
+              <span class="stepcounter">2</span> PRICING</a>
+          </li>
+          <li class="AccountServiceApp__navbar-step"
+              :class="{ active: tab === 2, done: tab > 2, notallowed: allowedTab < 2 }">
+            <a href="#"
+               class="AccountServiceApp__navbar-step-link"
+               @click.prevent="handleTabChange(2)">
+              <span class="stepcounter">3</span> REQUIREMENTS</a>
+          </li>
+          <li class="AccountServiceApp__navbar-step"
+              :class="{ active: tab === 3, done: tab > 3, notallowed: allowedTab < 3 }">
+            <a href="#"
+               class="AccountServiceApp__navbar-step-link"
+               @click.prevent="handleTabChange(3)">
+              <span class="stepcounter">4</span> GALLERY</a>
+          </li>
+          <li class="AccountServiceApp__navbar-step"
+              :class="{ active: tab === 4, done: tab > 4, notallowed: allowedTab < 4 }">
+            <a href="#"
+               class="AccountServiceApp__navbar-step-link"
+               @click.prevent="handleTabChange(4)">
+              <span class="stepcounter">5</span> FEATURES</a>
+          </li>
+          <li class="AccountServiceApp__navbar-step"
+              :class="{ active: tab >= 5, done: tab > 5, notallowed: allowedTab < 5 }">
+            <a href="#"
+               class="AccountServiceApp__navbar-step-link"
+               @click.prevent="handleTabChange(5)">
+              <span class="stepcounter">6</span> PUBLISH</a>
+          </li>
+        </ul>
+        <ul class="nav navbar-nav navbar-right actions">
+          <li v-if="editMode && tab < 4"><button type="button" class="btn btn-primary" :disabled="isLoading" @click.prevent="handleSaveClick">SAVE</button></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <div class="row" v-if="tab === 0" v-cloak>
+    <div class="col-md-9">
+      <div class="design-box inner addservice">
+        <div class="title-fields">
+          <form class="form-horizontal">
+            <div class="form-group" v-bind:class="{ 'has-error': errors.fields.title }">
+              <label class="control-label col-sm-2" for="txtTitle">TITLE:</label>
+              <div class="col-sm-10">
+                <div class="title-wrapper">
+                  <input v-model="fields.title" type="text" class="form-control" id="txtTitle" placeholder="do something" @focus="openTooltip('title', $event)" @blur="tooltip = null" />
+                  <span class="info-form">min. 15 characters</span>
+                </div>
+              </div>
+            </div>
+            <div class="form-group" v-bind:class="{ 'has-error': errors.fields.category_id }">
+              <label for="sel1" class="control-label col-sm-2" for="selectCategory">CATEGORY</label>
+              <div class="col-sm-5">
+                <select v-model="topCategory" class="form-control selectpicker" id="selectTopCategory" title="Select category" @change="handleTopCategoryChange" @focus="openTooltip('category_id', $event)" @blur="tooltip = null">
+                  <option v-bind:value="category.id" v-for="category in sharedState.extra.categories" v-text="category.title"></option>
+                </select>
+              </div>
+              <div class="col-sm-5">
+                <select v-model="fields.category_id" class="form-control selectpicker" id="selectCategory" title="Select subcategory" v-if="topCategory" @focus="openTooltip('category_id', $event)" @blur="tooltip = null">
+                  <option value="-1" disabled>Select subcategory</option>
+                  <option v-bind:value="category.id" v-for="category in topCategoryMapping[topCategory]" v-text="category.title"></option>
+                </select>
+              </div>
+            </div>
+            <div class="form-group" v-bind:class="{ 'has-error': errors.fields.tags }">
+              <label class="control-label col-sm-2" for="txtTags">SEARCH TAGS</label>
+              <div class="col-sm-10">
+                <v-select
+                  v-model="tags"
+                  multiple
+                  taggable
+                  :debounce="250"
+                  :on-search="fetchSelectTags"
+                  :on-change="handleTagsChange"
+                  :options="selectTags"
+                  placeholder="Search for tags or create your own"
+                  label="title">
+                  <div slot="no-options">Start typing to search</div>
+                </v-select>
+                <span class="info-form">up to 5 tags</span>
+              </div>
+            </div>
+            <hr>
+          </form>
+        </div>
+        <div class="description-fields">
+          <form>
+            <h2>Description</h2>
+            <p>Provide detailed description of your service for your clients</p>
+            <div class="form-group" v-bind:class="{ 'has-error': errors.fields.description }">
+              <textarea ref="textarea" cols="12" class="form-control" v-model="fields.description"></textarea>
+              <span class="info-form pull-left">min. 150 words, max. 5000 words, markdown is supported</span>
+              <span class="info-form"><span v-text="descriptionWords"></span> words</span>
+
+              <span v-if="descriptionWarning" class="warning">HTML tags are not supported and displayed as is</span>
+              <span v-if="descriptionBlockWordError.domain || descriptionBlockWordError.email || descriptionBlockWordError.phone || descriptionBlockWordError.skype"><br/>Reminder: Communicating with other users outside of Jobdone is not permitted. See our Terms of Service for more info.</span>
+            </div>
+          </form>
+        </div>
+
+        <hr>
+        <div class="add-faq-description">
+          <h2>Frequently Asked Questions</h2>
+          <p>Provide most common questions related to your service and answers on them</p>
+
+          <button type="button" class="btn btn-default pull-left" @click="showFaqEditor = true" v-if="!showFaqEditor">ADD QUESTION</button>
+
+          <div v-if="showFaqEditor">
+            <div class="form-group">
+              <input v-model="newFaqItem.q" type="text" class="form-control" id="faq-question" placeholder="Add a question">
+            </div>
+            <div class="form-group">
+              <textarea v-model="newFaqItem.a" cols="30" rows="5" class="form-control" placeholder="Add an answer"></textarea>
+            </div>
+
+            <div class="alert alert-danger" v-if="newFaqItemError">Please fill in both question and answer fields</div>
+
+            <div class="text-right">
+              <button type="button" class="btn" @click="handleQuestionDiscard">CANCEL</button>
+              <button type="button" class="btn btn-primary" @click="handleQuestionAdd">ADD QUESTION</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="AccountServiceApp__expandable-list">
+          <div class="AccountServiceApp__expandable-element" v-for="(faq, idx) in faqs">
+            <div class="AccountServiceApp__expandable-element-header">
+              <div class="AccountServiceApp__expandable-element-title" v-text="faq.q"></div>
+              <div type="button"
+                class="AccountServiceApp__expandable-element-remove"
+                @click="handleQuestionRemove(idx)"><span>&times;</span>
+              </div>
+              <div class="AccountServiceApp__expandable-element-toggle"
+                :class="{'active': faqExpanded === idx}"
+                @click="toggleExpanded('faqExpanded', idx)">
+                <svg class="icon icon-ar-down">
+                  <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-down"></use>
+                </svg>
+              </div>
+              <div class="AccountServiceApp__expandable-element-draggable"></div>
+            </div>
+            <transition name="fade-in">
+              <div class="AccountServiceApp__expandable-element-body"
+                v-if="faqExpanded === idx"
+                v-text="faq.a">
+              </div>
+            </transition>
+          </div>
+        </div>
+
+        <hr>
+        <div>
+          <h2>Private Service</h2>
+          <p>Private services don't appear in search results and available only to those who are given an unique link</p>
+
+          <div class="row">
+            <fieldset class="col-sm-4">
+              <label class="switch-light">
+                <input type="checkbox" v-model="fields.is_private" v-bind:disabled="id" />
+
+                <span class="well">
+                  <span>Public</span>
+                  <span>Private</span>
+                  <a class="btn btn-primary"></a>
+                </span>
+              </label>
+            </fieldset>
+          </div>
+        </div>
+      </div>
+      <div class="save-actions">
+        <ul class="nav navbar-nav navbar-right">
+          <li><a href="#" class="btn btn-primary" v-bind:disabled="isLoading" @click.prevent="handleSaveClick">SAVE &amp; CONTINUE</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="col-md-3 ads" v-bind:class="{ errDesc: !(errors.fields.title || errors.fields.category_id || errors.fields.tags) && errors.fields.description }">
+      <div class="error" v-if="errors.general">
+        <span class="arrow-top" v-if="editMode"></span>
+        <span class="arrow-left" v-else></span>
+        <p v-text="errors.general"></p>
+        <ul v-if="errors.fields">
+          <li v-if="errors.fields.title">Title must be between 15 and 80 characters long</li>
+          <li v-if="errors.fields.category_id">Select category</li>
+          <li v-if="errors.fields.tags">Select at least one tag</li>
+          <li v-if="errors.fields.description">Description must contain at least 150 words and at most 5000 words</li>
+          <li v-if="errors.fields.description_skype">Description may not contain an skype id</li>
+          <li v-if="errors.fields.description_email">Description may not contain an email address</li>
+          <li v-if="errors.fields.description_phone">Description may not contain an phone number</li>
+          <li v-if="errors.fields.description_domain">External links are not allowed</li>
+        </ul>
+      </div>
+
+      <div class="add" v-if="!errors.general && !success && tooltip" v-bind:style="{ marginTop: tooltipTop + 'px' }">
+        <span class="arrow-left"></span>
+        <h4 v-text="tooltip.title"></h4>
+        <p v-text="tooltip.desc"></p>
+      </div>
+
+      <div class="add" v-if="editMode && !errors.general && success">
+        <span class="arrow-top"></span>
+        <h4>Successfully Saved</h4>
+        <p>Your service has been successfully updated. Preview it here:<br /><br /><a v-bind:href="success" v-text="success" target="_blank"></a></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" v-if="tab === 1" v-cloak>
+    <div class="col-md-9">
+      <div class="design-box inner addservice">
+        <div class="title-fields">
+          <form class="form-horizontal">
+            <div class="form-group" v-bind:class="{ 'has-error': errors.fields.price }">
+              <label class="control-label col-sm-2" for="email">PRICE</label>
+              <div class="col-sm-2">
+                <input v-model="fields.price" type="text" class="form-control" placeholder="0.00" @focus="openTooltip('price', $event)" @blur="tooltip = null" />
+              </div>
+              <div class="col-sm-2">
+                <select class="form-control" @focus="openTooltip('price', $event)" @blur="tooltip = null">
+                  <option value="USD">USD</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group" v-bind:class="{ 'has-error': errors.fields.delivery_time }">
+              <label class="control-label col-sm-2" for="email">DELIVERY TIME</label>
+              <div class="col-sm-2">
+                <div class="delivery-time-wrapper">
+                  <input v-model="fields.delivery_time" type="text" class="form-control" placeholder="0" @focus="openTooltip('delivery_time', $event)" @blur="tooltip = null" />
+                </div>
+              </div>
+            </div>
+
+            <div class="form-group" v-bind:class="{ 'has-error': errors.fields.revision_count }">
+              <label class="control-label col-sm-2" for="email">REVISION COUNT</label>
+              <div class="col-sm-2">
+                <input v-model="fields.revision_count" type="text" class="form-control" placeholder="0" @focus="openTooltip('revision_count', $event)" @blur="tooltip = null" />
+              </div>
+            </div>
+            <hr>
+          </form>
+        </div>
+
+        <div class="AccountServiceApp__extras-fields extras-fields">
+          <h2>Extras</h2>
+          <p>Describe extra services for the clients who order your service, such as faster delivery</p>
+
+          <button type="button"
+            class="AccountServiceApp__add-extra btn btn-primary pull-left"
+            @click="showExtraEditor = true"
+            v-if="!showExtraEditor">
+            ADD EXTRA
+          </button>
+
+          <div v-if="showExtraEditor">
+            <div class="checkbox">
+              <div class="custom extra">
+                <div class="row">
+                  <label class="control-label col-sm-2" for="txtTitle">Title</label>
+                  <div class="form-group col-sm-4">
+                    <input v-model="newExtra.text" type="text" class="form-control" id="txtTitle">
+                  </div>
+                  <div class="col-sm-6">
+                    <div class="recommended">
+                      <h5>RECOMMENDED</h5>
+                      <p>MAX 20 CHARACTERS</p>
+                    </div>
+                  </div>
+                </div>
+                <div class="row">
+                  <label class="control-label col-sm-2" for="txtDescription">Description</label>
+                  <div class="form-group col-sm-10">
+                    <input v-model="newExtra.description" type="text" class="form-control" id="txtDescription">
+                  </div>
+                </div>
+                <div class="row">
+                  <label class="control-label col-sm-2" for="moneybudg">For an extra</label>
+                  <div class="form-group col-sm-2">
+                    <input v-model="newExtra.price" type="text" class="form-control" placeholder="0.00">
+                  </div>
+                  <div class="col-sm-2">
+                    <select class="form-control">
+                      <option value="USD">USD</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="alert alert-danger" v-if="newExtraError">Title and price are required fields</div>
+
+            <div class="pull-right">
+              <button type="button" class="btn" @click="handleExtraDiscard">CANCEL</button>
+              <button type="button" class="btn btn-primary" @click="handleExtraAdd">ADD EXTRA</button>
+            </div>
+          </div>
+
+          <div class="AccountServiceApp__expandable-list">
+            <div class="AccountServiceApp__expandable-element" v-for="(extra, idx) in extras">
+              <div class="AccountServiceApp__expandable-element-header">
+                <div class="AccountServiceApp__expandable-element-title">
+                  <span v-text="extra.text"></span> (<span v-text="(extra.price / 100).toFixed(2)"></span> USD)
+                </div>
+                <div type="button"
+                     class="AccountServiceApp__expandable-element-remove"
+                     @click="handleExtraRemove(idx)"><span>&times;</span>
+                </div>
+                <div class="AccountServiceApp__expandable-element-toggle"
+                     v-if="extra.description"
+                     :class="{'active': extraExpanded === idx}"
+                     @click="toggleExpanded('extraExpanded', idx)">
+                  <svg class="icon icon-ar-down">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-down"></use>
+                  </svg>
+                </div>
+                <div class="AccountServiceApp__expandable-element-draggable"></div>
+              </div>
+              <transition name="fade-in">
+                <div class="AccountServiceApp__expandable-element-body"
+                     v-if="extraExpanded === idx"
+                     v-text="extra.description">
+                </div>
+              </transition>
+            </div>
+          </div>
+
+          {# <!-- <div class="border-box">
+            <div class="checkbox">
+              <label><input type="checkbox" checked value="">Extra Fast Delivery</label>
+              <div class="innercontent">
+                <div class="row">
+                  <div class="col-sm-3 title"><p>Basic</p></div>
+                  <div class="col-sm-9">
+                  <form class="form-inline">
+                    <div class="form-group">
+                      <label for="deliveronly">I’ll deliver in only</label>
+                      <select name="" class="form-control" id="deliveronly">
+                        <option value="" disabled selected>- select -</option>
+                        <option value="3 Days">3 days</option>
+                      </select>
+                    </div>
+                    <div class="form-group">
+                      <label for="plus">for an extra</label>
+                      <select name="" class="form-control" id="plus">
+                        <option value="$5">$ 5</option>
+                      </select>
+                    </div>
+                  </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="checkbox">
+              <label><input type="checkbox" value="">Additional Revision</label>
+            </div>
+            <div class="checkbox">
+              <label><input type="checkbox" value="">Include Source Sode</label>
+            </div>
+            <div class="checkbox">
+              <label><input type="checkbox" value="">Stock Photos</label>
+            </div>
+            <div class="checkbox">
+              <label><input type="checkbox" value="">Custom</label>
+              <div class="custom extra">
+                <div class="row">
+                  <label class="control-label col-sm-2" for="Title">Title</label>
+                  <div class="form-group col-sm-4">
+                    <input type="text" class="form-control" id="Title" placeholder="">
+                  </div>
+                  <div class="col-sm-6">
+                    <ad class="recommended">
+                      <h5>RECOMMENDED</h5>
+                      <p>MAX 20 CHARACTERS</p>
+                    </ad>
+                  </div>
+                </div>
+                <div class="row">
+                  <label class="control-label col-sm-2" for="Description">Description</label>
+                  <div class="form-group col-sm-10">
+                    <input type="text" class="form-control" id="Title" placeholder="">
+                  </div>
+                </div>
+                <div class="row">
+                  <label class="control-label col-sm-2" for="moneybudg">For an extra</label>
+                  <div class="form-group col-sm-2">
+                    <select name="" class="form-control" id="moneybudg">
+                      <option value="$20">$20</option>
+                    </select>
+                  </div>
+                  <label class="control-label col-sm-2" for="moneybudg">and additional</label>
+                  <div class="form-group col-sm-2">
+                    <select name="" class="form-control" id="moneybudg">
+                      <option value="" disabled selected>- select -</option>
+                      <option value="3 Days">3 more colors</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="checkbox">
+              <a href="#" class="addcustomsxtra">Add custom extra</a>
+            </div>
+          </div> --> #}
+        </div>
+      </div>
+      <div class="save-actions">
+        <ul class="nav navbar-nav navbar-right">
+          {# <!-- <li><a href=""  class="btn">CANCEL</a></li> --> #}
+          <li><a href="#" class="btn btn-primary" v-bind:disabled="isLoading" @click.prevent="handleSaveClick">SAVE &amp; CONTINUE</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="col-md-3 ads">
+      <div class="error" v-if="errors.general">
+        <span class="arrow-top" v-if="editMode"></span>
+        <span class="arrow-left" v-else></span>
+        <p v-text="errors.general"></p>
+        <ul v-if="errors.fields">
+          <li v-if="errors.fields.price && errors.fields.price[0]" v-text="errors.fields.price[0]"></li>
+          <li v-if="errors.fields.delivery_time && errors.fields.delivery_time[0]" v-text="errors.fields.delivery_time[0]"></li>
+        </ul>
+      </div>
+
+      <div class="add" v-if="!errors.general && !success && tooltip" v-bind:style="{ marginTop: tooltipTop + 'px' }">
+        <span class="arrow-left"></span>
+        <h4 v-text="tooltip.title"></h4>
+        <p v-text="tooltip.desc"></p>
+      </div>
+
+      <div class="add" v-if="editMode && !errors.general && success">
+        <span class="arrow-top"></span>
+        <h4>Successfully Saved</h4>
+        <p>Your service has been successfully updated. Preview it here:<br /><br /><a v-bind:href="success" v-text="success" target="_blank"></a></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" v-if="tab === 2" v-cloak>
+    <div class="col-md-9">
+      <div class="design-box inner requirements">
+        <div class="row">
+          <div class="image col-sm-2"><img src="{{ static_file('images/account/brief-image@3x.png') }}" alt=""></div>
+          <div class="text col-sm-10">
+            <h2>Tell your clients what do you need to get started</h2>
+            <p>Please define what information is required in order to get started</p>
+          </div>
+        </div>
+        <div class="addon-box">
+          <div class="row">
+            <div class="col-md-6 title"><h3>REQUIREMENT <span v-text="requirements.length + 1"></span></h3></div>
+            {# <!-- <div class="col-md-6 characters"><p><em>0 / 450 chatacters</em></p></div> --> #}
+          </div>
+          <textarea v-model="newRequirement.text" cols="30" rows="5" class="form-control" placeholder="Please describe your requirement to your clients"></textarea>
+
+          <div class="alert alert-danger" v-if="newRequirementError">Please fill in requirement description</div>
+
+          <div class="row actions-form">
+            <div class="col-md-7">
+              <div class="actions form-inline">
+                <div class="form-group">
+                  <label class="control-label">Answer type</label>
+
+                  <select class="form-control" v-model="newRequirement.type">
+                    <option value="text">Free text</option>
+                    <option value="files">Attachment(s)</option>
+                  </select>
+                </div>
+                <div class="checkbox">
+                  <label><input type="checkbox" v-model="newRequirement.required"> Answer is mandatory</label>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-5">
+              <ul class="nav navbar-nav navbar-right">
+                {# <!-- <li><a href="" class="btn">CANCEL</a></li> --> #}
+                <li><button type="button" class="btn btn-primary" @click="handleRequirementAdd">ADD REQUIREMENT</button></li>
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        <!--
+        <div class="list-requierements">
+          <div class="requierement drag-item" v-for="(requirement, idx) in requirements">
+            <div class="row">
+              {# &lt;!&ndash; <div class="col-md-1"><span class="icon drag"></span></div> &ndash;&gt; #}
+              <div class="col-md-12">
+                <button type="button" class="close" @click="handleRequirementRemove(idx)"><span>&times;</span></button>
+                <h3 class="title">Requirement <span v-text="idx + 1"></span><span v-if="requirement.required"> &mdash; mandatory</span></h3>
+                <p v-text="requirement.text"></p>
+              </div>
+            </div>
+          </div>
+        </div>
+        -->
+
+        <div class="AccountServiceApp__expandable-list">
+          <div class="AccountServiceApp__expandable-element" v-for="(requirement, idx) in requirements">
+            <div class="AccountServiceApp__expandable-element-header">
+              <div class="AccountServiceApp__expandable-element-title">
+                Requirement <span v-text="idx + 1"></span><span v-if="requirement.required"> &mdash; mandatory</span>
+              </div>
+              <div type="button"
+                   class="AccountServiceApp__expandable-element-remove"
+                   @click="handleRequirementRemove(requirementExpanded, idx)"><span>&times;</span>
+              </div>
+              <div class="AccountServiceApp__expandable-element-toggle"
+                   :class="{'active': requirementExpanded === idx}"
+                   @click="toggleExpanded('requirementExpanded', idx)">
+                <svg class="icon icon-ar-down">
+                  <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-down"></use>
+                </svg>
+              </div>
+              <div class="AccountServiceApp__expandable-element-draggable"></div>
+            </div>
+            <transition name="fade-in">
+              <div class="AccountServiceApp__expandable-element-body"
+                   v-if="requirementExpanded === idx"
+                   v-text="requirement.text">
+              </div>
+            </transition>
+          </div>
+        </div>
+
+      </div>
+      <div class="save-actions">
+        <ul class="nav navbar-nav navbar-right">
+          {# <!-- <li><a href=""  class="btn">CANCEL</a></li> --> #}
+          <li><a href="" class="btn btn-primary" v-bind:disabled="isLoading" @click.prevent="handleSaveClick">SAVE &amp; CONTINUE</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="col-md-3 ads">
+      <div class="error" v-if="errors.general">
+        <span class="arrow-top" v-if="editMode"></span>
+        <span class="arrow-left" v-else></span>
+        <p v-text="errors.general"></p>
+      </div>
+
+      <div class="add" v-if="editMode && !errors.general && success">
+        <span class="arrow-top"></span>
+        <h4>Successfully Saved</h4>
+        <p>Your service has been successfully updated. Preview it here:<br /><br /><a v-bind:href="success" v-text="success" target="_blank"></a></p>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" v-if="tab === 3" v-cloak>
+    <div class="col-md-9">
+      <div class="design-box inner gallery">
+        <div class="row">
+          <div class="image col-sm-2"><img src="{{ static_file('images/account/galery-image@3x.png') }}" /></div>
+          <div class="text col-sm-10">
+            <h2>Build your gallery</h2>
+            <p>Upload photos related to your service. Click on the icon in the right top corner to make item primary which means it will be used as a thumbnail for your service</p>
+          </div>
+        </div>
+        <div class="addphoto">
+          <div class="portfolio tooltip-workaround" ref="videos" @mouseover="openGalleryTooltip('videos')" @mouseleave="closeGalleryTooltip('videos')">
+            <h4>Videos</h4>
+            <div class="grid-upload" id="upload_video">
+              <div class="loading" v-show="galleryLoading">
+                <img src="{{ static_file('images/loading.gif') }}" />
+              </div>
+              <div class="error" v-if="errors.videos">
+                <p><span v-text="errors.videos"></span><br /><button type="button" class="btn btn-danger" @click="errors.videos = null">Got It</button></p>
+              </div>
+
+              <div class="panel uploaded" v-for="item in videos" @click="videoPreviewShow = true, videoPreviewCode = item.code">
+                <span class="remove-button" @click.stop="handleGalleryItemRemoveClick('videos', item.id)">&times;</span>
+                <span class="primary-button" v-bind:class="{ active: item.primary }" @click.stop="handleGalleryItemClick(item.id)">&#10003;</span>
+                <img v-bind:src="item.url" class="uploadedimage" v-if="item.url" />
+                <div v-else class="empty"></div>
+              </div>
+              {# <!-- <div class="panel uploaded">
+                <span class="upload-number">1</span>
+                <span class="badge alert-success pull-right">Success</span>
+                <img src="images/resource-uploaded@3x.png" alt="" class="uploadedimage">
+
+              </div>
+              <div class="panel emptyupload"></div>
+              <div class="panel emptyupload"></div>
+              <div class="panel emptyupload"></div> --> #}
+
+              <div class="panel uploading" v-show="videosLoading" v-for="i in previewVideoCounts">
+                <img class="spin" src="{{ static_file('images/loading.gif') }}" />
+              </div>
+
+              <div class="panel upload-file" v-show="!videosLoading">
+                <file-upload title="Drag video here or click to browse" name="video" drop="#upload_video" :post-action="videoUploadAction" :multiple="false" :thread="1" :files="videoUploads" accept="video/mp4,video/ogg,video/webm, video/avi" :events="videoUploadEvents">
+                </file-upload>
+              </div>
+            </div>
+          </div>
+
+          <div class="portfolio" ref="photos" @mouseover="openGalleryTooltip('photos')" @mouseleave="closeGalleryTooltip('photos')">
+            <h4>Photos</h4>
+            <div class="grid-upload" id="upload_photo">
+              <div class="loading" v-show="galleryLoading">
+                <img src="{{ static_file('images/loading.gif') }}" />
+              </div>
+              <div class="error" v-if="errors.photos">
+                <p><span v-text="errors.photos"></span><br /><button type="button" class="btn btn-danger" @click="errors.photos = null">Got It</button></p>
+              </div>
+
+              <div class="panel uploaded" v-for="item in photos">
+                <span class="remove-button" @click="handleGalleryItemRemoveClick('photos', item.id)">&times;</span>
+                <span class="primary-button" v-bind:class="{ active: item.primary }" @click.stop="handleGalleryItemClick(item.id)">&#10003;</span>
+                <img v-bind:src="item.url" @load="loadPhoto(item.md5)" class="uploadedimage">
+              </div>
+              {# <!-- <div class="panel uploaded">
+                <span class="upload-number">1</span>
+                <span class="badge alert-success pull-right">Success</span>
+                <img src="images/resource-uploaded@3x.png" alt="" class="uploadedimage">
+
+              </div>
+              <div class="panel emptyupload"></div>
+              <div class="panel emptyupload"></div>
+              <div class="panel emptyupload"></div> --> #}
+
+              <div class="panel uploading" v-show="photosLoading" v-for="(value, key) in previewImages">
+                <img class="spin" src="{{ static_file('images/loading.gif') }}" />
+                <img class="preview" :src="value" />
+              </div>
+
+              <div class="panel upload-file" v-show="!photosLoading">
+                <file-upload title="Drag image here or click to browse" name="photo" drop="#upload_photo" :thread="1" :post-action="photoUploadAction" :multiple="false" :files="photoUploads" accept="image/JPEG, image/JPG, image/PNG" :events="photoUploadEvents">
+                </file-upload>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="save-actions">
+        <ul class="nav navbar-nav navbar-right">
+          {# <!-- <li><a href=""  class="btn">CANCEL</a></li> --> #}
+          <li><a href="" class="btn btn-primary" v-bind:disabled="isLoading" @click.prevent="handleSaveClick">SAVE &amp; CONTINUE</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="col-md-3 ads">
+      <div class="error" v-if="errors.general">
+        <span class="arrow-top" v-if="editMode"></span>
+        <span class="arrow-left" v-else></span>
+        <p v-text="errors.general"></p>
+      </div>
+
+      <div class="add" v-if="editMode && !errors.general && success">
+        <span class="arrow-top"></span>
+        <h4>Successfully Saved</h4>
+        <p>Your service has been successfully updated. Preview it here:<br /><br /><a v-bind:href="success" v-text="success" target="_blank"></a></p>
+      </div>
+
+      <div class="add gallery" v-if="!errors.general && !success && videoTooltipTop" v-bind:style="{ top: videoTooltipTop + 'px', position: 'absolute' }" @mouseover="openGalleryTooltip('videos')" @mouseleave="closeGalleryTooltip('videos')">
+        <span class="arrow-left"></span>
+        <h4>Videos</h4>
+        <p>Videos can increase user engagement by 50%. Ensure that the production quality is representative of your deliveres.</p>
+
+        {% if gallery_video_category %}
+        <p>Need help with your video? Check out our JobDone audio/video experts <a target="_blank" href="{{ url_for('category', category_title=gallery_video_category.get_title_seofied(), category_id=gallery_video_category.id) }}">here</a>.</p>
+        {% endif %}
+      </div>
+
+      <div class="add gallery" v-if="!errors.general && !success && photoTooltipTop" v-bind:style="{ top: photoTooltipTop + 'px', position: 'absolute' }" @mouseover="openGalleryTooltip('photos')" @mouseleave="closeGalleryTooltip('photos')">
+        <span class="arrow-left"></span>
+        <h4>Photos</h4>
+        <p>Files must be in JPG, JPEG, PNG. Minimum dimensions are {{ gallery_min_photo_dimensions }} and maximum size limit is 5MB per file.</p>
+
+        {% if gallery_photo_category %}
+        <p>The quality of the photos will influence customers. Get help from our JobDone design/graphics experts <a target="_blank" href="{{ url_for('category', category_title=gallery_photo_category.get_title_seofied(), category_id=gallery_photo_category.id) }}">here</a>.</p>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+  <div class="row" v-if="tab === 4" v-cloak>
+    <div class="col-md-9">
+      <div class="design-box inner done features__container">
+        <div class="features__check-list-container">
+
+          <div class="features__check-list-element"
+               v-for="(feature, index) in featuresTab.list"
+               :ref="'feature_' + index"
+               @click.prevent="handleFeatureToggle(index)"
+               @mouseover="openFeaturesTooltip(feature.type, index)"
+               @mouseleave="closeFeaturesTooltip('feature_' + index)">
+            <div class="features__check-list-element-inner">
+              <div class="features__element-radio features__element-component">
+                <div class="features__radio-container">
+                  <input type="checkbox" v-model="feature.selected" :id="'features__' + index" readonly />
+                  <label class="features__radio-label" :for="'features__' + index"></label>
+                </div>
+              </div>
+              <div class="features__element-icon features__element-component" :class="{ [feature.id]: true }"></div>
+              <div class="features__element-text features__element-component">
+                <p v-if="feature.id == 'top_search'">Place your at the top <span class="features__bold features__bold-indent"> of the search</span> listings with a special ribbon</p>
+
+                <p v-if="feature.id == 'newsletter'">Increase your changes to get promoted in our daily newsletter that goes out to <span class="features__bold features__bold-indent">400.000 buyers</span></p>
+
+                <p v-if="feature.id == 'highlight_7'">Highlight your service as <span class="features__bold features__bold-indent">Featured for 7 days</span></p>
+
+                <p v-if="feature.id == 'highlight_30'">Highlight your service as <span class="features__bold features__bold-indent">Featured for 30 days</span></p>
+              </div>
+              <div class="features__element-price features__element-component">
+                <p class="features__bold" v-bind:class="{ features__disabled: feature.disabled }" v-text="'$' + (feature.price / 100).toFixed(2)" v-if="!feature.active"></p>
+                <p class="features__bold" v-else>Active</p>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      <div class="features__controls features__container">
+        <div class="features__controls_inner">
+          <div class="features__controls-button features__controls-button-active btn" @click="handleFeatureItClick" :disabled="!featureSummary || isLoading">FEATURE IT</div>
+          
+          <div class="features__controls-button btn" @click="handleSkipFeatureClick" :disabled="isLoading" :class="{ 'features__controls-button-active': success }"><span v-if="success">NEXT</span><span v-else>SKIP</span></div>
+
+          <div class="features__summary">
+            <p><span>TOTAL:</span><span>$<span v-text="(featureSummary / 100).toFixed(2)"></span></span></p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 ads">
+      <div class="error" v-if="errors.general">
+        <span class="arrow-top" v-if="editMode"></span>
+        <span class="arrow-left" v-else></span>
+        <p v-text="errors.general"></p>
+      </div>
+
+      <div class="add" v-if="!errors.general && success">
+        <span class="arrow-left"></span>
+        <h4>Features has been added</h4>
+        <p>Your service has been successfully featured.</p>
+      </div>
+
+      <div class="add features"
+           v-if="!errors.general && !success && featuresTab.tooltip"
+           v-bind:style="{ top: featuresTab.tooltip + 'px', position: 'absolute' }">
+        <span class="arrow-left"></span>
+        <img :src="featuresTab.tooltipSrc">
+      </div>
+    </div>
+  </div>
+
+  <div class="row" v-if="tab === 5" v-cloak>
+    <div class="col-md-12">
+      <div class="design-box inner done">
+        <h1>Almost There!</h1>
+        <p>Let’s publish your service and get some buyers</p>
+        <div class="publish">
+          <p class="alert alert-danger" v-if="errors.publish">Unfortunately, error occured while publishing your service. Please try again a little later</p>
+          <a href="#" class="btn btn-success" @click.prevent="handlePublishClick" v-bind:disabled="isLoading">PUBLISH SERVICE</a>
+          <a href="#" class="back" @click.prevent="handleTabChange(4)" v-bind:disabled="isLoading">BACK</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row" v-if="tab === 6" v-cloak>
+    <div class="col-md-12">
+      <div class="design-box inner done">
+        <img src="{{ static_file('images/account/itsalive@3x.png') }}" alt="" width="52" class="doneimg">
+        <h1>IT’S ALIVE!</h1>
+        <p>Our statistics show that promoted services are 3 times more efficient to sell!</p>
+      </div>
+      <div class="save-actions" style="padding: 70px 0;">
+        <ul class="socialbuttons">
+          <li class="facebook"><a v-bind:href="urls.facebook" class="btn" target="popup" @click.prevent="openSocialWindow(urls.facebook)"><span class="icon"></span>SHARE ON <strong>FACEBOOK</strong></a></li>
+          <li class="twitter"><a v-bind:href="urls.twitter" class="btn" target="popup" @click.prevent="openSocialWindow(urls.twitter)"><span class="icon"></span></a></li>
+          <li class="googleplus"><a v-bind:href="urls.googleplus" class="btn" target="_blank" @click.prevent="openSocialWindow(urls.googleplus)"><span class="icon"></span></a></li>
+          <li class="linkedin"><a v-bind:href="urls.linkedin" class="btn" target="_blank" @click.prevent="openSocialWindow(urls.linkedin)"><span class="icon"></span></a></li>
+          <li class="mail"><a v-bind:href="urls.mailto" class="btn" target="_blank" @click.prevent="openSocialWindow(urls.mailto)"><span class="icon"></span></a></li>
+          {# <!-- <li class="link"><a href="#" class="btn"><span class="icon"></span></a></li> --> #}
+        </ul>
+        <form class="copyURL">
+          <div class="input-group">
+            <input type="text" class="form-control" v-bind:value="urls.external" id="copy-input-1" readonly>
+            <span class="input-group-btn">
+              <button class="btn btn-default" type="button" id="copy-button-1"
+                      data-toggle="tooltip" data-placement="button" title="Copy to Clipboard" data-clipboard-target="#copy-input-1">
+              COPY LINK
+              </button>
+            </span>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+  <modal effect="fade" v-model="videoPreviewShow" class="modal-custom" v-cloak>
+    <div slot="modal-header" class="modal-header">
+      <button type="button" class="close" @click="videoPreviewShow = false"><span>&times;</span></button>
+      <h4 class="modal-title">Preview Video</h4>
+    </div>
+    <div slot="modal-body" class="modal-body">
+      <div class="modal-video-holder" v-html="videoPreviewCode"></div>
+    </div>
+    <div slot="modal-footer"></div>
+  </modal>
+
+  <modal effect="fade" v-model="deleteFileModalShow" class="modal-custom modal-confirm" small v-cloak>
+    <div slot="modal-header" class="modal-header">
+      <button type="button" class="close" @click="deleteFileModalShow = false"><span>&times;</span></button>
+      <h4 class="modal-title">Delete File</h4>
+    </div>
+    <div slot="modal-body" class="modal-body">
+      Are you sure you want to delete this file? This is unrecoverable operation.
+    </div>
+    <div slot="modal-footer" class="modal-footer text-right">
+      <button class="btn btn-default" @click="deleteFileModalShow = false">Cancel</button>
+      <button class="btn btn-primary" @click="handleGalleryItemRemove">Delete</button>
+    </div>
+  </modal>
+
+</main>
+{% endblock %}
+
+{% block styles %}
+<link rel="stylesheet" href="{{ static_file('assets/editor.css', include_version=True) }}">
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript" src="{{ static_file('assets/editor.js', include_version=True) }}"></script>
+{% endblock %}

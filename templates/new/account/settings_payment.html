@@ -1,0 +1,27 @@
+{% extends "new/account/layout.html" %}
+
+{% block body %}
+<div class="container standard" id="sm-account-settings">
+  <div class="row">
+    <div class="col-md-3">
+      <div class="design-box">
+        <h1>Settings</h1>
+        <ul class="nav">
+          <li class="active"><a href="{{ url_for('account.settings') }}">Account</a></li>
+          <li class="active"><a href="{{ url_for('account.settings_email') }}">Notifications</a></li>
+          <li class="active"><a href="{{ url_for('account.settings_payment') }}">Payment & Financials</a></li>
+          <li class="active"><a href="{{ url_for('account.settings_verification') }}">Trust & Verification</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="col-md-9">
+      <div class="design-box inner">
+        <h2>Payment & Financials</h2>
+        
+      </div>
+    </div>
+  </div>
+
+
+</div>
+{% endblock %}

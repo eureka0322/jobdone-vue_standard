@@ -1,0 +1,232 @@
+@import "./webStylesOrder.css";
+@import "./webStylesDepositForm.scss";
+@import "./deliverableRating.scss";
+
+
+.Order {
+    margin-top: 20px;
+}
+
+.OrderAlertBar {
+    width: 100%;
+    min-height: 64px;
+    box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.2);
+
+    background-color: #FFF;
+    color: #777;
+
+    &-red {
+        background-color: #FF474B;
+        color: #FFF;
+    }
+
+    &-green {
+        background-color: #00B145;
+        color: #FFF;
+    }
+
+    &-orange {
+        background-color: #FF9231;
+        color: #FFF;
+    }
+
+    &-grey {
+        background-color: #EEE;
+        color: #999;
+    }
+
+    &__container {
+        display: flex;
+    }
+
+    &__item {
+        margin: 16px 0;
+
+        &-left {
+            flex-grow: 1;
+        }
+
+        &-center {
+            margin: 16px 10px;
+            flex-grow: 2;
+            text-align: center;
+        }
+    }
+
+    &__check {
+        display: inline-block;
+        margin-right: 10px;
+        height: 32px;
+        font: bold 12px/16px Helvetica, Arial, sans-serif;
+        text-transform: uppercase;
+
+        position: relative;
+        padding-left: 36px;
+
+        &::before {
+            content: " ";
+            width: 26px; height: 26px;
+            position: absolute;
+            left: 0; top: 3px;
+            background-repeat: no-repeat;
+            background-image: url(../assets/images/order/alertbar/checked.svg);
+            background-size: 26px 26px;
+        }
+
+        &-green {
+            color: #00B33E;
+
+            &::before {
+                background-image: url(../assets/images/order/alertbar/checked-green.svg);
+            }
+        }
+
+        &-large-green {
+            color: #777;
+
+            &::before {
+                background-image: url(../assets/images/order/alertbar/checked-large-green.svg);
+            }
+        }
+
+        &-grey {
+            &::before {
+                background-image: url(../assets/images/order/alertbar/checked-grey.svg);
+            }
+        }
+
+        &-grey-canceled {
+            &::before {
+                background-image: url(../assets/images/order/alertbar/checked-grey-canceled.svg);
+            }
+        }
+    }
+
+    &__point {
+        display: inline-block;
+        margin-right: 10px;
+        height: 32px;
+        font: bold 12px/16px Helvetica, Arial, sans-serif;
+        text-transform: uppercase;
+        color: #B6581C;
+
+        position: relative;
+        padding-left: 30px;
+
+        &::before {
+            content: " ";
+            width: 26px; height: 26px;
+            position: absolute;
+            left: 0; top: 3px;
+            background-repeat: no-repeat;
+            background-image: url(../assets/images/order/alertbar/point-orange.svg);
+            background-size: 26px 26px;
+        }
+    }
+
+    &__warning {
+        display: inline-block;
+        height: 32px;
+        font: normal 28px/32px Helvetica, Arial, sans-serif;
+        text-transform: uppercase;
+
+        & > strong {
+            font-weight: bold;
+        }
+
+        position: relative;
+        padding-left: 40px;
+
+        &::before {
+            content: " ";
+            width: 32px; height: 32px;
+            position: absolute;
+            left: 0; top: 0px;
+            background-repeat: no-repeat;
+            background-image: url(../assets/images/order/alertbar/exclamation.svg);
+            background-size: 32px 32px;
+        }
+    }
+
+    &__success {
+        display: inline-block;
+        height: 32px;
+        font: normal 28px/32px Helvetica, Arial, sans-serif;
+        text-transform: uppercase;
+
+        & > strong {
+            font-weight: bold;
+        }
+
+        position: relative;
+        padding-left: 40px;
+
+        &::before {
+            content: " ";
+            width: 32px; height: 32px;
+            position: absolute;
+            left: 0; top: 0px;
+            background-repeat: no-repeat;
+            background-image: url(../assets/images/order/alertbar/checked-large-white.svg);
+            background-size: 32px 32px;
+        }
+    }
+
+    &__largeinfo {
+        display: inline-block;
+        height: 32px;
+        font: normal 28px/32px Helvetica, Arial, sans-serif;
+        text-transform: uppercase;
+        margin-right: 10px;
+        color: #FFF;
+
+        & > strong {
+            font-weight: bold;
+        }
+
+        &-orange {
+            color: #FF933F;
+        }
+
+        &-grey {
+            color: #9A9A9A;
+        }
+    }
+
+    &__info {
+        display: inline-block;
+        min-height: 32px;
+        font: bold 12px/16px Helvetica, Arial, sans-serif;
+        text-transform: uppercase;
+    }
+
+    &__button {
+        display: inline-block;
+        min-height: 32px;
+        font: bold 13px/16px Helvetica, Arial, sans-serif;
+        background: linear-gradient(to bottom, #00C45A, #00B63B);
+        color: #FFF;
+        padding: 0 20px;
+        border: 1px solid rgba(0, 0, 0, 0.15);
+        border-radius: 3px;
+        outline: none;
+        margin-right: 5px;
+
+        &:active {
+            background: linear-gradient(to top, #00C45A, #00B63B);
+        }
+
+        &[disabled] {
+            cursor: not-allowed;
+        }
+
+        &-red {
+            background: linear-gradient(to bottom, #DF272B, #BF070B);
+
+            &:active {
+                background: linear-gradient(to top, #DF272B, #BF070B);
+            }
+        }
+    }
+}
+

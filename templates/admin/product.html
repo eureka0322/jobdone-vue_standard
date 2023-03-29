@@ -1,0 +1,84 @@
+{% extends "admin/layout.html" %}
+
+{% block admin_title %}
+    {{ product.title }}{% if product.is_disabled %}
+      <div class="label label-danger">Disabled</div>
+    {% endif %}
+    {% if product.is_private %}
+      <div class="label label-warning">Private</div>
+    {% endif %}
+{% endblock %}
+
+{% block admin_body %}
+
+<div class="panel-body">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+          <p class="alert alert-info">{{ message }}</p>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+  <a class="btn btn-primary" href="{{ product.get_url() }}">View public page</a>
+    {% if product.is_approved and product.published_on %}
+        <a class="btn btn-danger" href="{{ url_for('admin.product_unapprove', product_id=product.id) }}">Unapprove Product</a>
+	  {% endif %}
+
+    {% if not product.is_approved and product.published_on %}
+		<a class="btn btn-success" href="{{ url_for('admin.product_approve', product_id=product.id) }}">Approve product</a>
+    <a class="btn btn-danger" href="{{ url_for('admin.product_not_approve', product_id=product.id) }}">Do not approve product</a>
+	  {% endif %}
+
+  <a class="btn btn-danger" href="{{ url_for('admin.product_delete', product_id=product.id) }}" onclick="return confirm('Are you sure you want to delete this product? This cannot be undone');">Delete product</a>
+	<br /><br />
+
+    {% with tags = product.get_tags() %}
+      {% if tags %}
+      <label>Tags:</label><br />
+      {% for tag in tags %}
+      <p>
+        <i class="glyphicon glyphicon-tag"></i> {{ tag.tag }}
+        {% if tag.is_approved %}
+        <a href="{{ url_for('admin.tag_unapprove', tag_id=tag.id, product_id=product.id) }}" class="btn btn-xs btn-danger">Unapprove tag</a>
+        {% else %}
+        <a href="{{ url_for('admin.tag_approve', tag_id=tag.id, product_id=product.id) }}" class="btn btn-xs btn-success">Approve tag</a>
+        {% endif %}
+      </p>
+      {% endfor %}
+      <br /><br />
+      {% endif %}
+    {% endwith %}
+
+    <label>Price:</label><br />
+    {{ product.get_price_pp() }}<br /><br />
+
+    <label>Private description:</label><br />
+    {{ product.private_description|nl2br }}<br /><br />
+
+    {% if product.private_filename %}
+    <label>Private attachment:</label><br />
+    <a href="{{ static_file(product.get_filename_url()) }}">{{ product.private_filename }}</a><br /><br />
+    {% endif %}
+
+    <label>Created on:</label><br />
+    {{ product.created_on.strftime('%Y-%m-%d %H:%m') }}<br /><br />
+
+    {% if product.published_on %}
+    <label>Published on:</label><br />
+    {{ product.published_on.strftime('%Y-%m-%d %H:%m') }}<br /><br />
+
+    <label>Approval status:</label><br />
+    {% if product.is_approved %}
+    Approved
+    {% else %}
+      {% if product.not_approved %}
+      Not Approved
+      {% else %}
+      Pending Approval
+      {% endif %}
+    {% endif %}
+    {% endif %}
+</div>
+
+{% endblock %}

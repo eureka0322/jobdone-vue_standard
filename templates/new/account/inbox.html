@@ -1,0 +1,293 @@
+{% set tab = 'inbox' %}
+
+{% extends "new/account/layout.html" %}
+
+{% block body %}
+<div class="container inbox standard" id="sm-account-inbox">
+  <div class="row order-list inbox-list table" v-cloak>
+    <div class="col-md-12">
+      <div class="tabs-holder row">
+        <ul class="nav nav-tabs left-position col-md-11">
+          <li role="presentation" class="missing" v-bind:class="{ active: folder === 'inbox' }">
+            <a href="#" @click.prevent="setFolder('inbox')">Inbox</a>
+          </li>
+          <li role="presentation" class="active-tab" v-bind:class="{ active: folder === 'unread' }">
+            <a href="#" @click.prevent="setFolder('unread')">Unread<span class="badge" v-if="tabCounts.unread" v-text="tabCounts.unread"></span></a>
+          </li>
+          <li role="presentation" class="active-tab" v-bind:class="{ active: folder === 'sent' }">
+            <a href="#" @click.prevent="setFolder('sent')">Sent</a>
+          </li>
+          <li role="presentation" class="active-tab" v-bind:class="{ active: folder === 'archive' }">
+            <a href="#" @click.prevent="setFolder('archive')">Archive</a>
+          </li>
+        </ul>
+
+        <div class="col-md-1">
+          <div class="actions-holder" v-show="!currentRoom">
+            <button class="btn btn-default pull-right" v-bind:disabled="folder !== 'inbox' && folder !== 'sent'" @click="handleArchiveRooms">Archive</button>
+          </div>
+        </div>
+      </div>
+
+      <transition name="fade" mode="out-in">
+
+        <div class="tabs-processing"
+             v-if="processingTab"
+             key="processingOn">
+          <spinner/>
+        </div>
+
+        <div class="tabs-content"
+             v-else
+             key="processingOff">
+
+          <div v-if="!currentRoom">
+            <table width="100%" border="0" class="inbox-table margin">
+              <thead>
+                <tr>
+                  <th>USER</th>
+                  <th>SUBJECT</th>
+                  <th>LAST MESSAGE</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="item in items" v-cloak>
+                  <td>
+                    <input type="checkbox" v-if="folder === 'inbox' || folder === 'sent'" v-model="selectedItems[item.type + ':' + item.entity_id]" />
+                    <div class="infomracion-container"><img v-bind:src="item._photo_url" class="circle" /><div class="text-info"><a href="#" class="title" v-text="item._username" @click.prevent="currentRoom = item"></a></div>
+                  </td>
+                  <td class="inbox-table-subject">
+                    <a href="#" v-text="item._display_name" @click.prevent="currentRoom = item" v-bind:class="{ unread: item.unread }"></a>
+                  </td>
+                  <td>
+                    <span v-text="item._last_action_date_display"></span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+
+            <div class="pagination-table">
+              <div class="col-md-6">
+                <div class="pagination-list" v-show="!itemsLoading && totalResults > 0" v-cloak>
+                  <ul class="pagination">
+                    <li v-bind:class="{ disabled: currentPage <= 1 }"><a href="#" @click.prevent="handlePageSelect(currentPage - 1)">&laquo;</a></li>
+                    <li v-for="page in pages" v-bind:class="{ active: currentPage === page }">
+                      <a href="#" @click.prevent="handlePageSelect(page)" v-text="page">2</a>
+                    </li>
+                    <li v-bind:class="{ disabled: currentPage >= pages[pages.length - 1] }"><a href="#" @click.prevent="handlePageSelect(currentPage + 1)">&raquo;</a></li>
+                  </ul>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="gotopage">
+                  <span class="fileds">
+                    <label for="gotopage">Go To Page</label>
+                    <input type="number" name="gotopage" v-model="gotoPage" @keypress.enter="handlePageSelect(+gotoPage)">
+                    <a href="#" class="btn" @click.prevent="handlePageSelect(+gotoPage)">GO</a>
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div v-if="currentRoom">
+            <div class="messages-wrapper">
+              <div class="messages-header-top">
+                <button class="btn btn-default" @click="currentRoom = null">&larr; Back</button>
+                <button class="btn btn-default pull-right" @click="handleArchiveRoom" v-show="!currentRoom.is_archived">Archive</button>
+              </div>
+
+          <div class="messages-header">
+            <div class="row">
+              <div class="col-sm-4">
+                <a v-bind:href="currentRoomPeer && currentRoomPeer._url">
+                  <img v-if="currentRoomPeer" v-bind:src="currentRoomPeer._photo_url" class="profile message-user" />
+                </a>
+                <h3 v-if="currentRoomPeer" class="username"><a v-bind:href="currentRoomPeer._url" v-text="currentRoomPeer.username"></a></h3>
+              </div>
+              <div class="col-sm-8">
+                <div class="info content" v-if="currentRoomOrder">
+                  <a v-bind:href="currentRoomOrder._url" class="product" v-text="currentRoomOrder._service_title"></a><span class="ordernumber">Order #<span v-text="currentRoomOrder.id"></span></span>
+                </div>
+
+                    <div class="info content" v-if="currentRoomService">
+                      <a v-bind:href="currentRoomService._url" class="product" v-text="currentRoomService.title"></a>
+                      <span v-if="currentRoomPeer._response_time">Avg. Response Time: <span v-text="currentRoomPeer._response_time"></span></span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="messagesbody" ref="currentRoomMessagesBody">
+                <div class="message" v-for="message in currentRoomMessages" v-bind:class="{ incoming: message._incoming, outcomming: message._outgoing, system: message.type !== 'message' }">
+                  <div class="message-holder">
+                    <div v-if="message.type === 'message'">
+                      <p v-text="message.text" v-if="message.text"></p>
+                      <p v-if="message.meta && message.meta.attachments" class="attachments">
+                        <a v-bind:href="'/api/account/messaging/download/' + attachment.attachmentId + '/' + attachment.filename" v-text="attachment.filename" v-for="attachment in message.meta.attachments" target="_blank"></a>
+                      </p>
+                    </div>
+                    <p v-if="message.type === 'new_order'">Order has been created</p>
+                    <p v-if="message.type === 'order_accepted'">Order has been accepted</p>
+                    <p v-if="message.type === 'order_sent'">Order has been sent</p>
+                    <p v-if="message.type === 'order_rejected'">Order has been rejected</p>
+                    <p v-if="message.type === 'order_completed'">Order has been closed</p>
+                    <p v-if="message.type === 'order_cancelled'">Order has been cancelled</p>
+                    <p v-if="message.type === 'order_dispute'">Order is under resolution process</p>
+
+                    <div v-if="message.type === 'enquiry_offer'">
+                      Custom Service Offer:<br />
+                      <p>
+                        <img :src="message._service_thumb_url" />
+                        <span v-text="message._service_title"></span>
+                      </p>
+                      <p>Price: <span v-text="'$' + (message._offer_price / 100).toFixed(2)"></span></p>
+                      <p>Delivery Time: <span v-text="message._offer_delivery_time"></span> days</p>
+                      <!-- <p>Expiration Time: <span v-text="message._offer_price"></span></p> -->
+
+                      <div v-if="serviceOfferLoading[message.meta.enquiry_offer.id]">
+                          <Spinner />
+                      </div>
+                      <div v-else>
+                        <div v-if="(serviceOfferDisabled[message.meta.enquiry_offer.id] && serviceOfferDisabled[message.meta.enquiry_offer.id].is_closed) || message.meta.enquiry_offer.is_closed">
+                          Offer is canceled
+                        </div>
+                        <div v-if="(serviceOfferDisabled[message.meta.enquiry_offer.id] && serviceOfferDisabled[message.meta.enquiry_offer.id].is_accepted) || message.meta.enquiry_offer.is_accepted">
+                          Offer is accepted
+                        </div>
+                        <div v-if="!serviceOfferDisabled[message.meta.enquiry_offer.id] && !message.meta.enquiry_offer.is_closed && !message.meta.enquiry_offer.is_accepted">
+                          <button v-if="currentRoomPeer._seller" @click="handleBuyerOfferAccept(message.meta.enquiry_offer.id)">Accept</button>
+                          <button v-if="!currentRoomPeer._seller" @click="handleSellerOfferCancel(message.meta.enquiry_offer.id)">Cancel</button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="peer-holder" v-if="message._incoming">
+                    <img v-if="currentRoomPeer" v-bind:src="currentRoomPeer._photo_url" class="profile message-user" />
+                  </div>
+                  <div class="peer-holder" v-else>
+                    <img src="{{ g.user.get_photo_url('h_100,w_100,c_thumb,g_face') }}" class="profile message-user" />
+                  </div>
+                  <span class="date-sent" v-text="message._date_display"></span>
+                </div>
+              </div>
+
+              <div class="message-footer">
+                <div class="lchat_area" v-if="currentRoomPeer">
+                  <span class="pull-right">
+                    <b v-text="currentRoomPeer.username"></b>
+                    <b>Local time: <span v-text="currentRoomPeer.local_time"></span></b>
+                    <span class="online" v-if="currentRoomPeer.is_online">Online</span>
+                    <span class="offline" v-else v-text="'Last seen ' + currentRoomPeer._last_seen"></span>
+                  </span>
+                </div>
+
+                <textarea v-model="currentRoomNewMessage" cols="30" rows="5" class="form-control" placeholder="type your message here"></textarea>
+                <div class="row">
+                  <div class="col-md-12">
+                    <span class="warning" v-if="messageIncludedBlockWord.pay"><br/>Reminder : Never accept or ask for direct payments. Doing so may get your account restricted.</span>
+                    <span class="warning" v-if="messageIncludedBlockWord.skype || messageIncludedBlockWord.phone"><br/>Terms of Service reminder : <br/> Providing email, Skype, or phone number is only allowed if it is needed as part of the service. Otherwise, all communication must go through Jobdone.net</span>
+                  </div>
+                </div>
+                <div class="row" v-if="attachError">
+                  <div class="col-md-12">
+                    <p class="alert alert-danger" v-text="attachError">Error</p>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-6 attachment-list">
+                    <ul>
+                      <li v-for="upload in attachUploads">
+                        <span v-text="upload.name"></span> &mdash; <span class="delete" v-if="!upload.active" @click="handleAttachDelete(upload)">delete</span><span v-else>uploading...</span>
+                      </li>
+                    </ul>
+                  </div>
+                  <div class="col-sm-6">
+                    <ul class="nav navbar-nav navbar-right">
+                      <li>
+                        <span class="icon attachements">
+                          <file-upload title="" name="file" post-action="/api/account/messaging/upload" :multiple="true" :files="attachUploads" :events="attachUploadEvents" ref="uploader">
+                          </file-upload>
+                        </span>
+                      </li>
+                      <li v-if="currentRoomPeer && !currentRoomPeer._seller">
+                        <a href="#" class="btn btn-default" @click.prevent="handleCreateOffer">CREATE OFFER</a>
+                      </li>
+                      <li><a href="#" class="btn btn-primary" v-bind:disabled="attachUploading" v-bind:class="{ 'disabled':  messageIncludedBlockWord.skype || messageIncludedBlockWord.pay || messageIncludedBlockWord.phone }" @click.prevent="handleMessageSend">SEND MESSAGE</a></li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </transition>
+
+    </div>
+  </div>
+
+  <modal effect="fade" v-model="serviceOfferModal.show" class="modal-custom" v-cloak>
+    <div slot="modal-header" class="modal-header">
+      <button type="button" class="close" @click="serviceOfferModal.show = false"><span>&times;</span></button>
+      <h4 class="modal-title" v-if="serviceOfferModal.step === 0">Select a service to offer</h4>
+      <h4 class="modal-title" v-else>Specify your service details</h4>
+    </div>
+    <div slot="modal-body" class="modal-body">
+      <div class="request-form" v-if="serviceOfferModal.step === 0">
+        <div v-if="serviceOfferModal.loading">
+          <spinner></spinner>
+        </div>
+        <div v-else style="max-height: 400px; overflow-y: scroll;">
+          <label v-for="service in serviceOfferModal.services" style="display: block;">
+            <img :src="service._thumbnail_url" width="50" height="50" />
+            <span v-text="service.title"></span>
+            <input type="radio" v-model="serviceOfferModal.serviceId" :value="service.id" name="serviceId" />
+          </label>
+        </div>
+      </div>
+      <div class="request-form" v-else>
+        <h4>I will <span v-text="serviceOfferModal.service.title"></span></h4>
+
+        <img :src="serviceOfferModal.service._thumbnail_url" width="100" height="100" />
+
+        <p>Description:</p>
+        <div class="field">
+          <textarea v-model="serviceOfferModal.offer.text" style="width: 100%" cols="30" rows="3" placeholder="Notes"></textarea>
+        </div>
+        
+        <p>Delivery Time:</p>
+        <div class="field">
+          <select v-model="serviceOfferModal.offer.deliveryTime">
+            <option v-for="i in 14" :value="i" v-text="i"></option>
+          </select>
+          day(s)
+        </div>
+
+        <p>Price:</p>
+        <div class="field">
+          <input v-model="serviceOfferModal.offer.price" type="text" placeholder="0.00" />
+        </div>
+        
+        <p>Expiration Time:</p>
+        <div class="field">
+          <select v-model="serviceOfferModal.offer.expirationTime">
+            <option :value="-1">N/A</option>
+            <option v-for="i in 14" :value="i" v-text="i"></option>
+          </select>
+          day(s)
+        </div>
+
+        <div class="alert alert-danger" v-if="serviceOfferModal.error" v-text="serviceOfferModal.error"></div>
+      </div>
+    </div>
+    <div slot="modal-footer" class="modal-footer" style="text-align: right;">
+      <button v-if="serviceOfferModal.step === 0" class="btn btn-primary" v-bind:disabled="serviceOfferModal.loading || !serviceOfferModal.serviceId" style="display: inline-block;" @click.prevent="handleSubmitOffer">SUBMIT OFFER</button>
+
+      <button v-if="serviceOfferModal.step === 1" class="btn btn-default" v-bind:disabled="serviceOfferModal.loading" style="display: inline-block;" @click.prevent="serviceOfferModal.step = 0">BACK</button>
+
+      <button v-if="serviceOfferModal.step === 1" href="#" class="btn btn-primary" v-bind:disabled="isNaN(serviceOfferModal.offer.price) || serviceOfferModal.offer.price <= 0" style="display: inline-block;" @click.prevent="handleSubmitOffer">SUBMIT OFFER</button>
+    </div>
+  </modal>
+</div>
+{% endblock %}

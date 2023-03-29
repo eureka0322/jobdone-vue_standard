@@ -1,0 +1,232 @@
+{% extends "new/layout.html" %}
+
+{% block styles %}
+  <link rel="stylesheet" type="text/css" href="{{ static_file('assets/landing.css') }}">
+{% endblock %}
+
+{% block body %}
+<main class="splash" id="sm-become-seller-landing">
+  <div class="header_area">
+    <img src="{{ static_file('images/landing/work_header_bg.jpg') }}" alt="">
+    <div class="header_over_content">
+      <div class="hdr_bnr_content text-center">
+        <h1>WORK THE WAY YOU WANT</h1>
+        <p>You bring the skill. We'll make earning easy.</p>
+        <div class="search_frm">
+          <a href="#" class="become_aseller" @click.prevent="handleOpenSignupModal">BECOME A SELLER</a>
+          <p>Already have an account? <a href="#" @click.prevent="handleOpenLoginModal">login here</a></p>
+       </div>
+      </div>
+    </div>
+  </div>
+
+  <!--Work area start-->
+  <div class="work_sng_page">
+    <div class="section_heading text-center">
+     <h1>HOW IT WORKS</h1>
+   </div>
+   <div class="container">
+     <div class="row">
+      <div class="work_step">
+       <div class="work_pr_step">
+        <sup>1</sup>
+        <div class="work_stp_title">
+         <h3>Create a service</h3>
+         <p>Sign up for free, set up your services, and offer your work to our global audience</p>
+       </div>
+       <div class="work_stp_thumb">
+         <img src="{{ static_file('images/landing/w_service.png') }}">
+       </div>
+     </div>
+     <div class="work_pr_step">
+      <sup>2</sup>
+      <div class="work_stp_title">
+       <h3>Deliver Great Work</h3>
+       <p>Get notified when you get an order and use our system to discuss details with customers</p>
+     </div>
+     <div class="work_stp_thumb">
+       <img src="{{ static_file('images/landing/w_delivery.png') }}">
+     </div>
+   </div>
+   <div class="work_pr_step">
+    <sup>3</sup>
+    <div class="work_stp_title">
+     <h3>Get Paid</h3>
+     <p>Get paid on time, every time. Payment is transferred to you upon order completion.</p>
+   </div>
+   <div class="work_stp_thumb">
+     <img src="{{ static_file('images/landing/w_paid.png') }}">
+   </div>
+  </div>
+  <p class="text-center">For more information view <a href="#">FAQs </a>and <a href="#">Terms.</a></p>
+  </div>
+  </div>
+  </div>
+  </div>
+  <!--Work area end-->
+
+  <!--Client feedback area start-->
+  <div class="cfeddback_area">
+    <div class="container">
+     <div class="row carousel fade" id="fade-quote-carousel" data-ride="carousel" data-interval="3000">
+      <div class="carousel-inner text-center">
+       <div class="csng_feedback item">
+        <img src="{{ static_file('images/landing/cfedd.jpg') }}" alt="profile image">
+        <div class="c_coment">
+         <p>"I started selling on jobdone in 2016. My business has grown ten times since then."</p>
+         <b>Steven T.</b>
+       </div>
+     </div>
+     <div class="csng_feedback item">
+      <img src="{{ static_file('images/landing/cl_scnd.jpg') }}" alt="profile image">
+      <div class="c_coment">
+       <p>"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua."</p>
+       <b>John Doe.</b>
+     </div>
+   </div>
+   <div class="csng_feedback item">
+    <img src="{{ static_file('images/landing/cfedd.jpg') }}" alt="profile image">
+    <div class="c_coment">
+     <p>"I started selling on jobdone in 2016. My business has grown ten times since then."</p>
+     <b>Steven T.</b>
+   </div>
+  </div>
+  <div class="csng_feedback item">
+    <img src="{{ static_file('images/landing/cl_scnd.jpg') }}" alt="profile image">
+    <div class="c_coment">
+     <p>"I started selling on jobdone in 2016. My business has grown ten times since then."</p>
+     <b>Steven T.</b>
+   </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  <!--Client feedback area end-->
+
+  <!--FAQ area start-->
+  <div class="faq_area">
+    <div class="section_heading text-center">
+      <h1>FAQ</h1>
+    </div>
+    <div class="container">
+     <div class="row">
+      <div class="faq_content">
+       <div class="panel-group">
+
+        <div class="panel pntl_ttl">
+         <div class="panel-heading">
+          <h4 class="panel-title">
+           <a href="#" @click.prevent="faqOpened = 0">
+            What can I sell?
+          </a>
+          <i class="fa fa-angle-up pull-right"></i>
+        </h4>
+      </div>
+      <div class="panel-collapse collapse" v-bind:class="{ in: faqOpened == 0 }">
+        <div class="panel-body">
+         Be creative! You can offer any service you wish as long as it's legal and complies with our terms. There are many categories you can browse to get ideas.
+       </div>
+     </div>
+   </div>
+
+
+   <div class="panel pntl_ttl">
+     <div class="panel-heading">
+      <h4 class="panel-title">
+      <a href="#" @click.prevent="faqOpened = 1">
+        How much money can I make?
+      </a>
+      <i class="fa fa-angle-down pull-right"></i>
+    </h4>
+  </div>
+  <div>
+    <div class="panel-collapse collapse" v-bind:class="{ in: faqOpened == 1 }">
+      <div class="panel-body">
+       It's your decision. You can work as much as you want. Many sellers work on Jobdone full time and some keep their job while using Jobdone to make extra money.
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <div class="panel pntl_ttl">
+   <div class="panel-heading">
+    <h4 class="panel-title">
+    <a href="#" @click.prevent="faqOpened = 2">
+      How much does it cost?
+    </a>
+    <i class="fa fa-angle-down pull-right"></i>
+  </h4>
+  </div>
+  <div class="panel-collapse collapse" v-bind:class="{ in: faqOpened == 2 }">
+    <div class="panel-body">
+     It's free to join Jobdone. There is no subscription required or fees to list your services. You keep 80% of each transaction.
+   </div>
+  </div>
+  </div>
+
+  <div class="panel pntl_ttl">
+   <div class="panel-heading">
+    <h4 class="panel-title">
+    <a href="#" @click.prevent="faqOpened = 3">
+      How much time will I need to invest?
+    </a>
+    <i class="fa fa-angle-down pull-right"></i>
+  </h4>
+  </div>
+  <div class="panel-collapse collapse" v-bind:class="{ in: faqOpened == 3 }">
+    <div class="panel-body">
+     It's very flexible. You need to put in some time and effort in the beginning to learn the marketplace and then you can decide for yourself what amount of work you want to do.
+   </div>
+  </div>
+  </div>
+
+  <div class="panel pntl_ttl">
+   <div class="panel-heading">
+    <h4 class="panel-title">
+    <a href="#" @click.prevent="faqOpened = 4">
+      How do I price my service?
+    </a>
+    <i class="fa fa-angle-down pull-right"></i>
+  </h4>
+  </div>
+  <div class="panel-collapse collapse" v-bind:class="{ in: faqOpened == 4 }">
+    <div class="panel-body">
+     With Service Extra, you set your pricing anywhere from $5 - $999
+   </div>
+  </div>
+  </div>
+
+ <div class="panel pntl_ttl">
+   <div class="panel-heading">
+    <h4 class="panel-title">
+    <a href="#" @click.prevent="faqOpened = 5">
+      How do I get paid?
+    </a>
+    <i class="fa fa-angle-down pull-right"></i>
+  </h4>
+  </div>
+  <div class="panel-collapse collapse" v-bind:class="{ in: faqOpened == 5 }">
+    <div class="panel-body">
+     Once you complete a buyer's order, the money is transferred to your account. No need to chase clients for payments and wait 60 or 90 days for a check.
+   </div>
+  </div>
+  </div>
+
+
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  <!--FAQ area end-->
+
+  <!--Join our comunity area start-->
+  <div class="getting_str_area">
+    <h2>SIGN UP AND CREATE YOUR FIRST SERVICE TODAY</h2>
+    <a href="#" class="become_aseller" @click.prevent="handleOpenSignupModal">BECOME A SELLER</a>
+    <p>Already an seller? <a href="#" @click.prevent="handleOpenLoginModal">login here</a></p>
+  </div>
+  <!--Join our comunity area end-->
+</main>
+{% endblock %}

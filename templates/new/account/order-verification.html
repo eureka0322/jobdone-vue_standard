@@ -1,0 +1,43 @@
+{% set tab = 'buyer' %}
+{% set header_hide_navigation_bar = 'true' %}
+
+{% extends "new/account/layout.html" %}
+
+{% block body %}
+<div id="sm-account-order-requirements">
+  <div class="Order">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-9">
+          {% include "new/account/components/order/summary.html" %}
+
+          {% if order.state == order.NEW %}
+          <div class="order_req_ar text-center">
+            <img src="{{ static_file('images/account/write-req.png') }}" alt="write req">
+            <h3>ORDER IS UNDER VERIFICATION</h3>
+            <p>This is automated process for all new customers, we kindly ask you to wait a little and then we'll notify you</p>
+          </div>
+          {% else %}
+          <div class="order_req_ar text-center">
+            <img src="{{ static_file('images/account/write-req.png') }}" alt="write req">
+            <h3>ORDER HAS NOT PASSED VERIFICATION</h3>
+            <p>For some reason, order has not passed our verification process and has been cancelled</p>
+          </div>
+          {% endif %}
+          
+        </div>
+
+        {% if mode == 'buyer' and order.state == order.NEW %}
+        <div class="col-md-3" v-if="order" v-cloak>
+          <div class="order_issue" v-if="order.state === 'new'">
+            <p>Having issues with the order?</p>
+            <a href="{{ url_for('account.buyer_order_resolution', order_id=order.id) }}" class="btn btn-primary" v-bind:disabled="isLoading">RESOLVE NOW</a>
+          </div>
+        </div>
+        {% endif %}
+        
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

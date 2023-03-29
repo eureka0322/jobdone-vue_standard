@@ -1,0 +1,12 @@
+{% extends "email/layout.txt" %}
+
+{% block content %}Thank you for your order! Below are your new account credentials:
+
+Username: {{ username }}
+Password: {{ password }}
+
+Please follow the link below in order to activate your account:
+{{ link }}
+
+Warning: we highly recommend you to change password once you log in for the first time!
+{% endblock %}

@@ -1,0 +1,143 @@
+{% extends "admin/layout.html" %}
+{% import "admin/macros.html" as macros with context %}
+
+{% block admin_title %}Withdrawal requests{% endblock %}
+
+{% block admin_body %}
+
+<div class="panel-body">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <p class="alert alert-danger">
+        {% for message in messages %}
+          {{ message }}<br />
+        {% endfor %}
+        </p>
+      {% endif %}
+    {% endwith %}
+
+    <a class="btn btn-danger" href="{{ url_for('admin.withdrawals_toggle_wu') }}">
+      {% if wu_enabled %}Disable{% else %}Enable{% endif %} Western Union withdrawals
+    </a>
+</div>
+
+<table class="table table-condensed">
+    <thead>
+    <tr>
+        <th>Username</th>
+        <th>Information</th>
+        <th>Type and amount</th>
+        <th>Requested on</th>
+        <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for withdrawal in pagination.items %}
+    <tr>
+        <td>{{ withdrawal.get_user().username }}</td>
+        {% with data = withdrawal.get_data() %}
+        <td>
+          <strong>User information:</strong><br />
+          {% if withdrawal.type == withdrawal.WESTERN_UNION %}
+          First name: {{ data.info.first_name }}<br />
+          Middle name: {{ data.info.middle_name }}<br />
+          Last name: {{ data.info.last_name }}<br />
+          Country: {{ data.info.country }}<br />
+          City: {{ data.info.city }}<br />
+          {% else %}
+          Address: {{ data.info.address }}
+          {% endif %}
+
+          {% if data.reply %}
+          <br /><br />
+          <strong>Administrator reply:</strong><br />
+          {{ data.reply.note|nl2br }}
+          {% endif %}
+        </td>
+        <td>
+          <strong>
+          {{ withdrawal.type }}
+          <br />
+          To send:
+          {% if withdrawal.type in (withdrawal.WESTERN_UNION, withdrawal.PAYPAL) %}
+            {{ '{0:.2f}'.format(data.amount_received / 100.0) }} USD
+          {% endif %}
+          {% if withdrawal.type == withdrawal.BTC %}
+            {{ '{0:.8f}'.format(data.amount_received / 100000000.0) }} BTC
+          {% endif %}
+          </strong><br />
+          <small>
+          {% if withdrawal.type == withdrawal.WESTERN_UNION %}
+            Requested: {{ '{0:.2f}'.format(data.amount_usd) }} USD<br />
+            Market fee: {{ '{0:.2f}'.format(data.withdrawal_fee_usd) }} USD<br />
+            WU fee: {{ '{0:.2f}'.format(data.wu_fee_usd) }} USD<br />
+          {% endif %}
+          {% if withdrawal.type == withdrawal.BTC %}
+            Requested: {{ '{0:.8f}'.format(data.amount / 100000000.0) }} BTC<br />
+            Market fee: {{ '{0:.8f}'.format(data.withdrawal_fee / 100000000.0) }} BTC
+          {% endif %}
+          </small>
+        </td>
+        {% endwith %}
+
+        <td>{{ withdrawal.created_on.strftime('%Y-%m-%d %H:%m') }}</td>
+        <td>
+          {% if not withdrawal.is_closed %}
+          <a class="btn btn-xs btn-danger" href="{{ url_for('admin.withdrawal_reject', withdrawal_id=withdrawal.id) }}">Reject</a>
+          <button class="btn btn-default btn-xs btn-success" data-toggle="modal" data-target="#confirmWithdrawalModal" data-action="{{ url_for('admin.withdrawal_confirm', withdrawal_id=withdrawal.id) }}" onclick="changeFormAction(this);">Confirm</button>
+          {% else %}
+            {% if withdrawal.is_rejected %}
+            <span class="text-danger">Rejected</span>
+            {% else %}
+            <span class="text-success">Paid / Completed</span>
+            {% endif %}
+          {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<div class="panel-body">
+  {{ macros.pagination(pagination) }}
+</div>
+
+<div class="modal fade" id="confirmWithdrawalModal">
+<div class="modal-dialog">
+  <form action="" method="POST" class="form-horizontal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+      <h4 class="modal-title">Confirm withdrawal</h4>
+    </div>
+    <div class="modal-body">
+      <div class="control-group">
+        <div class="controls">
+          <label for="old_pincode">Provide a note for this request:</label><br />
+          <textarea cols="40" rows="10" name="note"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button type="submit" class="btn btn-primary">Confirm</button>
+    </div>
+  </div><!-- /.modal-content -->
+  </form>
+</div><!-- /.modal-dialog -->
+</div><!-- /.modal -->  
+
+{% endblock %}
+
+{% block scripts %}
+
+<script type="text/javascript">
+  function changeFormAction(btn) {
+    var $btn = $(btn),
+        action = $btn.attr('data-action'),
+        $modal = $($btn.attr('data-target'));
+
+    $('form', $modal).attr('action', action);
+  }
+</script>
+
+{% endblock %}

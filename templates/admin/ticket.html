@@ -1,0 +1,66 @@
+{% extends "admin/layout.html" %}
+{% set conversation = ticket.conversation %}
+
+{% block admin_title %}View ticket{% endblock %}
+
+{% block admin_body %}
+
+<div class="panel-body">
+    <h1>{{ ticket.subject|nl2br }}</h1>
+    <blockquote>
+      <p>{{ ticket.text|nl2br }}</p>
+    </blockquote>
+    {% if ticket.order_id %}
+    <p class="lead">Order #{{ ticket.order_id }}</p>
+    {% endif %}
+    <small>Opened on {{ ticket.created_on.strftime('%Y-%m-%d %H:%m') }}</small> by {{ ticket.get_user().username }}<br /><br />
+    {% if not ticket.is_closed %}
+    <a class="btn btn-danger" href="{{ url_for('admin.ticket_close', ticket_id=ticket.id) }}">Close ticket</a>
+    {% endif %}
+</div>
+
+<ul class="list-group" id="lst-messages">
+</ul>
+
+<ul class="list-group">
+    <li class="list-group-item">
+        <textarea id="txt-new-message" cols="50" rows="5"></textarea><br />
+        <button id="btn-new-message" class="btn btn-primary">Send</button>
+    </li>
+</ul>
+
+{% endblock %}
+
+{% block scripts %}
+<script type="text/javascript">
+    $(function() {
+        function appendMessage(msg) {
+            var text = msg.text.replace(/\n+/g, '<br />');
+            $('#lst-messages').append('<li class="list-group-item">' + text + '<br /><small>By ' + msg.user + ' on ' + msg.sent_on + '</small></li>');
+        }
+
+        $('#btn-new-message').click(function() {
+            var text = $('#txt-new-message').val();
+            if (!text) return;
+
+            $.ajax({
+                'url': '{{ url_for('admin.messages_json', conversation_id=conversation.id) }}',
+                'method': 'POST',
+                'data': {
+                    'text': text
+                }
+            }).done(function(data) {
+                $('#txt-new-message').val('');
+                appendMessage(data);
+            });
+        });
+
+        $.ajax({
+            'url': '{{ url_for('admin.messages_json', conversation_id=conversation.id) }}',
+            'method': 'GET'
+        }).done(function(data, d2) {
+            data.forEach(appendMessage);
+        });
+    });
+</script>
+{% endblock %}

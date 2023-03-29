@@ -1,0 +1,36 @@
+{% extends "admin/layout.html" %}
+
+{% block admin_title %}
+    E-mail update by {{ newsletter.get_seller().username }}
+{% endblock %}
+
+{% block admin_body %}
+
+<div class="panel-body">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        {% for message in messages %}
+          <p class="alert alert-info">{{ message }}</p>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+	{% if newsletter.is_sent %}
+		<strong>Update has been sent to {{ newsletter.recipients_count }} recipients on {{ newsletter.sent_on.strftime('%Y-%m-%d %H:%m') }}</strong>
+	{% else %}
+		<a class="btn btn-success" href="{{ url_for('admin.newsletter_approve', newsletter_id=newsletter.id) }}">Approve and send</a>
+    <a class="btn btn-danger" href="{{ url_for('admin.newsletter_delete', newsletter_id=newsletter.id) }}" onclick="return confirm('Are you sure you want to discard and delete this update? This cannot be undone');">Discard and delete</a>
+	{% endif %}
+	<br /><br />
+
+  <label>Subject:</label><br />
+  {{ newsletter.subject }}<br /><br />
+
+  <label>Message:</label><br />
+  {{ newsletter.text|nl2br }}<br /><br />
+
+  <label>Created on:</label><br />
+  {{ newsletter.created_on.strftime('%Y-%m-%d %H:%m') }}<br /><br />
+</div>
+
+{% endblock %}

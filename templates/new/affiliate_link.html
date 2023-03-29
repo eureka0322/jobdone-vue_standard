@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>{% block title %}JobDone{% endblock %}</title>
+
+    <meta name="description" content="JobDone">
+    <link rel="alternate" type="application/atom+xml" title="Atom" href="{{ url_for('atom_xml') }}">
+
+    <link rel="icon" href="{{ static_file('images/favicon/favicon.ico') }}" />
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ static_file('images/favicon/favicon-32x32.png') }}" />
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ static_file('images/favicon/favicon-16x16.png') }}" />
+
+    <!-- Add to homescreen for Chrome on Android. Fallback for manifest.json -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="JobDone">
+    <link rel="manifest" href="{{ static_file('images/favicon/manifest.json') }}" />
+
+    <!-- Add to homescreen for Safari on iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="JobDone">
+
+    <link rel="mask-icon" href="{{ static_file('images/favicon/safari-pinned-tab.svg') }}" color="#5bbad5" />
+    <meta name="theme-color" content="#ffffff" />
+
+    <!-- Homescreen icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ static_file('images/favicon/apple-touch-icon.png') }}">
+
+    <!-- Tile icon for Windows 8 (144x144 + tile color) -->
+    <meta name="msapplication-TileImage" content="{{ static_file('images/favicon/mstile-150x150.png') }}">
+    <meta name="msapplication-TileColor" content="#000000">
+    <meta name="msapplication-tap-highlight" content="no">
+
+    <!-- OpenGraph definitions goes here -->
+    <meta http-equiv="refresh" content="5;{{ affiliate_link.url }}" />
+    <meta property="og:site_name" content="JobDone.net">
+    <meta property="og:locale" content="en_US">
+    <meta prefix="og: http://ogp.me/ns#" property="og:title" content="{{ affiliate_link.title }}">
+    <meta prefix="og: http://ogp.me/ns#" property="og:description" content="{{ affiliate_link.description }}">
+    <meta prefix="og: http://ogp.me/ns#" property="og:url" content="{{ request.url }}">
+    <meta prefix="og: http://ogp.me/ns#" property="og:image" content="{{ affiliate_link.get_image_url('w_670') }}">
+    <meta prefix="og: http://ogp.me/ns#" property="og:type" content="article">
+
+    <style>
+    body {
+        margin: 0;
+        font-family: Helvetica, Arial, sans-serif;
+        line-height: 1.5;
+        min-height: 100vh;
+        background-color: #FFF;
+    }
+
+    .wrapper {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        background-color: #FFF;
+    }
+
+    .content {
+        width: 300px;
+        height: 300px;
+        
+        position:absolute;
+        left:0; right:0;
+        top:0; bottom:0;
+        margin:auto;
+        
+        max-width:100%;
+        max-height:100%;
+        overflow:auto;
+
+        text-align: center;
+    }
+
+    .image {
+        padding: 20px 0;
+        background-color: #161E2C;
+        text-align: center;
+    }
+    </style>
+
+  </head>
+  <body>
+    <div class="wrapper">
+        <div class="content">
+            <div class="image">
+                <img src="{{ static_file('images/email/logo.png', _external=True) }}" alt="JobDone" width="192" height="30" />
+            </div>
+            <p>Redirecting you to <a href="{{ affiliate_link.url }}">{{ affiliate_link.title }}</a> page...</p>
+        </div>
+    </div>
+
+    <script type="text/javascript">
+        {% if g.inject_affiliate_script_options %}
+        window.SM_AFFILIATE_OPTIONS = {{ g.inject_affiliate_script_options|tojson|safe }};
+        {% endif %}
+
+        window.SM_AFFILIATE_LINK_URL = '{{ affiliate_link.url }}';
+    </script>
+
+    <script type="text/javascript" src="{{ static_file('assets/vendor.js', include_version=True) }}"></script>
+    <script type="text/javascript" src="{{ static_file('assets/affiliate.js', include_version=True) }}"></script>
+  </body>
+</html>

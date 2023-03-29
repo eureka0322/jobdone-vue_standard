@@ -1,0 +1,98 @@
+{% if not footer_hide %}
+
+<footer>
+  <div class="footer-wrap">
+    {# <!--<div class="refer-block">
+      <div class="left">
+        <h5>Refer Friends & Get 30%</h5>
+        <p>Share your referral link with friends and earn 30% credit upon for all purchases.</p>
+        <div class="referal-link">
+          <label>your referral link:</label>
+          <div class="input-field">
+            <input type="text" value="http://jobdone.net/refer/hiy675">
+          <div class="btn copy-btn">copy link</div>
+          </div>
+        </div>
+      </div>
+      <div class="right">
+        <h5>Questions</h5>
+        <p>
+          Email our Customer Support<br>
+          From 9am - 6pm PST. We're here to help!
+        </p>
+        <a class="mailto" href="mailto:support@jobdone.net">support@jobdone.net</a>
+      </div>
+    </div>--> #}
+    <div class="links">
+      <div class="left">
+        <div class="col">
+          <h5>Marketplace</h5>
+          <ul>
+            <!-- <li><a target="_blank" href="http://support.jobdone.net">Customer support</a></li> -->
+            <li><a href="{{ url_for('affiliate') }}">Affiliate Program</a></li>
+            <li><a href="{{ url_for('become_seller') }}">Selling on jobdone</a></li>
+            <!-- <li><a target="_blank" href="http://blog.jobdone.net">Blog</a></li> -->
+
+          </ul>
+        </div>
+        <div class="col">
+          <h5>About</h5>
+          <ul>
+
+            <li><a href="{{ url_for('terms') }}">Terms &amp; Conditions</a></li>
+            <li><a href="{{ url_for('content_policy') }}">Content Policy</a></li>
+            <li><a href="{{ url_for('privacy') }}">Privacy Policy</a></li>
+            <!-- <li><a href="{{ url_for('support') }}">Contact Us</a></li> -->
+            <li><a href="mailto:contact@jobdone.net">Contact Us</a></li>
+
+          </ul>
+        </div>
+        <div class="col">
+          <h5>Follow us</h5>
+          <ul>
+            <li><a target="_blank" href="https://www.facebook.com/jobdone.net/">
+              <svg class="icon icon-facebook">
+                <use xlink:href="{{ static_file('images/sprite.svg') }}#facebook"></use>
+              </svg>
+              Facebook</a>
+            </li>
+            <li><a href="#">
+              <svg class="icon icon-twitter">
+                <use xlink:href="{{ static_file('images/sprite.svg') }}#twitter"></use>
+              </svg>
+              Twitter</a>
+            </li>
+            <li><a target="_blank" href="https://plus.google.com/b/111694516602075188568/111694516602075188568">
+              <svg class="icon icon-google">
+                <use xlink:href="{{ static_file('images/sprite.svg') }}#google"></use>
+              </svg>
+              Google+</a>
+            </li>
+            <li><a target="_blank" href="https://www.youtube.com/channel/UCAZjKidt459fZH6vTTkeUWw">
+              <svg class="icon icon-youtube">
+                <use xlink:href="{{ static_file('images/sprite.svg') }}#youtube"></use>
+              </svg>
+              Youtube</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+      {% if not g.user.seller_fee_paid %}
+      <div class="right">
+        <h5>Are you a Freelancer ?</h5>
+        <p>Sign up today as free and get clients for your skills.</p>
+        <a href="{{ url_for('become_seller') }}" class="btn btn-white">Become a Seller</a>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="copyright">
+    <span>Copyright &copy; 2017 JOBDONE.net.</span>
+    <span>All Rights Reserved.</span>
+  </div>
+
+
+</footer>
+
+{% endif %}

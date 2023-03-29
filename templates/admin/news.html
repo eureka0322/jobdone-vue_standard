@@ -1,0 +1,36 @@
+{% extends "admin/layout.html" %}
+{% import "admin/macros.html" as macros with context %}
+
+{% block admin_title %}News{% endblock %}
+
+{% block admin_body %}
+
+<div class="panel panel-default">
+<div class="panel-body">
+  <p><a href="{{ url_for('admin.news_add') }}" class="btn btn-success">Add news item</a></p>
+
+  {% for content in pagination.items %}
+  <div class="panel panel-default">
+  <div class="panel-body">
+    {% if content.title %}<h4>{{ content.title }}</h4>{% endif %}
+    {% if not content.is_published %}
+      <span class="label label-danger">Not published</span><br /><br />
+    {% endif %}
+
+    <p>{{ content.text|nl2br }}</p>
+    <p><small>Published on {{ content.created_on.strftime('%Y-%m-%d %H:%m') }}</small></p>
+
+    <a class="btn btn-warning btn-small" href="{{ url_for('admin.news_edit', content_id=content.id) }}">Edit</a>
+    <a class="btn btn-danger btn-small" href="{{ url_for('admin.news_delete', content_id=content.id) }}">Delete</a>
+  </div>
+  </div>
+  {% endfor %}
+
+  {{ macros.pagination(pagination) }}
+</div>
+</div>
+
+<div class="panel-body">
+</div>
+
+{% endblock %}

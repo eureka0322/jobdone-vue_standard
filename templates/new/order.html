@@ -1,0 +1,316 @@
+{% extends "new/layout.html" %}
+{% set footer_hide = True %}
+{% set header_hide_elements = True %}
+
+{% block head %}
+  <meta name="robots" content="noindex, nofollow">
+
+  <script src="https://js.stripe.com/v3/"></script>
+{% endblock %}
+
+{% block title %}{{ product.title }}{% endblock %}
+
+{% block body %}
+<main id="sm-order">
+  <div class="OrderDetails__header">
+    <div class="OrderDetails__header-inner">
+      <div class="OrderDetails__progress-bar">
+        <div class="OrderDetails__progress-bar-step done">
+          <div class="OrderDetails__progress-bar-step-indicator"></div>
+          <div class="OrderDetails__progress-bar-step-label">
+            Order Details
+          </div>
+        </div>
+        <div class="OrderDetails__progress-bar-step done current">
+          <div class="OrderDetails__progress-bar-step-indicator"></div>
+          <div class="OrderDetails__progress-bar-step-label">
+            Review &amp; Pay
+          </div>
+        </div>
+        <div class="OrderDetails__progress-bar-step">
+          <div class="OrderDetails__progress-bar-step-indicator"></div>
+          <div class="OrderDetails__progress-bar-step-label">
+            Submit Requirements &amp; Start Order
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="wrapper">
+    <section class="order-info">
+      <div class="left">
+        <h4>Order Details</h4>
+        <table>
+          <tr>
+            <td>Service Name:</td>
+            <td>I will {{ product.title }}</td>
+          </tr>
+          <tr>
+            <td>Service Provider:</td>
+            <td>{{ product_seller.username }}</td>
+          </tr>
+          {# <!--<tr>
+            <td>Revision Requests:</td>
+            <td>2</td>
+          </tr>--> #}
+          <tr>
+            <td>Turnaround:</td>
+            <td>
+              {% if enquiry_offer %}
+                {{ enquiry_offer.delivery_time.days }} day{{ 's' if enquiry_offer.delivery_time.days > 1 else '' }}
+              {% else %}
+                {% if product.delivery_time %}
+                  {{ product.delivery_time.days }} day{{ 's' if product.delivery_time.days > 1 else '' }}
+                {% else %}
+                  7 days
+                {% endif %}
+              {% endif %}
+            </td>
+          </tr>
+          <tr>
+            <td>Service Price:</td>
+            <td><strong>${{ product_price|format_price }}</strong> + {{ order_fee|format_percents }}% fee</td>
+          </tr>
+        </table>
+        <div class="extras" v-if="extras.length" v-cloak>
+          <h6>Add Extras to your order</h6>
+          <div v-for="(extra, idx) in extras">
+          <label v-bind:class="{ checked: extra.id in extrasSelected }">
+            <span class="checkbox">
+              <input type="checkbox" v-model="extra.selected" @change="handleExtraSelectionChange">
+              <svg class="icon icon-checkbox">
+                <use xlink:href="{{ static_file('images/sprite.svg') }}#checkbox"></use>
+              </svg>
+              <svg class="icon icon-checked-solid">
+                <use xlink:href="{{ static_file('images/sprite.svg') }}#checked-solid"></use>
+              </svg>
+            </span>
+            <span class="option">
+              <span class="text">
+                <span v-text="extra.text"></span>
+                <span v-if="extra.description" class="description" v-text="extra.description"></span>
+              </span>
+              <span class="price" v-text="'$' + (extra.price / 100).toFixed(2)"></span>
+            </span>
+          </label>
+          </div>
+
+          {% if not product.get_active_offer() and not enquiry_offer %}
+          <h6>Do you have a coupon?</h6>
+
+          <div class="coupon-error" v-if="couponError" v-text="couponError"></div>
+
+          <div class="coupon-wrapper">
+            <input v-model="coupon" type="text" placeholder="" v-bind:disabled="isLoading" />
+            <button type="button" class="btn" v-bind:disabled="isLoading" @click="handleApplyCouponClick">APPLY COUPON</button>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+      <div class="right clearfix">
+        <div class="catalog--list--item" v-cloak>
+          <a class="item-image" v-bind:href="sharedState.extra.product._url">
+            <div class="labels">
+              <span class="label cloud">
+                <svg class="icon icon-download">
+                  <use xlink:href="{{ static_file('images/sprite.svg') }}#download"></use>
+                </svg>
+              </span>
+              <span class="label star">
+                <svg class="icon icon-star">
+                  <use xlink:href="{{ static_file('images/sprite.svg') }}#star"></use>
+                </svg>
+              </span>
+            </div>
+            <div class="favorite" v-if="sharedState.extra.product._is_favorite" v-cloak>
+              <svg class="icon icon-heart">
+                  <use xlink:href="{{ static_file('images/sprite.svg') }}#heart"></use>
+              </svg>
+            </div>
+            <img v-bind:src="sharedState.extra.product._primary_photo_url" alt="">
+            <div class="prices">
+              {% if enquiry_offer %}
+              <div class="price">
+                {{ product_price|format_price }}
+              </div>
+              {% else %}
+              <div class="old-price price" v-if="sharedState.extra.product.price_offer" v-text="(sharedState.extra.product.price / 100).toFixed(2)"></div>
+              <div class="current-price price" v-text="((sharedState.extra.product.price_offer ? sharedState.extra.product.price_offer : sharedState.extra.product.price) / 100).toFixed(2)"></div>
+              {% endif %}
+            </div>
+          </a>
+          <a class="item-title" v-html="'I will ' + sharedState.extra.product.title" v-bind:href="sharedState.extra.product._url"></a>
+          <div class="item-rating">
+            <span class="rating-stars" v-bind:data-stars="sharedState.extra.product._feedbacks_rating_int"></span>
+          </div>
+          <div class="item-author">
+            <span class="status" v-bind:class="{ online: sharedState.extra.product._seller_is_online, offline: !sharedState.extra.product._seller_is_online }"></span>
+            by <strong v-html="sharedState.extra.product._seller"></strong>
+          </div>
+          <div class="item-tags">
+            <ul>
+              <li v-for="tag in sharedState.extra.product._tags"><span class="tag-label"></span> <span v-html="tag"></span></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    {# <!-- <section class="order-images" v-if="requirements.length" v-cloak>
+      <h4>Provide your brief</h4>
+      <div class="subheader">Your service provider needs the following information:</div>
+      
+      <div class="flex">
+        <div class="left">
+          <div class="instructions">
+            <div class="header">how it works</div>
+            <ol>
+              <li>Please attach your Photos</li>
+              <li>Please inform preferred Background color (White, Transparent or any)</li>
+              <li>Preferred resolution (72 or 300ppi)</li>
+              <li>Dimension of output image (width & height)</li>
+              <li>Preferred file format (PSD, PNG, JPEG, TIFF, etc)</li>
+            </ol>
+          </div>
+          <textarea placeholder="Write down your brief here..."></textarea>
+        </div>
+        <div class="right">
+          <div class="dropzone">
+            <div class="items">
+              <div class="item" v-for="n in 18" v-text="fileUploadAttachments[n-1] ? n : ''"></div>
+            </div>
+            <div class="btn upload">
+              <file-upload title="upload files" name="file" post-action="/api/order/upload" :multiple="true" :files="fileUploadAttachments" :events="fileUploadEvents">
+              </file-upload>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="flex requirement" v-for="(requirement, idx) in requirements">
+        <div class="left">
+          <div class="instructions">
+            <div class="header">Requirement <span v-text="idx + 1"></span> <span class="required" v-if="requirement.required">&mdash; REQUIRED</span></div>
+            <p v-text="requirement.text"></p>
+          </div>
+          <textarea placeholder="Write down your brief here..." v-if="requirement.type === 'text'" v-model="requirement.reply.text"></textarea>
+        </div>
+      </div>
+
+    </section> --> #}
+
+    <section class="order-sumbit" v-cloak>
+      <h4>Add a Payment Method</h4>
+      <div class="title-desc">
+        <svg class="icon icon-lock title-desc-icon">
+          <use xlink:href="{{ static_file('images/sprite.svg') }}#lock"></use>
+        </svg>
+        <span class="title-desc-text">
+          Please provide your payment information. Every payment is processed via secured transaction
+        </span>
+      </div>
+      <div>
+        <div class="payment-methods">
+          <div class="tabs">
+            <form ref="tabsForm">
+              <div class="radio" v-if="sharedState.user">
+                <input id="radio-1" type="radio" value="balance" v-model="paymentMethod">
+                <label for="radio-1" class="radio-label">
+                  <div style="padding: 9.5px 0;">Balance</div> 
+                </label>
+              </div>
+              <div class="radio">
+                <input id="radio-2" type="radio" value="card" v-model="paymentMethod">
+                <label for="radio-2" class="radio-label">
+                  <div>Credit Card</div> 
+                  <span class="ccdc-image"></span>
+                </label>
+              </div>
+            </form>
+          </div>
+          <div class="tab-panel" >
+            <div class="submit-balance" ref="submitPaypal" style="height: 500px; margin: 20px 0;" v-show="paymentMethod === 'balance'">
+              <div class="submit-error" v-if="notEnoughBalanceError">
+                <span v-if="notEnoughBalanceError">You do not have enough balance to order this service</span>
+              </div>
+              <div >
+                <div class="submit-order-total">Total:</div>
+                <div class="submit-order-price">
+                  <span v-bind:class="{ strikethrough: !!couponValue }" v-text="'$' + (totalPrice / 100).toFixed(2)"></span>
+                  <span v-if="!!couponValue" v-text="'$' + (totalPriceWithCoupon / 100).toFixed(2)"></span>
+                  <span>&nbsp;USD</span>
+                </div>
+                <button type="button" class="btn submit" v-bind:disabled="notEnoughBalanceError || isLoading" @click="handleOrderClick">
+                  <svg class="icon icon-lock">
+                    <use xlink:href="{{ static_file('images/sprite.svg') }}#lock"></use>
+                  </svg>
+                  Pay with balance
+                </button>
+              </div>
+            </div>
+
+            <div class="submit-credit-card" ref="submitCreditCard" v-show="paymentMethod === 'card'">
+              <form @submit.prevent="handleStripePayment" ref="submitCreditCardForm">
+                <div class="flex" >
+                  <div style="width:70%; min-width: 350px; padding: 0 1em; " >
+                    <div class="flex" v-if="!sharedState.user || !sharedState.user.email">
+                      <div class="width-7 padding1em">
+                        <h6>E-mail</h6>
+                        <input type="email" v-model="cardEmail" placeholder="E-mail" />
+                      </div>
+                    </div>
+                    <div  class="flex" >
+                      <div  class="width-7 padding1em">
+                        <h6>Card Number</h6>
+                        <div ref="stripeCardNumberElement"></div>
+                      </div>
+                      <div  class="width-3 padding1em">
+                        <h6>CVC</h6>
+                        <div ref="stripeCardCvcElement"></div>
+                      </div>
+                    </div>
+                    <div class="flex" >
+                      <div class="width-5 padding1em">
+                        <h6>Expires</h6>
+                        <div ref="stripeCardExpiryElement">
+                        </div>
+                      </div>
+                      <div class="width-5 padding1em">
+                        <h6>Use this card for future orders</h6>
+                        <div class="radio">
+                          <input id="radio-3" name="radio" type="checkbox" v-model="cardRemember">
+                          <label for="radio-3" class="radio-label">
+                            <div>Yes, save this card</div>
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <!-- Totoal USD & Submit Order -->
+                  <div class="submit-order-section">
+                    <div class="submit-order-total">Total:</div>
+                    <div class="submit-order-price">
+                      <span v-bind:class="{ strikethrough: !!couponValue }" v-text="'$' + (totalPrice / 100).toFixed(2)"></span>
+                      <span v-if="!!couponValue" v-text="'$' + (totalPriceWithCoupon / 100).toFixed(2)"></span>
+                      <span>&nbsp;USD</span>
+                    </div>
+                    <button type="submit" class="btn submit" v-bind:disabled="isLoading || !cardComplete || cardError">
+                      <svg class="icon icon-lock">
+                        <use xlink:href="{{ static_file('images/sprite.svg') }}#lock"></use>
+                      </svg>
+                      Pay with credit card
+                    </button>
+                  </div>
+                </div>
+              </form>              
+            </div>
+
+            <div class="submit-success" v-if="success" v-text="success"></div>
+            <div class="submit-error" v-if="error" v-text="error"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+</main>
+{% endblock %}

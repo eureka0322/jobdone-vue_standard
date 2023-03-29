@@ -1,0 +1,366 @@
+{% set tab = mode %}
+{% set header_hide_navigation_bar = 'true' %}
+
+{% extends "new/account/layout.html" %}
+
+{% block body %}
+<div id="sm-account-order">
+  {% include "new/account/components/order/alertbar.html" %}
+
+  <div class="Order">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-9">
+          {% include "new/account/components/order/summary.html" %}
+
+          <div v-if="order" v-cloak>
+            <div class="order_str_area" v-if="order.state === 'new' && order.is_requirements_provided">
+              <div class="order_strt_lft text-center">
+                <h2>Awaiting confirmation</h2>
+                <p>Please confirm that you are ready to start with this order</p>
+              </div>
+              <div class="order_strt_rgt">
+                <Countdown key="accept" v-if="order._accept_deadline" v-bind:date="order._accept_deadline" />
+              </div>
+            </div>
+
+            <div class="order_str_area" v-if="order.state === 'accepted'">
+              <div class="order_strt_lft text-center">
+                <img src="{{ static_file('images/account/itsalive@3x.png') }}" />
+                <h2>Order started</h2>
+              </div>
+              <div class="order_strt_rgt">
+                <Countdown key="delivery" v-if="order.delivery_on" v-bind:date="order.delivery_on" />
+              </div>
+            </div>
+
+            <div class="order_str_area text-center" v-if="order.state === 'sent'">
+              <div class="order_strt_full text-center">
+                <img src="{{ static_file('images/account/itsalive@3x.png') }}" />
+                <h2>Order is delivered</h2>
+                <p>We notified <strong v-text="buyerDisplayName"></strong> that you finished your work on this order</p>
+              </div>
+            </div>
+
+            <div class="order_str_area text-center" v-if="order.state === 'new' && !order.is_requirements_provided">
+              <div class="order_req_seller order_strt_full text-center">
+                <img src="{{ static_file('images/account/write-req.png') }}" />
+                <h2>Awaiting requirements</h2>
+                <p>We asked <strong v-text="buyerDisplayName"></strong> to provide detailed information on this order</p>
+              </div>
+            </div>
+
+            <div class="project_dtails clearfix">
+              <div class="sng_pdt_mesage" v-if="orderProductHasRequirements">
+                <div class="pr_profile">
+                  <a href="#">
+                    <img v-bind:src="sellerPhoto" alt="profile picture" />
+                  </a>
+                </div>
+                <div class="pr_ab_desc">
+                  <p>Before <b v-text="sellerDisplayName"></b> starts working on this order he needs to receive the following details:</p>
+                  <p class="pr_time_ago" v-text="orderCreatedDate"></p>
+                  <div class="repaly_content">
+                    <ol>
+                      <li v-for="requirement in sharedState.extra.product_requirements" v-text="requirement.text"></li>
+                    </ol>
+                  </div>
+                </div>
+              </div>
+
+              <div class="sng_pdt_mesage right" v-if="order.is_requirements_provided && orderHasRequirements">
+                <div class="pr_profile">
+                  <a href="#"><img v-bind:src="buyerPhoto" alt="profile picture" /></a>
+                </div>
+                <div class="pr_ab_desc">
+                  <p><b v-text="buyerDisplayName"></b> has provided the following information:</p>
+                  {# <!-- <p class="pr_time_ago" v-text="orderCreatedDate"></p> --> #}
+                  <div class="repaly_content">
+                    <ul>
+                      <li v-for="requirement in orderRequirements">
+                        <span v-if="typeof requirement.reply === 'string'" v-text="requirement.reply"></span>
+                        <span v-if="typeof requirement.reply === 'object'">
+                          <a v-bind:href="attachment._url" v-for="attachment in requirement.reply"><span v-text="attachment.filename"></span></a>
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              <div v-if="order.is_requirements_provided || order.state !== 'new'">
+                <div class="sng_pdt_mesage" v-for="message in messages" v-bind:class="{ right: message._buyer }">
+                  <div class="pr_profile">
+                    <a href="#"><img v-bind:src="message._sender_photo" /></a>
+                  </div>
+                  <div class="pr_ab_desc" v-if="message.type === 'message'">
+                    <p><b v-text="message._sender_display"></b> wrote:</p>
+                    <p class="pr_time_ago" v-text="message._create_date_display"></p>
+                    <div class="clearfix">
+                      <div class="repaly_content">
+                        <p v-text="message.text"></p>
+                        <p v-if="message.meta && message.meta.attachments" class="attachments">
+                          <a v-bind:href="'/api/account/messaging/download/' + attachment.attachmentId + '/' + attachment.filename" v-text="attachment.filename" v-for="attachment in message.meta.attachments" target="_blank"></a>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="pr_ab_desc" v-if="message.type === 'order_rejected'">
+                    <p><strong v-text="sellerDisplayName"></strong> rejected the order</strong></p>
+                    <p class="pr_time_ago" v-text="message._create_date_display"></p>
+                    <div class="clearfix" v-if="message.text">
+                      <div class="repaly_content"><p v-text="message.text"></p></div>
+                    </div>
+                  </div>
+
+                  <div class="pr_ab_desc" v-if="message.type === 'order_sent'">
+                    <p><strong v-text="sellerDisplayName"></strong> has delivered his work</strong></p>
+                    <p class="pr_time_ago" v-text="message._create_date_display"></p>
+
+                    <div class="repaly_content full" v-if="message.meta && message.meta.deliverable">
+                      <div class="replay_cn_lft">
+                        <p v-text="message.meta.deliverable.text"></p>
+                        <p class="attachments-block">
+                          <a v-bind:href="file._url" class="attachment-item" v-for="file in message.meta.deliverable.files" v-text="file.filename"></a>
+                        </p>
+                      </div>
+                      <div class="refunt_ser_rgt">
+                          <div v-if="deliveryVote[message.meta.deliverable.id] || message.meta.deliverable.rating">Vote: <span v-text="deliveryVote[message.meta.deliverable.id] || message.meta.deliverable.rating"></span></div>
+                          <div v-else>Buyer has not voted yet</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="pr_ab_desc" v-if="message.type === 'order_offer'">
+                    <p><strong v-text="sellerDisplayName"></strong> has offered an extra work:</strong></p>
+                    <p class="pr_time_ago" v-text="message._create_date_display"></p>
+
+                    <div class="repaly_content full">
+                      <div class="replay_cn_lft">
+                        <p v-if="message.meta.order_offer.text" v-text="message.meta.order_offer.text"></p>
+                        <p v-if="message.meta && message.meta.attachments" class="attachments-block">
+                          <a v-bind:href="'/api/account/messaging/download/' + attachment.attachmentId + '/' + attachment.filename" class="attachment-item" v-for="attachment in message.meta.attachments">
+                            <span class="attachment-name" v-text="attachment.filename"></span>
+                          </a>
+                        </p>
+                        <ul class="extras">
+                          <li v-for="extra in message.meta.order_offer.extras"><label>
+                              <input type="checkbox" checked disabled />
+                              <span v-text="extra.text"></span>
+                              <span v-text="'$' + (extra.price / 100).toFixed(2)" class="price pull-right"></span>
+                            </label>{#<!-- <p v-if="extra.description" v-text="extra.description"></p> -->#}</li>
+                        </ul>
+                        <p>Delivered within <span v-text="message.meta.order_offer.delivery_time"></span> day(s)</p>
+                      </div>
+                      <div class="refunt_ser_rgt" v-if="order.state == 'accepted'">
+                        <p>Amount</p>
+                        <span v-text="'$' + (message.meta.order_offer.price / 100).toFixed(2)"></span>
+
+                        <div v-if="orderOfferLoading[message.meta.order_offer.id]">
+                          <Spinner />
+                        </div>
+                        <div v-else>
+                          <div v-if="(orderOfferDisabled[message.meta.order_offer.id] && orderOfferDisabled[message.meta.order_offer.id].is_closed) || message.meta.order_offer.is_closed">
+                            Offer is either canceled or rejected
+                          </div>
+                          <div v-if="(orderOfferDisabled[message.meta.order_offer.id] && orderOfferDisabled[message.meta.order_offer.id].is_accepted) || message.meta.order_offer.is_accepted">
+                            Offer is accepted
+                          </div>
+                          <div v-if="!orderOfferDisabled[message.meta.order_offer.id] && !message.meta.order_offer.is_closed && !message.meta.order_offer.is_accepted">
+                            <a href="#" class="cancel_order" @click.prevent="handleSellerOfferCancel(message.meta.order_offer.id)">CANCEL OFFER</a>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="pr_ab_desc" v-if="message.type === 'order_revision'">
+                    <p><strong v-text="buyerDisplayName"></strong> requested a revision</strong></p>
+                    <p class="pr_time_ago" v-text="message._create_date_display"></p>
+                  </div>
+
+                  <div class="pr_ab_desc" v-if="message.type === 'order_cancelled'">
+                    <p><strong v-text="buyerDisplayName"></strong> cancelled the order</strong></p>
+                    <p class="pr_time_ago" v-text="message._create_date_display"></p>
+                  </div>
+
+                  <div class="pr_ab_desc" v-if="message.type === 'order_completed'">
+                    <p><strong v-text="buyerDisplayName"></strong> closed the order</strong></p>
+                    <p class="pr_time_ago" v-text="message._create_date_display"></p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="sng_pdt_mesage" v-if="order.state === 'dispute' && order._dispute_user_id !== sharedState.user.id">
+                <div class="pr_profile">
+                  <a href="#"><img v-bind:src="buyerPhoto" /></a>
+                </div>
+                <div class="pr_ab_desc">
+                  <p><b v-text="buyerDisplayName"></b> is asking for refund</p>
+                  {# <!-- <p class="pr_time_ago">An 1 houre ago</p> --> #}
+                  <div class="repaly_content full">
+                    <div class="replay_cn_lft">
+                      <b>REASON</b>
+                      <p v-text="order._dispute_text"></p>
+                    </div>
+                    <div class="refunt_ser_rgt">
+                      <p>Amount To Refund</p>
+                      <span v-text="'$' + ((order.price + sharedState.extra.extras_price) / 100).toFixed(2)"></span>
+                      <a href="#" class="make_refund btn btn-primary" @click.prevent="handleResolveDisputeClick">MAKE REFUND</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="sng_pdt_mesage" v-if="order.state === 'dispute' && order._dispute_user_id === sharedState.user.id">
+                <div class="pr_profile">
+                  <a href="#"><img v-bind:src="sellerPhoto" /></a>
+                </div>
+                <div class="pr_ab_desc">
+                  <p><b v-text="sellerDisplayName"></b> is asking to cancel the order</p>
+                  {# <!-- <p class="pr_time_ago">An 1 houre ago</p> --> #}
+                  <div class="repaly_content full">
+                    <div class="replay_cn_lft">
+                      <b>REASON</b>
+                      <p v-text="order._dispute_text"></p>
+                    </div>
+                    <div class="refunt_ser_rgt">
+                      <p>Amount</p>
+                      <span v-text="'$' + ((order.price + sharedState.extra.extras_price) / 100).toFixed(2)"></span>
+                      <a href="#" class="cancel_order" @click.prevent="handleCancelDisputeClick">CANCEL REQUEST</a>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="acc_rv_btn text-center" v-if="order.state === 'closed_completed'">
+                <!-- <div class="order_strt_lft text-center"> -->
+                  <img src="{{ static_file('images/account/itsalive@3x.png') }}" />
+
+                  <h2>Order has been completed</h2>
+                <!-- </div> -->
+              </div>
+
+              <div class="bottom_action text-center" v-if="order.state === 'new' && order.is_requirements_provided">
+                <div class="btn-group">
+                  <button class="btn btn-primary" v-bind:disabled="isLoading" @click="handleAcceptOrderClick">ACCEPT ORDER</button>
+                  <button type="button" class="btn btn-primary dropdown-toggle" @click="sellerRejectPopup = !sellerRejectPopup">
+                    <span class="caret"></span>
+                  </button>
+
+                  <ul class="dropdown-menu dropdown-menu-right" v-bind:style="{ display: sellerRejectPopup ? 'block' : 'none' }" @mouseleave="sellerRejectPopup = false">
+                    <li><a href="#" v-bind:disabled="isLoading" @click.prevent="handleRejectOrderClick">REJECT ORDER</a></li>
+                  </ul>
+                </div>
+              </div>
+
+              <div class="bottom_action text-center" v-if="order.state === 'accepted'">
+                <button v-bind:disabled="isLoading" @click="handleDeliverClick">DELIVER NOW</button>
+              </div>
+
+              <div class="dlv_or_lchat" v-if="(order.state === 'new' && order.is_requirements_provided) || order.state === 'accepted' || order.state === 'sent' || order.state === 'dispute'">
+                <div class="lchat_area">
+                  {# <!-- <span class="pull-left">Use a quick response <i class="fa fa-angle-down"></i></span> --> #}
+                  <span class="pull-right">
+                    <b v-text="buyerDisplayName"></b>
+                    <b>Local time: <span v-text="sharedState.extra.buyer.local_time"></span></b>
+                    <span class="online" v-if="sharedState.extra.buyer.is_online">Online</span>
+                    <span class="offline" v-else v-text="'Last seen ' + buyerLastSeen"></span>
+                  </span>
+                </div>
+                
+                {% include "new/account/components/order/textarea.html" %}
+              </div>
+            </div><!-- /.project_dtails -->
+          </div>
+
+          <div v-else>
+            <Spinner />
+          </div>
+        </div><!-- /.col-md-9 -->
+
+        <div class="col-md-3" v-if="order" v-cloak>
+          <div v-if="order.state === 'accepted'">
+            <div class="order_issue">
+              <p>Done working on this order? Make sure you have provided all necessary assets for your client before sending it to review</p>
+              <a href="#" class="btn btn-primary" v-bind:disabled="isLoading" @click.prevent="handleDeliverClick">DELIVER NOW</a>
+            </div>
+          </div>
+
+          <div v-if="order.state === 'new' || order.state === 'accepted' || order.state === 'sent'">
+            <div class="order_issue">
+              <p>Having issues with the order?</p>
+              <a href="{{ url_for('account.seller_order_resolution', order_id=order.id) }}" class="btn btn-primary" v-bind:disabled="isLoading">RESOLVE NOW</a>
+            </div>
+          </div>
+
+          <div v-if="order.state === 'closed_completed'">
+            <div class="order_issue">
+              <p>Congratulations! This order has been completed</p>
+            </div>
+          </div>
+        </div><!-- /.col-md-3 -->
+
+      </div>
+    </div>
+  </div>
+
+  <modal effect="fade" v-model="sellerRejectModal" class="modal-custom modal-reject-order" v-cloak>
+    <div slot="modal-header" class="modal-header">
+      <button type="button" class="close" @click="sellerRejectModal = false"><span>&times;</span></button>
+      <h4 class="modal-title">Reject order</h4>
+    </div>
+    <div slot="modal-body" class="modal-body">
+      <div class="request-form">
+        <div class="field">
+          <textarea v-model="sellerRejectReason" placeholder="Leave an optional message to your buyer" rows="5"></textarea>
+        </div>
+      </div>
+    </div>
+    <div slot="modal-footer" class="modal-footer">
+      <button class="btn btn-danger" v-bind:disabled="isLoading" style="width: 220px; margin: 0 auto; display: block;" @click.prevent="handleRejectOrder">REJECT ORDER</button>
+    </div>
+  </modal>
+
+  <modal effect="fade" v-model="sellerDeliverModal" class="modal-custom modal-deliver-order" v-cloak>
+    <div slot="modal-header" class="modal-header">
+      <button type="button" class="close" @click="sellerDeliverModal = false"><span>&times;</span></button>
+      <h4 class="modal-title">Deliver your work</h4>
+    </div>
+    <div slot="modal-body" class="modal-body">
+      <div class="request-form">
+        <div class="modal-deliver-files">
+          <div>
+            <file-upload title="" name="file" post-action="/api/account/messaging/upload" :multiple="true" :files="sellerDeliverUploads" :events="sellerDeliverUploadEvents" ref="deliverUploader">
+              <div class="btn btn-default">Upload Work</div>
+            </file-upload>
+          </div>
+
+          <div class="attachment-items field" v-if="sellerDeliverUploads.length">
+            <div class="attachment-item" v-for="attachment in sellerDeliverUploads">
+              <span class="attachment-name" v-text="attachment.name">
+              </span>
+              <div class="attachment-delete" v-if="!attachment.active" @click="handleSellerDeliveryUploadDelete(attachment)">&times;</div>
+              <div class="attachment-loading" v-else>
+                <span class="attachment-loading-dot">.</span>
+                <span class="attachment-loading-dot">.</span>
+                <span class="attachment-loading-dot">.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="field">
+          <textarea v-model="sellerDeliverText" placeholder="Leave a message to your buyer" rows="5"></textarea>
+        </div>
+
+        <div class="alert alert-danger" v-if="sellerDeliverError" v-text="sellerDeliverError"></div>
+      </div>
+    </div>
+    <div slot="modal-footer" class="modal-footer">
+      <button class="btn btn-success" style="width: 220px; margin: 0 auto; display: block;" v-bind:disabled="isLoading || sellerDeliverUploading || !sellerDeliverUploads.length || !sellerDeliverText" @click.prevent="handleDeliver">Deliver Work</button>
+    </div>
+  </modal>
+</div>
+{% endblock %}

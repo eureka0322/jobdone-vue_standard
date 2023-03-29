@@ -1,0 +1,154 @@
+{% extends "new/layout.html" %}
+
+{% block styles %}
+  <link rel="stylesheet" type="text/css" href="{{ static_file('assets/landing.css') }}">
+{% endblock %}
+
+{% block body %}
+<main class="splash" id="sm-become-seller-landing">
+  <div class="header_area affiliate-landing-header"
+   :style="{'background-image': 'url({{ static_file('images/landing/w_header_ptwo.jpg') }})'}">
+    <div class="header_over_content">
+      <div class="hdr_bnr_content text-center">
+        <h1>GET PAID FOR DRIVING TRAFFIC</h1>
+        <p>Earn 20% commission for new customers you refer</p>
+        <div class="search_frm">
+          <a href="#" class="become_aseller" @click.prevent="handleOpenSignupModal">BECOME AN AFFILIATE</a>
+          <p>Already an seller? <a href="#" @click.prevent="handleOpenLoginModal">login here</a></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="work_sng_page">
+    <div class="section_heading text-center">
+      <h1>HOW IT WORKS</h1>
+    </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-xs-4">
+          <div class="single_wr_module text-center">
+           <img src="{{ static_file('images/landing/wr_ticn.png') }}" alt="time icn">
+           <h3>Real-Time</h3>
+           <p>Track every action, click and conversion through our real-time platform. Generate your own tracking links, implement pixels, and gain access to all the tools you need.</p>
+         </div>            
+        </div>
+        <div class="col-xs-4">
+         <div class="single_wr_module text-center">
+          <img src="{{ static_file('images/landing/wr_cmicn.png') }}" alt="time icn">
+          <h3>Generous Commissions</h3>
+          <p>For each new customer you refer to jobdone, you will earn 20% commission on their first purchase</p>
+         </div>            
+        </div>
+        <div class="col-xs-4">
+          <div class="single_wr_module text-center">
+            <img src="{{ static_file('images/landing/wr_wldicn.png') }}" alt="time icn">
+            <h3>Worldwide</h3>
+            <p>Promote the world’s largest marketplace for business services.Get paid for driving traffic to Jobdone. Let's do it together.</p>
+          </div>            
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!--FAQ area start-->
+  <div class="faq_area">
+    <div class="section_heading text-center">
+      <h1>FAQ</h1>
+    </div>
+    <div class="container">
+     <div class="row">
+      <div class="faq_content">
+       <div class="panel-group">
+        <div class="panel pntl_ttl">
+         <div class="panel-heading">
+          <h4 class="panel-title">
+           <a href="#" @click.prevent="faqOpened = 0">
+            How often is commission paid?
+          </a>
+          <i class="fa fa-angle-up pull-right"></i>
+        </h4>
+      </div>
+      <div class="panel-collapse collapse" v-bind:class="{ in: faqOpened === 0 }">
+        <div class="panel-body">
+         Commission is paid once a month upon receiving your invoice. Payment is made on a net 30 basis, which starts at the beginning of the following month. For example: invoices for January 2015 are paid on March 1st/2nd. To cash-out, simply send JobDone your monthly invoice by email.
+       </div>
+     </div>
+   </div>
+   <div class="panel pntl_ttl">
+     <div class="panel-heading">
+      <h4 class="panel-title">
+      <a href="#" @click.prevent="faqOpened = 1">
+        How do you track my conversions?
+      </a>
+      <i class="fa fa-angle-down pull-right"></i>
+    </h4>
+  </div>
+  <div>
+    <div class="panel-collapse collapse" v-bind:class="{ in: faqOpened === 1 }">
+      <div class="panel-body">
+       Affiliate links contain unique identifiers, allowing us to track anyone directed from your website. Our tracking system captures your URL, which guarantees you are credited for any First-Time-Buyer (FTB) you refer. For example, if someone was directed to JobDone from your link and registered, but didn't make a purchase and then after six months decided to make a purchase, you will still be eligible for commission.
+      </div>
+    </div>
+  </div>
+  </div>
+
+  <div class="panel pntl_ttl">
+   <div class="panel-heading">
+    <h4 class="panel-title">
+    <a href="#" @click.prevent="faqOpened = 2">
+      Why do I see conversions with no payouts?
+    </a>
+    <i class="fa fa-angle-down pull-right"></i>
+  </h4>
+  </div>
+  <div class="panel-collapse collapse" v-bind:class="{ in: faqOpened === 2 }">
+    <div class="panel-body">
+     "Conversions" include two different goals: "FTB" and "Registration". Only FTB conversions are eligible to receive commission.
+   </div>
+  </div>
+  </div>
+
+
+  <div class="panel pntl_ttl">
+   <div class="panel-heading">
+    <h4 class="panel-title">
+    <a href="#" @click.prevent="faqOpened = 3">
+      Do I earn commission on every purchase?
+    </a>
+    <i class="fa fa-angle-down pull-right"></i>
+  </h4>
+  </div>
+  <div class="panel-collapse collapse" v-bind:class="{ in: faqOpened === 3 }">
+    <div class="panel-body">
+     Commission is 20% for users who are considered First-Time-Buyers (FTBs). Only the first purchase from each customer is payable. Registered and/or previous buyers who make a purchase through your link, are not considered FTBs and therefore won't generate commission.
+   </div>
+  </div>
+  </div>
+
+
+  <div class="panel pntl_ttl">
+   <div class="panel-heading">
+    <h4 class="panel-title">
+    <a href="#" @click.prevent="faqOpened = 4">
+      What links and landing pages (LPs) provide the best performance?
+    </a>
+    <i class="fa fa-angle-down pull-right"></i>
+  </h4>
+  </div>
+  <div class="panel-collapse collapse" v-bind:class="{ in: faqOpened === 4 }">
+    <div class="panel-body">
+     This is a common question with a tricky answer. Generally speaking, direct Services preform better then general LPs. However, the best performing "creative" depends on the traffic source. Therefore, business-related blogs convert better with Services, such as tax assistance, business plan help, branding, etc. While tech blogs convert better with Services, such as code review, web design, etc.
+   </div>
+  </div>
+  </div>
+
+
+  </div>
+  </div>
+  </div>
+  </div>
+  </div>
+  <!--FAQ area end-->
+</main>
+{% endblock %}

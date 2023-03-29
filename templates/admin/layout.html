@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}selfmarket.net - bitcoin marketplace {% endblock %}</title>
+    <link rel="stylesheet" href="{{ static_file('css/bootstrap.min.css') }}">
+    <link rel="alternate" type="application/atom+xml" title="Atom" href="{{ url_for('atom_xml') }}">
+    <link rel="stylesheet" href="{{ static_file('css/main.css') }}">
+
+    {% block head %}{% endblock %}
+    {% block styles %}{% endblock %}
+</head>
+<body>
+<div class="container">
+    <div class="panel panel-default">
+        <div class="panel-body" style="background: #DDD">
+            <ul class="nav nav-pills" id="headerApp">
+
+                <li class="pull-left">
+                    <a href="{{ url_for('index') }}"><img src="{{ static_file('images/logo.png') }}" alt=""></a>
+                </li>
+
+                {% if not g.user.is_authenticated %}
+                    <li class="pull-right" style="margin-left: 20px;">
+                        <dropdown>
+                            <a slot="button" href="#">
+                                <i class="glyphicon glyphicon-user"></i>
+                                <strong>Login</strong>
+                            </a>
+
+                            <ul slot="dropdown-menu" class="dropdown-menu">
+                                <li><a href="{{ url_for('auth.login') }}">Login</a></li>
+                                <li><a href="{{ url_for('auth.register') }}">Register</a></li>
+                            </ul>
+                        </dropdown>
+                    </li>
+                {% endif %}
+
+                {% if g.user.is_authenticated %}
+                    <li class="pull-right" style="margin-left: 20px;">
+                        <dropdown>
+                            <a slot="button" href="#">
+                                <i class="glyphicon glyphicon-user"></i>
+                                <strong>{{ g.user.username }} ${{ g.user.get_credit_pp() }}</strong>
+                            </a>
+
+                            <ul slot="dropdown-menu" class="dropdown-menu">
+                                <li class="dropdown-header">
+                                    {% if g.user.premium_member %}
+                                        <span class="label label-success"><i class="glyphicon glyphicon-star"></i> PREMIUM MEMBER</span>
+                                    {% else %}
+                                        <a href="{{ url_for('account.become_premium') }}">
+                                            <span class="label label-default">
+                                                <i class="glyphicon glyphicon-eye-close"></i>
+                                                STANDARD MEMBER
+                                            </span>
+                                        </a>
+                                    {% endif %}
+                                </li>
+
+                                <li class="divider"></li>
+
+                                <li>
+                                    <a href="{{ url_for('account.buyer') }}">
+                                        <i class="glyphicon glyphicon-shopping-cart"></i> My Orders
+                                    </a>
+                                </li>
+
+                                {% if g.user.get_active_products_count() > 0 %}
+                                <li>
+                                    <a href="{{ url_for('account.services') }}">
+                                        <i class="glyphicon glyphicon-record"></i>
+                                        My Products
+                                    </a>
+                                </li>
+                                {% endif %}
+
+                                <li class="dropdown-submenu">
+                                    <a href="#">
+                                        <i class="glyphicon glyphicon-star"></i>
+                                        Favorites
+                                    </a>
+
+                                    <ul class="dropdown-menu dropdown-menu-left">
+                                        <li><a role="menuitem" href="{{ url_for('account.favorites') }}">Items
+                                            <span class="badge badge-success">{{ g.user.get_favorite_items_count() }}</span></a>
+                                        </li>
+                                        <li><a role="menuitem" href="{{ url_for('account.favorites') }}">Search
+                                            <span class="badge badge-success">{{ g.user.get_favorite_searches_count() }}</span></a>
+                                        </li>
+                                    </ul>
+                                </li>
+
+                                {% if g.seller_fee_pp and not g.user.seller_fee_paid %}
+                                <li>
+                                    <a role="menuitem" href="{{ url_for('account.seller_fee') }}">Become a seller</a>
+                                </li>
+                                {% endif %}
+
+                                <li class="divider"></li>
+
+                                <li>
+                                    <a role="menuitem" href="{{ url_for('account.index') }}">
+                                        <i class="glyphicon glyphicon-dashboard"></i>
+                                        Dashboard
+                                    </a>
+                                </li>
+
+                                {% if g.user.is_admin %}
+                                <li class="divider"></li>
+
+                                <li>
+                                    <a href="{{ url_for('admin.index') }}">
+                                        <i class="glyphicon glyphicon-cog"></i>
+                                        Admin panel
+                                    </a>
+                                </li>
+                                {% endif %}
+
+                                <li class="divider"></li>
+
+                                <li>
+                                    <a href="{{ url_for('auth.logout') }}">
+                                        <i class="glyphicon glyphicon-log-out"></i>
+                                        Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </dropdown>
+                    </li>
+                {% endif %}
+
+                {% if g.user.is_authenticated %}
+                    <a href="{{ url_for('admin.maintenance') }}" class="btn btn-primary pull-right">Maintenance</a>
+                {% endif %}
+
+            </ul>
+        </div>
+    </div>
+
+
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">
+                    <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+
+
+<h2>Admin interface</h2>
+<div class="row">
+<div class="col-md-2">
+  <ul class="nav nav-pills nav-stacked">
+    <li><a href="{{ url_for('admin.tickets') }}">Tickets <span class="badge">{{ g.admin_opened_tickets_count }}</span></a></li>
+    <li><a href="{{ url_for('admin.categories') }}">Categories</a></li>
+    <li><a href="{{ url_for('admin.orders') }}">Orders <span class="badge">{{ g.admin_new_orders_count }}</span></a></li>
+    <li><a href="{{ url_for('admin.orders_pending_verification') }}">Orders pending verification <span class="badge">{{ g.admin_verification_orders_count }}</span></a></li>
+    <li><a href="{{ url_for('admin.users') }}">Users <span class="badge">{{ g.admin_users_count }}</span></a></li>
+    <li><a href="{{ url_for('admin.products') }}">Products <span class="badge">{{ g.admin_products_count }}</span></a></li>
+    <li><a href="{{ url_for('admin.products_pending_verification') }}">Products pending verification <span class="badge">{{ g.admin_verification_products_count }}</span></a></li>
+    <li><a href="{{ url_for('admin.news') }}">News <span class="badge">{{ g.admin_news_count }}</span></a></li>
+    <li><a href="{{ url_for('admin.disputes') }}">Disputes <span class="badge">{{ g.admin_opened_disputes_count }}</span></a></li>
+    <li><a href="{{ url_for('admin.addresses') }}">Bitcoin addresses <span class="badge">{{ g.admin_free_addresses_count }}</span></a></li>
+    <li><a href="{{ url_for('admin.withdrawals') }}">Withdrawal requests <span class="badge">{{ g.admin_withdrawals_count }}</span></a></li>
+    <li><a href="{{ url_for('admin.newsletters') }}">E-mail updates <span class="badge">{{ g.admin_newsletters_count }}</span></a></li>
+    <li><a href="{{ url_for('admin.vouchers') }}">Voucher codes</a></li>
+    <li><a href="{{ url_for('admin.affiliate_links') }}">Affiliate Links</a></li>
+  </ul>
+</div>
+<div class="col-md-10">
+  <div class="panel panel-default">
+    <div class="panel-heading">
+      <h3 class="panel-title">{% block admin_title %}{% endblock %}</h3>
+    </div>
+
+    {% block admin_body %}{% endblock %}
+  </div>
+</div>
+</div>
+
+
+
+    <br><br>
+    <div class="panel panel-default row">
+        <div class="panel-body">
+            <div> © 2017
+                <a href="{{ url_for('index') }}">selfmarket.net</a> /
+                <a href="{{ url_for('atom_xml') }}">RSS Feed</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript" src="{{ static_file('js/vue.min.js') }}"></script>
+<script type="text/javascript" src="{{ static_file('js/vue-resource.min.js') }}"></script>
+<script type="text/javascript" src="{{ static_file('js/vue-strap.min.js') }}"></script>
+
+{% block account_scripts %}
+<script type="text/javascript" src="{{ static_file('js/jquery-1.11.2.js') }}"></script>
+<script type="text/javascript" src="{{ static_file('js/bootstrap.min.js') }}"></script>
+{% endblock %}
+
+{% block scripts %}{% endblock %}
+
+</body>
+</html>
+

@@ -1,0 +1,125 @@
+.AccountServiceApp__add-mode .AccountServiceApp {
+    @media (min-width: 768px) {
+        &__navbar-steps {
+            width: 100%;
+        }
+
+        &__navbar-step {
+            width: 16.66%;
+        }
+
+        &__navbar-step-link {
+            white-space: nowrap;
+            overflow: hidden;
+        }
+    }
+
+    &__navbar-step-link {
+        @media (max-width: 1200px) {
+            font-size: 13px !important;
+        }
+
+        @media (max-width: 992px) {
+            padding: 15px 8px 15px 8px !important;
+            font-size: 12px !important;
+        }
+    }
+}
+
+.AccountServiceApp {
+    &__extras-fields {
+        position: relative;
+    }
+
+    &__add-extra {
+        position: absolute;
+        top: 0;
+        right: 0;
+    }
+
+    &__expandable-element {
+        background: #F2F2F2;
+        background: rgba(242, 242, 242, 1);
+        border-style: Solid;
+        border-color: #E6E6E6;
+        border-color: rgba(230, 230, 230, 1);
+        border-width: 1px;
+        border-radius: 3px;
+        margin: 10px 0;
+        padding: 14px 50px;
+        position: relative;
+
+        &-title {
+            margin: 0;
+            padding: 0;
+            font-size: 15px;
+            line-height: 22.4px;
+            color: #333333;
+            font-weight: 300;
+        }
+
+        &-body {
+            font-size: 15px;
+            line-height: 22.4px;
+            color: #4D4D4D;
+            transition: opacity .4s ease;
+
+            &.fade-in-enter {
+                opacity: 0;
+            }
+            &.fade-in-enter-to.fade-in-enter-active {
+                opacity: 1;
+            }
+        }
+
+        &-remove {
+            font-size: 18px;
+            font-weight: bold;
+            line-height: 1;
+            color: #b3b3b3;
+            text-shadow: 0 1px 0 #fff;
+            filter: alpha(opacity=20);
+            position: absolute;
+            top: 5px;
+            right: 15px;
+            cursor: pointer;
+            opacity: .8;
+            &:hover {
+                opacity: 1;
+            }
+        }
+
+        &-draggable {
+            background: url(../assets/images/icons/draggable-area_grey.png);
+            width: 21px;
+            height: 19px;
+            background-size: cover;
+            position: absolute;
+            left: 10px;
+            top: 16px;
+            cursor: -webkit-grab;
+        }
+
+        &-toggle {
+            position: absolute;
+            right: 10px;
+            top: 24px;
+            transition: transform .3s linear;
+
+            &.active {
+                transform: rotate(180deg);
+            }
+            .icon {
+                width: 24px;
+                height: 24px;
+                cursor: pointer;
+                color: #b3b3b3;
+                opacity: .8;
+                &:hover {
+                    opacity: 1;
+                }
+            }
+        }
+    }
+}
+

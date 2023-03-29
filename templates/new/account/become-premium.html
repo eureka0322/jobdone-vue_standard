@@ -1,0 +1,30 @@
+{% extends "new/account/layout.html" %}
+
+{% block body %}
+<div class="container" id="sm-become-premium">
+  <div class="premium-box">
+    <h2>Become a premium member!</h2>
+    <p>Receive access to view all private products<br>View more informations about products<br> And more ...</p>
+
+    <form action="{{ url_for('account.become_premium') }}" method="POST">
+      {{ form.csrf_token }}
+
+      <input type="hidden" v-model="useCoupon" name="use_coupon" />
+
+      <button v-bind:class="{ hide: useCoupon }" class="btn btn-success" {% if not can_pay %}disabled{% endif %}>Pay activation fee of USD {{ premium_fee_pp }}</button>
+
+      {% if not can_pay %}<p v-bind:class="{ hide: useCoupon }">Unfortunately you don't have enough funds, please deposit some at <a href="{{ url_for('account.balance') }}">your balance page</a></p>{% endif %}
+
+      {% if coupon_error %}<p v-bind:class="{ hide: !useCoupon }" v-cloak class="alert alert-danger">{{ coupon_error }}</p>{% endif %}
+
+      <div class="input-group" v-bind:class="{ hide: !useCoupon }" v-cloak>
+        <input name="coupon" type="text" class="form-control" placeholder="ADD YOUR COUPON HERE"><button class="coupon">APPLY</button>
+      </div>
+
+      <p v-bind:class="{ hide: useCoupon }">or use a <a href="#" @click.prevent="useCoupon = true">coupon code</a></p>
+      <p v-bind:class="{ hide: !useCoupon }" v-cloak>or pay <a href="#" @click.prevent="useCoupon = false">USD {{ premium_fee_pp }}</a> activation fee</p>
+
+    </form>
+  </div>
+</div>
+{% endblock %}

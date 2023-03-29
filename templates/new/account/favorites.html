@@ -1,0 +1,105 @@
+{% set tab = 'buyer' %}
+
+{% extends "new/account/layout.html" %}
+
+{% block body %}
+<div class="container" id="sm-account-favorites">
+  <h1>My favorites</h1>
+  <div class="row order-list table">
+    <div class="col-md-12">
+      <div class="tabs-holder row">
+        <ul class="nav nav-tabs left-position col-md-11">
+          <li role="presentation" class="fav-tab" v-bind:class="{ active: mode === 'favorites' }">
+            <a href="#" @click.prevent="setMode('favorites')"><span class="icon"></span>Services</a>
+          </li>
+          <li role="presentation" class="f-searches" v-bind:class="{ active: mode === 'searches' }">
+            <a href="#" @click.prevent="setMode('searches')"><span class="icon"></span>Searches</a>
+          </li>
+        </ul>
+      </div>
+
+      <transition name="fade" mode="out-in">
+
+        <div class="tabs-processing"
+             v-if="itemsLoading"
+             key="processingOn">
+          <spinner/>
+        </div>
+
+        <div class="tabs-content"
+             v-else
+             key="processingOff">
+          <div class="table" v-cloak>
+
+            <div class="services-list favourites AccountFavourites__list"
+              v-if="mode === 'favorites'">
+              <div class="AccountFavourites__service"
+                v-for="service in items">
+                <div class="AccountFavourites__service-remove"
+                   @click.prevent="handleFavoriteDeleteClick(service)"></div>
+                <a :href="service._url"
+                  class="AccountFavourites__service-overlay">
+                  <img :src="service._primary_photo_url"
+                    class="AccountFavourites__service-image">
+                  <div class="price-holder AccountFavourites__service-price-block">
+                    <div class="price AccountFavourites__service-price-values">
+                      <del v-if="service.price_offer" v-text="(service.price / 100).toFixed(2)"></del>
+                      <div class="display-offer" v-text="((service.price_offer ? service.price_offer : service.price) / 100).toFixed(2)"></div>
+                    </div>
+                  </div>
+                </a>
+                <h4 class="AccountFavourites__service-title"
+                  v-text="service.title"></h4>
+                <a class="user AccountFavourites__service-seller"
+                  v-text="service._seller"></a>
+              </div>
+            </div>
+
+            <div class="fav-searches-box" v-if="mode === 'searches'">
+              <div class="search panel" v-for="search in items">
+                <div class="innerinfo">
+                  <a href="#" class="close" @click.prevent="handleFavoriteSearchDeleteClick(search)"></a>
+                  <h1>All ads</h1>
+                  <p>You saved a search for </p>
+                  <a v-bind:href="search._url" v-text="search.q"></a>
+                </div>
+                <div class="settings-confgi">
+                  <span class="notiad">
+                    Results: <span v-text="search.results_count"></span>
+                    {# <!-- <span class="checkbox"><label for="notofy-1"><input id="notofy-1" type="checkbox">Notofy me about new ads via email</label></span> --> #}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+          <div class="pagination-table">
+        <div class="col-md-6">
+          <div class="pagination-list" v-show="!itemsLoading && totalResults > 0" v-cloak>
+            <ul class="pagination">
+              <li v-bind:class="{ disabled: currentPage <= 1 }"><a href="#" @click.prevent="handlePageSelect(currentPage - 1)">&laquo;</a></li>
+              <li v-for="page in pages" v-bind:class="{ active: currentPage === page }">
+                <a href="#" @click.prevent="handlePageSelect(page)" v-text="page">2</a>
+              </li>
+              <li v-bind:class="{ disabled: currentPage >= pages[pages.length - 1] }"><a href="#" @click.prevent="handlePageSelect(currentPage + 1)">&raquo;</a></li>
+            </ul>
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="gotopage">
+            <span class="fileds">
+              <label for="gotopage">Go To Page</label>
+              <input type="number" name="gotopage" v-model="gotoPage" @keypress.enter="handlePageSelect(+gotoPage)">
+              <a href="#" class="btn" @click.prevent="handlePageSelect(+gotoPage)">GO</a>
+            </span>
+          </div>
+        </div>
+      </div>
+
+        </div>
+      </transition>
+    </div>
+  </div>
+</div>
+{% endblock %}

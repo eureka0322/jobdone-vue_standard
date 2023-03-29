@@ -1,0 +1,66 @@
+{% extends "admin/layout.html" %}
+{% import "admin/macros.html" as macros with context %}
+
+{% block admin_title %}Bitcoin addresses{% endblock %}
+
+{% block admin_body %}
+
+<div class="panel-body">
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <p class="alert alert-danger">
+        {% for message in messages %}
+          {{ message }}<br />
+        {% endfor %}
+        </p>
+      {% endif %}
+    {% endwith %}
+
+    <div class="pull-left">
+        <form action="{{ url_for('admin.addresses_upload') }}" method="POST" enctype="multipart/form-data">
+            <input type="file" name="addresses" />
+            <button type="submit" class="btn btn-xs btn-primary">Upload addresses</button>
+        </form>
+    </div>
+
+    <div class="pull-right">
+        <select onchange="window.location.search = '?show=' + this.value">
+            <option value="all" {% if show == 'all' %}selected{% endif %}>All</option>
+            <option value="confirmed" {% if show == 'confirmed' %}selected{% endif %}>With confirmed balance</option>
+        </select>
+    </div>
+</div>
+
+<table class="table table-condensed">
+    <thead>
+    <tr>
+        <th>Public key</th>
+        <th>Assigned?</th>
+        <th>Balance</th>
+        <th>Last deposit request</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for address in pagination.items %}
+    <tr>
+        <td>{{ address.address }}</td>
+        <td>{% if address.user_id %}<a href="{{ url_for('admin.user', user_id=address.user.id) }}">{{ address.user.username }}</a>{% else %}No{% endif %}</td>
+        <td>
+          {% if address.amount %}
+            {{ address.amount / 100000000.0 }}
+            {% if not address.is_amount_confirmed %}(unconfirmed){% endif %}
+          {% else %}
+            0
+          {% endif %}
+        </td>
+        <td>{% if address.touched_on %}{{ address.touched_on.strftime('%Y-%m-%d %H:%m') }}{% else %}N/A{% endif %}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<div class="panel-body">
+  {{ macros.pagination(pagination) }}
+</div>
+
+{% endblock %}

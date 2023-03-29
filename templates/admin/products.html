@@ -1,0 +1,59 @@
+{% extends "admin/layout.html" %}
+{% import "admin/macros.html" as macros with context %}
+
+{% block admin_title %}Products{% endblock %}
+
+{% block admin_body %}
+
+<div class="panel-body">
+    <form action="{{ url_for('admin.products') }}" method="GET">
+      <label>Search by username:</label>
+      <input type="text" name="username" value="{{ request.args.username }}" />
+      <button type="submit" class="btn btn-xs btn-primary">Search</button>
+    </form>
+</div>
+
+<table class="table table-condensed">
+    <thead>
+    <tr>
+      <th>Title</th>
+      <th>Seller</th>
+      <th>Price</th>
+      <th>Orders</th>
+      <th>Views</th>
+      <th>Actions</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for product in pagination.items %}
+    <tr>
+      <td>
+        {{ product.title }}
+        {% if product.is_deleted %}
+          <div class="label label-danger">Disabled</div>
+        {% endif %}
+        {% if product.is_private %}
+          <div class="label label-warning">Private</div>
+        {% endif %}
+        {% if product.is_approved == None %}
+          <div class="label label-primary">NEW</div>
+        {% endif %}
+      </td>
+      <td><a href="{{ url_for('admin.user', user_id=product.seller_id) }}">{{ product.seller.username }}</a></td>
+      <td>{{ product.get_price_pp() }}</td>
+      <td>{{ product.orders.count() }}</td>
+      <td>{{ product.get_views() }}</td>
+      <td>
+        <a class="btn btn-xs btn-default" href="{{ url_for('admin.product', product_id=product.id) }}">View</a>
+        <a class="btn btn-xs btn-default" href="{{ product.get_url() }}">Public page</a>
+      </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<div class="panel-body">
+  {{ macros.pagination(pagination) }}
+</div>
+
+{% endblock %}

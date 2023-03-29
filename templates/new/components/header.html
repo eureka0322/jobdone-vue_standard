@@ -1,0 +1,444 @@
+{% if not g.user.is_authenticated %}
+<div id="sm-cookies-notification" v-cloak v-if="show" v-bind:class="{ show: show }">
+  <div class="wrap">
+    <div class="message">
+      <p>We are using cookies to provide statistics that help us give you the best experience of our site. You can find out more or switch them off if you prefer. However, by continuing to use the site without changing settings, you are agreeing to our use of cookies.</p>
+    </div>
+    <button type="button" class="btn btn-accept" @click="handleAccept">Accept</button>
+  </div>
+</div>
+{% endif %}
+
+<header id="sm-header" class="{{'authenticated' if g.user.is_authenticated else 'unauthenticated'}}">
+  <div class="header-wrap">
+    <a class="logo" href="{{ url_for('index') }}"></a>
+
+    {% if not header_hide_elements %}
+    <div class="browse">
+      <div class="browse-toggler">
+        Browse
+        <svg class="icon icon-ar-down">
+          <use xlink:href="{{ static_file('images/sprite.svg') }}#ar-down"></use>
+        </svg>
+      </div>
+
+      <div class="browse-categories">
+        <div class="subheading">BROWSE SERVICES</div>
+        <ul class="browse-categories--list">
+        {% for category in application_data.categories %}
+          <li class="browse-categories--list-item">
+            <a href="{{ url_for('category', category_id=category.id, category_title=category._title_seofied) }}"><label>{{ category.title }}</label></a>
+            {% if category.subcategories %}
+            <div class="browse-items">
+              <div class="subheading">{{ category.title }}</div>
+              <ul class="browse-items--list">
+              {% for subcategory in category.subcategories %}
+                <li class="browse-items--list-item">
+                  <label><a href="{{ url_for('category', category_id=subcategory.id, category_title=subcategory._title_seofied) }}">{{ subcategory.title }}</a></label>
+                  <span class="line"></span>
+                  {# <!-- <span class="count">({{ subcategory.count }})</span> --> #}
+                </li>
+              {% endfor %}
+              </ul>
+            </div>
+            {% endif %}
+          </li>
+        {% endfor %}
+        </ul>
+      </div>
+    </div>
+
+    {% if not header_hide_search %}
+    <div class="search">
+      <form action="{{ url_for('index') if g.user.is_authenticated else url_for('explore') }}" method="GET" enctype="text/plain">
+        <div class="Header__search-box">
+          <input
+            type="text"
+            autocomplete="off"
+            class="Header__search-input"
+            placeholder="Find a service"
+            name="query"
+            ref="searchInput"
+            v-on:input="onSearch"
+            v-model="query" />
+          <svg @click="$refs.searchInput.focus()" class="icon icon-magnifier Header__search-icon">
+            <use xlink:href="{{ static_file('images/sprite.svg') }}#magnifier"></use>
+          </svg>
+          <transition name="fade-in">
+            <div class="Header__search-dropdown"
+                 :class="{'opened':searchIsOpen && suggestions.length}"
+                 v-on-click-outside="clearSearch"
+                 v-if="searchIsOpen && suggestions.length">
+              <div class="Header__search-dropdown-header">
+                <span>SEARCH SUGGESTIONS</span>
+                <!--<div class="Header__search-clear"
+                  @click="clearRecentSearches">clear</div>-->
+              </div>
+              <a class="Header__search-suggestion"
+                v-for="suggestion in suggestions.slice(0, 10)"
+                :href="'{{ url_for('index') if g.user.is_authenticated else url_for('explore') }}?query='+suggestion"
+                v-text="suggestion"></a>
+            </div>
+          </transition>
+        </div>
+      </form>
+    </div>
+    {% endif %}
+
+    {% if g.user.is_authenticated %}
+    <div class="menu" v-bind:class="{ opened: isMenuOpened }">
+      <div class="menu-sandwich" @click="isMenuOpened = true">
+        <!-- <svg class="icon icon-sandwich">
+          <use xlink:href="{{ static_file('images/sprite.svg') }}#sandwich"></use>
+        </svg> -->
+        <div class="icon icon-sandwich"></div>
+      </div>
+
+      <div class="menu-greeting">
+        <!-- {% with photo_url = g.user.get_photo_url('h_100,w_100,c_thumb,g_face,bo_2px_solid_white,r_max/w_100') %}
+        <div class="avatar">
+          <img src="{{ photo_url }}" />
+        </div>
+        {% endwith %} -->
+        <div class="avatar">
+          <img src="{{ g.user.get_photo_url('h_100,w_100,c_thumb,g_face') }}" />
+        </div>
+
+        <span>Hello</span>
+        {{ g.user.username }}
+      </div>
+
+      <div class="menu-close" @click="isMenuOpened = false">
+        <svg class="icon icon-close">
+          <use xlink:href="{{ static_file('images/sprite.svg') }}#close"></use>
+        </svg>
+      </div>
+
+      <ul class="menu-list">
+        <li class="menu-list-item"><a href="{{ url_for('account.index') }}">Dashboard</a></li>
+        
+        <li class="menu-list-item expandable" v-bind:class="{ opened: expandedMenuItem === 0 }">
+          <a href="{{ url_for('account.buyer') }}" @click.prevent="expandedMenuItem = expandedMenuItem === 0 ? -1 : 0">Buying</a>
+          <ul class="sub-menu">
+            <li class="menu-list-item"><a href="{{ url_for('account.buyer') }}">My Orders</a></li>
+            <li class="menu-list-item"><a href="{{ url_for('account.favorites') }}">My Favorites</a></li>
+          </ul>
+        </li>
+
+        {% if g.user.seller_fee_paid %}
+        <li class="menu-list-item expandable" v-bind:class="{ opened: expandedMenuItem === 1 }">
+          <a href="{{ url_for('account.seller') }}" @click.prevent="expandedMenuItem = expandedMenuItem === 1 ? -1 : 1">Selling</a>
+          <ul class="sub-menu">
+            <li class="menu-list-item orange">
+              <a href="{{ url_for('account.service_create') }}">Add Service</a>
+            </li>
+            <li class="menu-list-item"><a href="{{ url_for('account.seller') }}">My Orders</a></li>
+            <li class="menu-list-item"><a href="{{ url_for('account.services') }}">My Services</a></li>
+            <li class="menu-list-item"><a href="{{ url_for('account.discounts') }}">My Discounts</a></li>
+            <li class="menu-list-item"><a href="{{ url_for('account.earnings') }}">My Earnings</a></li>
+          </ul>
+        </li>
+        {% else %}
+        <li class="menu-list-item"><a href="{{ url_for('become_seller') }}">Become a Seller</a></li>
+        {% endif %}
+
+        <li class="menu-list-item expandable" v-bind:class="{ opened: expandedMenuItem === 2 }">
+          <a href="{{ url_for('account.affiliate') }}" @click.prevent="expandedMenuItem = expandedMenuItem === 2 ? -1 : 2">Affiliate</a>
+          <ul class="sub-menu">
+            <li class="menu-list-item"><a href="{{ url_for('account.affiliate') }}#?tab=dashboard">Dashboard</a></li>
+            <li class="menu-list-item"><a href="{{ url_for('account.affiliate') }}#?tab=links">Links</a></li>
+            <li class="menu-list-item"><a href="{{ url_for('account.affiliate') }}#?tab=referrals">Referrals</a></li>
+          </ul>
+        </li>
+
+        <li class="menu-list-item"><a href="{{ url_for('account.inbox') }}">Inbox</a></li>
+
+        <li class="menu-list-item"><a href="{{ url_for('account.balance') }}">Balance</a></li>
+
+        <li class="menu-extra-item">
+          <a href="{{ url_for('account.settings') }}"><span class="icon icon-settings"></span> Settings</a>
+        </li>
+        {%  if g.user.is_admin %}
+        <li class="menu-extra-item">
+          <a href="{{ url_for('admin.index') }}"><span class="icon icon-settings"></span>Admin Panel</a>
+        </li>
+        {% endif %}
+
+        <li class="menu-extra-item">
+          <a href="{{ url_for('auth.logout') }}"><span class="icon icon-logout"></span> Logout</a>
+        </li>
+      </ul>
+    </div>
+    {% endif %}
+
+    {% if not g.user.is_authenticated %}
+    <div class="right">
+      <span class="link join" @click="signupModalOpened = true">join</span>
+      <span class="link login" @click="loginModalOpened = true">login</span>
+      <a class="btn btn-sell" href="{{ url_for('become_seller') }}">BECOME A SELLER</a>
+    </div>
+    {% else %}
+    <div class="right">
+     <!-- {% if g.user.seller_fee_paid %}
+      <a class="btn btn-sell" href="{{ url_for('account.service_create') }}">add service</a>
+      {% else %}
+      <a class="btn btn-sell" href="{{ url_for('become_seller') }}">sell your work</a>
+      {% endif %} -->
+
+      <ul class="icons">
+        <li class="icons-notifications" v-bind:class="{ new: notificationsUnread > 0 }">
+          <nav class="header-dropdown">
+            <div class="nav-notification-container">
+              <div class="notification-header">
+                <div class="notifications-tab" v-bind:class="{ 'tab-opened': notificationTab == 0 }" @click="selectTab(0)">
+                  <span>NOTIFICATIONS</span>
+                  <span class="unread-counter" v-if="notificationsUnread > 0">
+                    <span class="unread-counter-text" v-text="notificationsUnread"></span>
+                  </span>
+                </div>
+                <div class="notifications-tab" v-bind:class="{ 'tab-opened': notificationTab == 1 }" @click="selectTab(1)">
+                  <span>INBOX</span>
+                  <span class="unread-counter" v-if="messagesUnread > 0">
+                    <span class="unread-counter-text" v-text="messagesUnread"></span>
+                  </span>
+                </div>
+              </div>
+              <div class="notifications-list-container">
+                <div class="notifications-list" v-if="notificationTab == 0">
+                  <div class="notifications-list-inner">
+                    <div v-for="notification in notifications">
+                      <a class="notifications-container" v-bind:href="notification._url" v-bind:class="{ unread: notification.unread }">
+                        <div class="notifications-inner">
+                          <div class="notifications-img-container">
+                            <div class="notifications-img">
+                              <img :src="notification.__icon" v-if="notification.__icon">
+                              <div v-else class="notifications-img-empty"></div>
+                            </div>
+                          </div>
+                          <div class="notifications-info">
+                            <div class="notifications-text" v-text="notification._notification"></div>
+                          </div>
+                          <div class="notifications-unread-status"></div>
+                        </div>
+                      </a>
+                    </div>
+                  </div>
+                  <div class="notifications-footer">
+                    <div class="notifications-footer-config-btn">
+                      <img :src="notificationsImages.configMessages">
+                    </div>
+                    <div class="notifications-footer-action-btn">dismiss all</div>
+                  </div>
+                </div>
+                <div class="notifications-messages-list" v-else>
+                  <div class="notifications-messages-list-inner">
+                    <div v-for="message in messages">
+                      <a class="notifications-messages-container" v-bind:href="message._url" v-bind:class="{ unread: message.unread }">
+                        <div class="notifications-messages-inner">
+                          <div class="notifications-messages-img-container">
+                            <div class="notifications-messages-img">
+                              <img :src="message.__usericon">
+                            </div>
+                          </div>
+                          <div class="notifications-messages-info">
+                            <div class="notifications-messages-user-info">
+                              <div class="notifications-messages-user-name" v-text="message._display_name"></div>
+                              <div class="notifications-messages-user-status" v-bind:class="{ online: message.__online }"></div>
+                            </div>
+                            <div class="notifications-messages-user-text" v-text="message.__text"></div>
+                          </div>
+                          <div class="notifications-unread-status"></div>
+                        </div>
+                      </a>
+                    </div>
+                  </div>
+                  <div class="notifications-messages-footer">
+                    <div class="notifications-messages-footer-config-btn">
+                      <img :src="notificationsImages.configMessages">
+                    </div>
+                    <div class="notifications-messages-footer-action-btn">dismiss all</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </nav>
+        </li>
+      </ul>
+      <div class="profile">
+        <a href="{{ url_for('account.index') }}" class="profile-wrap">
+          <div class="balance">
+            <!-- {% with photo_url = g.user.get_photo_url('h_100,w_100,c_thumb,g_face,bo_2px_solid_white,r_max/w_100') %}
+            <div class="avatar">
+              <img src="{{ photo_url }}" />
+            </div>
+            {% endwith %} -->
+            <div class="avatar">
+              <img src="{{ g.user.get_photo_url('h_100,w_100,c_thumb,g_face') }}" />
+            </div>
+            <div class="text">
+              ${{ g.user.get_credit_pp() }}
+            </div>
+          </div>
+        </a>
+      </div>
+    </div>
+    {% endif %}
+
+    <div class="darker darker-login" v-bind:class="{ shown: loginModalOpened }" @click.self="loginModalOpened = false">
+      <div class="top-text">
+        <div class="welcome">welcome back</div>
+        <span class="logo"></span>
+        {# <!-- <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet.</p> --> #}
+      </div>
+      <div class="dialog login">
+        <p class="text-danger message" v-if="loginModalError" v-text="loginModalError"></p>
+        <p class="text-success message" v-if="loginModalSuccess" v-text="loginModalSuccess"></p>
+        <form v-if="!loginModalRecoveryMode">
+          <input type="text" name="username" v-model="loginModalUsername" placeholder="USERNAME OR EMAIL" v-bind:class="{ error: loginModalFieldErrors.username }" v-bind:title="loginModalFieldErrors.username" @keyup.enter="loginModalHandleLoginClick">
+          <input type="password" name="password" v-model="loginModalPassword" placeholder="PASSWORD" v-bind:class="{ error: loginModalFieldErrors.password }" v-bind:title="loginModalFieldErrors.password" @keyup.enter="loginModalHandleLoginClick">
+          <div class="keep-signed">
+            <label for="keep-signed">
+              <input type="checkbox" id="keep-signed">
+              keep me signed in
+            </label>
+            <a class="forgot-password" href="#" @click.prevent="loginModalRecoveryMode = !loginModalLoading">forgot password?</a>
+          </div>
+          <div class="buttons">
+            <div class="btn login" @click="loginModalHandleLoginClick" v-bind:class="{ disabled: loginModalLoading }">Login</div>
+            <div class="separator"></div>
+            <a class="btn fb" href="#" @click.prevent="handleSocialLogin('facebook')">
+              <svg class="icon icon-fb">
+                <use xlink:href="{{ static_file('images/sprite.svg') }}#fb"></use>
+              </svg>
+              sign in with facebook</a>
+              <a class="btn google" href="#" @click.prevent="handleSocialLogin('google')">
+                <span class="icon"></span>
+                sign in with google</a>
+          </div>
+        </form>
+        <form v-else @submit.prevent>
+          <input type="text" name="username" v-model="loginModalUsername" placeholder="USERNAME OR EMAIL" v-bind:class="{ error: loginModalFieldErrors.username }" v-bind:title="loginModalFieldErrors.username" @keyup.prevent.enter="loginModalHandleRecoveryClick">
+          <div class="keep-signed">
+            <label></label>
+            <a class="forgot-password" href="#" @click.prevent="loginModalRecoveryMode = !loginModalLoading">remember password?</a>
+          </div>
+          <div class="buttons">
+            <div class="btn login" @click="loginModalHandleRecoveryClick" v-bind:class="{ disabled: loginModalLoading }">Recover</div>
+          </div>
+        </form>
+      </div>
+      <a href="#" class="link--sign-up" @click="loginModalOpened = false; signupModalOpened = true">Create an account</a>
+    </div>
+
+    <div class="darker darker-signup" v-bind:class="{ shown: signupModalOpened }" @click.self="signupModalOpened = false">
+      <div class="top-text">
+        <div class="welcome">welcome to</div>
+        <span class="logo"></span>
+        {# <!-- <p>Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh euismod tincidunt ut laoreet.</p> --> #}
+      </div>
+      <div class="dialog sign-up" v-if="!signupModalSuccess">
+        <form>
+          <div class="inputs">
+            <p class="text-danger message" v-if="signupModalError" v-text="signupModalError"></p>
+            <input type="text" placeholder="USERNAME" v-model="signupModalUsername" v-bind:class="{ error: signupModalFieldErrors.username }" v-bind:title="signupModalFieldErrors.username" @keyup.enter="signupModalHandleSignupClick">
+            <input type="text" placeholder="EMAIL" v-model="signupModalEmail" v-bind:class="{ error: signupModalFieldErrors.email }" v-bind:title="signupModalFieldErrors.email" @keyup.enter="signupModalHandleSignupClick">
+            <input type="password" placeholder="PASSWORD" v-model="signupModalPassword" v-bind:class="{ error: signupModalFieldErrors.password }" v-bind:title="signupModalFieldErrors.password" @keyup.enter="signupModalHandleSignupClick">
+            <input type="password" placeholder="REPEAT PASSWORD" v-model="signupModalPassword2" v-bind:class="{ error: signupModalFieldErrors.password2 }" v-bind:title="signupModalFieldErrors.password2" @keyup.enter="signupModalHandleSignupClick">
+
+            <select class="select-country" title="SELECT COUNTRY" v-model="signupModalCountry" v-bind:class="{ error: signupModalFieldErrors.country }" v-bind:title="signupModalFieldErrors.country">
+              <option value="-1" disabled>SELECT COUNTRY</option>
+              <option v-bind:value="country[0]" v-text="country[1]" v-for="country in signupModalCountries"></option>
+            </select>
+            <div class="g-recaptcha" data-sitekey="your_site_key"></div>
+            <p class="agreed">By joining I agree to receive emails from JobDone</p>
+            <div class="btn" @click="signupModalHandleSignupClick" v-bind:class="{ disabled: signupModalLoading }">CREATE AN ACCOUNT</div>
+          </div>
+        </form>
+        <span class="or">-or-</span>
+        <div class="buttons">
+          <a class="btn fb" href="#" @click.prevent="handleSocialLogin('facebook')">
+            <svg class="icon icon-fb">
+              <use xlink:href="{{ static_file('images/sprite.svg') }}#fb"></use>
+            </svg>
+            sign up with facebook
+          </a>
+          {# <!-- <a class="btn tw" href="#">
+            <svg class="icon icon-tw">
+              <use xlink:href="{{ static_file('images/sprite.svg') }}#tw"></use>
+            </svg>
+            sign up with twitter
+          </a> --> #}
+          <a class="btn google" href="#" @click.prevent="handleSocialLogin('google')">
+            <span class="icon"></span>
+            sign up with google
+          </a>
+        </div>
+      </div>
+      <div class="dialog sign-up" v-else>
+        <p class="text-success">We've just sent you an email with a magic link. Please follow this link in order to activate your account and start using JobDone</p>
+      </div>
+      <a href="#" class="link--login" v-if="!signupModalSuccess" @click="signupModalOpened = false; loginModalOpened = true">Already have an account?</a>
+    </div>
+
+    <div class="darker darker-login" v-bind:class="{ shown: recoveryModalOpened }" @click.self="recoveryModalOpened = false">
+      <div class="top-text">
+        <span class="logo"></span>
+      </div>
+      <div class="dialog login">
+        <p class="text-danger message" v-if="recoveryModalError" v-text="recoveryModalError"></p>
+        <form @submit.prevent>
+          <input type="password" placeholder="PASSWORD" v-model="recoveryModalPassword" @keyup.enter="signupModalHandleSignupClick">
+          <input type="password" placeholder="REPEAT PASSWORD" v-model="recoveryModalPassword2" @keyup.enter="signupModalHandleSignupClick">
+          <div class="keep-signed"></div>
+          <div class="buttons">
+            <div class="btn login" @click="recoveryModalHandleChangeClick" v-bind:class="{ disabled: recoveryModalLoading }">Change Password</div>
+          </div>
+        </form>
+      </div>
+      <a href="#" class="link--sign-up" @click="recoveryModalOpened = false">Cancel</a>
+    </div>
+    {% endif %}
+
+  </div>
+</header>
+
+{% if g.user.is_admin %}
+<div id="sm-frontend-admin"  v-bind:class="{ 'adminpanelactive': statusVisible }"  style="position: absolute;  top: 150px;" v-cloak v-show="module">
+  <div class="wrap clearfix hidebar">
+    <a class="btn" @click.prevent="statusVisible=!statusVisible">
+      <span v-if="statusVisible"><i class="glyphicon glyphicon-cog" ></i></span>
+      <span v-else><i class="glyphicon glyphicon-cog" ></i></span>
+    </a>
+  </div>
+    
+  <div class="wrap clearfix" v-if="statusVisible">
+    <div v-if="module == 'service'" style="margin-right:20px;" >
+      <div class="heading">Admin Panel</div>
+       Service status:
+      <span style="line-height: 2.5em;" v-if="!loading" v-text="service._status"></span>
+      <span style="line-height: 2.5em;" v-else>Loading...</span>
+    </div>
+    <div class="module-wrapper" v-if="module == 'service'">
+      <div class="buttons" v-if="service && !service.is_deleted && service.published_on">
+        <button type="button" class="btn" @click="serviceShowEditModal = true" v-bind:disabled="loading">Edit</button>
+        <button type="button" class="btn success" @click="serviceHandleApprove" v-bind:disabled="loading" v-if="!service.is_approved">Approve</button>
+        <button type="button" class="btn danger" @click="serviceHandleReject" v-bind:disabled="loading" v-if="!service.not_approved">Reject</button>
+      </div>
+
+      <modal v-if="serviceShowEditModal" class="modal-large" v-cloak>
+        <div slot="body">
+          I will:
+          <input type="text" class="service-edit-modal-input" v-model="service.title" placeholder="Service title">
+
+          <textarea class="service-edit-modal-textarea" v-model="service.description" v-bind:disabled="loading" placeholder="Service description" ref="descriptionTextarea"></textarea>
+        </div>
+        <div slot="footer">
+          <button v-show="!loading" class="button button-grey" @click="serviceShowEditModal = false" v-bind:disabled="loading">CANCEL</button>
+
+          <button class="button button-blue" @click="serviceHandleSubmit" v-bind:disabled="loading">SEND</button>
+        </div>
+      </modal>
+    </div>
+  </div>
+</div>
+{% endif %}

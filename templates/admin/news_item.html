@@ -1,0 +1,27 @@
+{% extends "admin/layout.html" %}
+
+{% block admin_title %}
+  {% if content.title %}{{ content.title }}{% else %}No title{% endif %}
+  {% if not content.is_published %}
+    <div class="label label-danger">Not published</div>
+  {% endif %}
+{% endblock %}
+
+{% block admin_body %}
+
+<div class="panel-body">
+
+	<a class="btn btn-danger" href="{{ url_for('admin.news_item_delete', content_id=content.id) }}">Delete</a>
+	<br /><br />
+
+  <label>Title:</label><br />
+  {{ content.title }}<br /><br />
+
+  <label>Text:</label><br />
+  {{ content.text|nl2br }}<br /><br />
+
+  <label>Created on:</label><br />
+  {{ content.created_on.strftime('%Y-%m-%d %H:%m') }}<br /><br />
+</div>
+
+{% endblock %}

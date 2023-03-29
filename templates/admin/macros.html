@@ -1,0 +1,298 @@
+{% macro product_photo(product) %}
+    {% with photo = product.get_primary_photo() %}
+        <p>
+            {% if photo %}
+                <img src="{{ static_file(photo.get_thumb_url()) }}" width="160" height="160"
+                     class="img-thumbnail mp-thumbnail" onerror="this.width = this.height = 160; "
+                     onerror="this.src='{{ static_file('no_image_product.png') }}';"/>
+            {% else %}
+                <img src="{{ static_file('no_image_product.png') }}" width="160" height="160" class="img-thumbnail mp-thumbnail"/>
+            {% endif %}
+        </p>
+    {% endwith %}
+{% endmacro %}
+
+{% macro buyer_product_photo(product) %}
+    {% with photo = product.get_primary_photo() %}
+        <p>
+            {% if photo %}
+                <a href="{{ product_url(product) }}"><img class="pull-right"
+                                                          src="{{ static_file(photo.get_thumb_url()) }}"
+                                                          width="160" height="160" class="img-thumbnail mp-thumbnail"
+                                                          onerror="this.width = this.height = 160; "
+                                                          onerror="this.src='{{ static_file('no_image_product.png') }}';"/></a>
+            {% else %}
+                <img src="{{ static_file('no_image_product.png') }}" width="160" height="160" class="img-thumbnail mp-thumbnail"/>
+            {% endif %}
+        </p>
+    {% endwith %}
+{% endmacro %}
+
+
+{% macro index_product_photo(product) %}
+    {% with photo = product.get_primary_photo() %}
+        <p>
+            {% if photo %}
+                <img width="200" height="200" src="{{ static_file(photo.get_thumb_url()) }}"
+                     onerror="this.src='{{ static_file('no_image_product.png') }}';"/>
+            {% else %}
+                <img src="{{ static_file('no_image_product.png') }}" class="img-thumbnail mp-thumbnail"/>
+            {% endif %}
+        </p>
+    {% endwith %}
+{% endmacro %}
+
+
+{% macro seller_product_photo(product) %}
+    {% with photo = product.get_primary_photo() %}
+        <p>
+            {% if photo %}
+                <a href="{{ product_url(product) }}"><img class="pull-right"
+                                                          src="{{ static_file(photo.get_thumb_url()) }}"
+                                                          width="160" height="160" class="img-thumbnail mp-thumbnail"
+                                                          onerror="this.src='{{ static_file('no_image_product.png') }}';"
+                                                          onerror="this.width = this.height = 160; "/></a>
+            {% else %}
+                <img src="{{ static_file('no_image_product.png') }}" width="160" height="160" class="img-thumbnail mp-thumbnail"/>
+            {% endif %}
+        </p>
+    {% endwith %}
+{% endmacro %}
+
+{% macro product_photos(product) %}
+    <carousel>
+        {% for photo in product.product_photos %}
+            <slider>
+                <img class="img-responsive center-block" src="{{ static_file(photo.get_url()) }}"
+                     alt="{{ product.title }}">
+            </slider>
+        {% endfor %}
+    </carousel>
+{% endmacro %}
+
+
+{% macro status_order_label(order) %}
+
+    {% if order.state == order.NEW and order.product.seller_id == g.user.id %}
+        <label class="label label-primary"><strong>New Order</strong></label>
+    {% elif order.state == order.NEW %}
+        <label class="label label-primary"><strong>Awaiting accept order by Seller</strong></label>
+    {% endif %}
+
+    {% if order.state == order.ACCEPTED and order.product.seller_id == g.user.id %}
+        <label class="label label-info"><strong>Awaiting delivery by buyer</strong></label>
+    {% elif order.state == order.ACCEPTED %}
+        <label class="label label-info"><strong>Awaiting shipment by seller</strong></label>
+    {% endif %}
+
+    {% if order.state == order.DISPUTE %}
+        <label class="label label-danger"><strong>Order is under dispute</strong></label>
+    {% endif %}
+
+    {% if order.state == order.SENT %}
+        <label class="label label-success"><strong>Order Shipped</strong></label>
+    {% endif %}
+
+    {% if order.state == order.CLOSED_COMPLETED %}
+        <label class="label label-success"><strong>Order Completed</strong></label>
+    {% endif %}
+
+{% endmacro %}
+
+
+{% macro product_photos_video(product, youtube_key) %}
+    <carousel>
+        <slider>
+            <iframe class="center-block" id="video" width="653" height="457"
+                    src="http://www.youtube.com/embed/{{ youtube_key }}" frameborder="0" allowfullscreen></iframe>
+        </slider>
+
+        {% for photo in product.product_photos %}
+            <slider>
+                <img class="img-responsive center-block" src="{{ static_file(photo.get_url()) }}"
+                     alt="{{ product.title }}">
+            </slider>
+        {% endfor %}
+    </carousel>
+{% endmacro %}
+
+
+{% macro product_url(product) %}
+    {% if product.is_private %}
+        {% if product.uuid %}
+            {{ url_for('product_by_uuid', product_uuid=product.uuid) }}
+        {% else %}
+            #
+        {% endif %}
+    {% else %}
+        {{ url_for('product', product_title=product.get_title_seofied(), product_id=product.unique_id) }}
+    {% endif %}
+{% endmacro %}
+
+{% macro product_description(product, full=False) %}
+    {% if full %}
+        <blockquote>
+            <p>{{ product.description|nl2br }}</p>
+        </blockquote>
+    {% endif %}
+
+    {% if g.user.is_authenticated %}
+        {% if g.user.premium_member and product.is_private %}<span class="label label-warning">Private</span>{% endif %}
+        <br/>
+    {% endif %}
+
+{% endmacro %}
+
+{% macro product_price(product) %}
+    <span class="lead">{{ product.get_price_pp() }}</span>
+    {% if g.user.premium_member and product.is_private %}<span class="label label-warning">Private</span>{% endif %}
+{% endmacro %}
+
+{% macro product_delivery_time(product, class="lead") %}
+    <span class="{{ class }}">
+  {% if product.delivery_time.days > 0 %}
+      Delivered within {{ product.delivery_time.days }} day(s)
+  {% else %}
+      Delivered instantly
+  {% endif %}
+</span>
+{% endmacro %}
+
+{% macro product_pagination(pagination) %}
+    <nav>
+        <ul class="pagination">
+            {% if pagination.has_prev %}
+                <li>
+                    <a href="{{ url_for('index', category_id=request.args.category_id, q=request.args.q, page=pagination.prev_num) }}"
+                       aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+            {% for page in pagination.iter_pages() %}
+                <li {% if page == pagination.page %}class="active"{% endif %}><a
+                        href="{{ url_for('index', category_id=request.args.category_id, q=request.args.q, page=page) }}">{{ page }}</a>
+                </li>
+            {% endfor %}
+            {% if pagination.has_next %}
+                <li>
+                    <a href="{{ url_for('index', category_id=request.args.category_id, q=request.args.q, page=pagination.next_num) }}"
+                       aria-label="Next">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endmacro %}
+
+{% macro search_pagination(pagination, category_id=None) %}
+    <nav>
+        <ul class="pagination">
+            {% if pagination.has_prev %}
+                <li>
+                    <a href="{{ url_for('index', category_id=category_id, q=request.args.q, sort=request.args.sort, page=pagination.prev_page) }}"
+                       aria-label="Previous">
+                        <span aria-hidden="true">&laquo; Previous</span>
+                    </a>
+                </li>
+            {% endif %}
+            {% if pagination.has_next %}
+                <li>
+                    <a href="{{ url_for('index', category_id=category_id, q=request.args.q, sort=request.args.sort, page=pagination.next_page) }}"
+                       aria-label="Next">
+                        <span aria-hidden="true">Next &raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endmacro %}
+
+{% macro pagination(pagination) %}
+    <nav>
+        <ul class="pagination">
+            {% if pagination.has_prev %}
+                <li>
+                    <a href="{{ url_for(request.endpoint, page=pagination.prev_num, **kwargs) }}" aria-label="Previous">
+                        <span aria-hidden="true">&laquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+            {% for page in pagination.iter_pages() %}
+                <li {% if page == pagination.page %}class="active"{% endif %}><a
+                        href="{{ url_for(request.endpoint, page=page, **kwargs) }}">{{ page }}</a></li>
+            {% endfor %}
+            {% if pagination.has_next %}
+                <li>
+                    <a href="{{ url_for(request.endpoint, page=pagination.next_num, **kwargs) }}" aria-label="Previous">
+                        <span aria-hidden="true">&raquo;</span>
+                    </a>
+                </li>
+            {% endif %}
+        </ul>
+    </nav>
+{% endmacro %}
+
+{% macro rating(r) %}
+    <span style="color: darkgreen;">+{{ r.positive }}</span> /
+    <span style="color: darkgrey;">{{ r.neutral }}</span> /
+    <span style="color: darkred;">-{{ r.negative }}</span>
+{% endmacro %}
+
+{% macro render_withdrawals(withdrawals) %}
+    <table class="table table-condensed">
+        <thead>
+        <tr>
+            <th>Type</th>
+            <th>Status</th>
+            <th>Amount requested</th>
+            <th>Requested on</th>
+            <th>Info</th>
+        </tr>
+        </thead>
+        <tbody>
+        {% for withdrawal in withdrawals %}
+            <tr>
+                {% with data = withdrawal.get_data() %}
+                    <td>
+                        {% if withdrawal.type == withdrawal.WESTERN_UNION %}
+                            Western Union
+                        {% else %}
+                            BTC
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if not withdrawal.is_closed %}
+                            <span class="text-success">Pending</span>
+                        {% else %}
+                            {% if withdrawal.is_rejected %}
+                                <span class="text-danger">Rejected</span>
+                            {% else %}
+                                <span class="text-success">Paid / Completed</span>
+                            {% endif %}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if withdrawal.type == withdrawal.WESTERN_UNION %}
+                            {{ '{0:.2f}'.format(data.amount_usd) }} USD
+                        {% endif %}
+                        {% if withdrawal.type == withdrawal.BTC %}
+                            {{ '{0:.8f}'.format(data.amount / 100000000.0) }} BTC
+                        {% endif %}
+                    </td>
+                    <td>{{ withdrawal.created_on.strftime('%Y-%m-%d %H:%m') }}</td>
+                    <td>
+                        {% if data.reply %}
+                            <strong>Administrator reply:</strong><br/>
+                            {{ data.reply.note|nl2br }}
+                        {% else %}
+                            No information provided
+                        {% endif %}
+                    </td>
+                {% endwith %}
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+{% endmacro %}

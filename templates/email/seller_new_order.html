@@ -1,0 +1,38 @@
+{% extends "email/layout.html" %}
+
+{% block heading %}Congratulations!{% endblock %}
+
+{% block content %}
+<p>You've just got new order from {{ buyer }}. Below is a summary:</p>
+
+<table align="center" border="0" cellpadding="10" cellspacing="0" width="100%">
+  <tr>
+    <td align="left" style="font-weight: bold; border-bottom: 1px solid #CCC;">
+      ITEM
+    </td>
+    <td align="right" style="font-weight: bold; border-bottom: 1px solid #CCC;">
+      AMOUNT
+    </td>
+  </tr>
+  {% for row in summary %}
+  <tr>
+    <td align="left">
+      {{ row.title }}
+    </td>
+    <td align="right">
+      USD {{ row.price|format_price }}
+    </td>
+  </tr>
+  {% endfor %}
+  <tr>
+    <td align="left" style="border-top: 1px solid #CCC;">
+      TOTAL
+    </td>
+    <td align="right" style="font-weight: bold; border-top: 1px solid #CCC;">
+      USD {{ total|format_price }}
+    </td>
+  </tr>
+</table>
+
+<a href="{{ link }}" style="background: #0472b8; border-radius: 4px; color: #fff; padding: 16px; margin-top: 10px; text-decoration: none; display: block; width: 200px; text-align: center; margin: 20px auto 0;">View Order</a>
+{% endblock %}

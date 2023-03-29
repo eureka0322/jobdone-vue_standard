@@ -1,0 +1,15 @@
+{% extends "email/layout.html" %}
+
+{% block heading %}Welcome to JobDone{% endblock %}
+
+{% block content %}
+<p>Thank you for your order! Below are your new account credentials:</p>
+
+<p style="padding: 15px; background: #EEE; font-family: monospace;">Username: {{ username }}<br />
+Password: {{ password }}</p>
+
+<p>Please follow the link below in order to activate your account:<br />
+<a href="{{ link }}">{{ link }}</a></p>
+
+<em>Warning: we highly recommend you to change password once you log in for the first time!</em>
+{% endblock %}

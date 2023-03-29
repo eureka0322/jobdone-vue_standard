@@ -1,0 +1,13 @@
+{% extends "email/layout.txt" %}
+
+{% block content %}Hi {{ username }}!
+This is an automated message to let you know that your JobDone account has been disabled.
+
+This message was triggered by one of the following:
+You either requested us to disable your account or that your account was flagged by our system as violating our Terms of Service and/or other policies.
+
+For more information, please review our Terms of Service: {{ terms_link }}
+
+If you have any questions, please contact us.
+Thanks!
+{% endblock %}

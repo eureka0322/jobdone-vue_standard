@@ -1,0 +1,163 @@
+{% extends "new/account/layout.html" %}
+
+{% block body %}
+<div class="container standard" id="sm-account-settings">
+  <div class="row">
+    <div class="col-md-3">
+      <div class="design-box">
+        <h1>SETTINGS</h1>
+        <ul class="nav">
+          <li class="active"><a href="{{ url_for('account.settings') }}">Account</a></li>
+          <li class="active"><a href="{{ url_for('account.settings_email') }}">Notifications</a></li>
+          <li class="active"><a href="{{ url_for('account.settings_payment') }}">Payment & Financials</a></li>
+          <li class="active"><a href="{{ url_for('account.settings_verification') }}">Trust & Verification</a></li>
+        </ul>
+      </div>
+    </div>
+    <div class="col-md-9">
+      <div class="design-box inner">
+        <h2>Account Details</h2>
+
+        <div class="row">
+          <div class="form-group col-md-3">
+            <label>email</label>
+            <input type="email" class="form-control disabled" disabled value="{{ g.user.email }}">
+          </div>
+          <div class="form-group col-md-3">
+            <label>timezone</label>
+            <select class="form-control" v-model="tz">
+              {% for tz in timezones %}
+              <option value="{{ tz[0] }}"{% if current_timezone == tz[0] %} selected{% endif %}>{{ tz[1] }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="row" v-if="settingsError" v-cloak>
+          <div class="col-md-12">
+            <div class="alert alert-danger" v-text="settingsError"></div>
+          </div>
+        </div>
+        <div class="row" v-if="settingsSuccess" v-cloak>
+          <div class="col-md-12">
+            <div class="alert alert-success">New settings have been successfully saved</div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="form-group col-md-3">
+            <input type="button" class="btn btn-primary" value="SAVE CHANGES" @click="handleChangeSettingsClick" v-bind:disabled="isLoading">
+          </div>
+        </div>
+
+        <div class="row">
+          <div class="col-md-12">
+            <h3>Password</h3>
+          </div>
+        </div>
+        <div class="row" v-cloak>
+          <div class="form-group col-md-3" v-if="!hideOldPassword">
+            <label>old password</label>
+            <input type="password" class="form-control" v-model="oldPassword">
+          </div>
+          <div class="form-group col-md-3">
+            <label>new password</label>
+            <input type="password" class="form-control" v-model="newPassword">
+          </div>
+          <div class="form-group col-md-3">
+            <label>repeat new password</label>
+            <input type="password" class="form-control" v-model="newPassword2">
+          </div>
+        </div>
+        <div class="row" v-if="passwordError" v-cloak>
+          <div class="col-md-12">
+            <div class="alert alert-danger" v-text="passwordError"></div>
+          </div>
+        </div>
+        <div class="row" v-if="passwordSuccess" v-cloak>
+          <div class="col-md-12">
+            <div class="alert alert-success">Password has been successfully changed</div>
+          </div>
+        </div>
+        <div class="row">
+          <div class="form-group col-md-3">
+            <input type="button" class="btn btn-primary" value="CHANGE PASSWORD" @click="handleChangePasswordClick" v-bind:disabled="isLoading">
+          </div>
+        </div>
+
+        <ul class="list-access nav" v-cloak>
+          <li v-if="!deleteAccountRequested">
+            <a href="#" class="btn-danger" @click.prevent="handleDeleteAccountRequest">delete my account</a>
+          </li>
+          <li v-else>
+            <img src="{{ static_file('images/loading.gif') }}" v-show="deleteAccountLoading" />
+            <div class="alert alert-danger delete-account" v-show="!deleteAccountLoading && deleteAccountError">
+              <p v-text="deleteAccountError"></p>
+            </div>
+            <div class="alert alert-danger delete-account" v-show="!deleteAccountLoading && !deleteAccountError">
+              <p>Warning! This is unrecoverable operation!<br />You're about to loose access to your account permanently. Before you leave we kindly ask you to provide a few words about your decision:</p>
+
+              <div class="form-horizontal">
+                <div class="form-group">
+                  <label class="col-sm-2 control-label">I'm leaving because...</label>
+                  <div class="col-sm-10">
+                    <select class="form-control" v-model="deleteAccountReason">
+                      <option value="" disabled>Select reason</option>
+                      {% for reason in delete_reasons %}
+                      <option value="{{ reason.reason }}">{{ reason.title }}</option>
+                      {% endfor %}
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label class="col-sm-2 control-label">Tell us more:</label>
+                  <div class="col-sm-10">
+                    <textarea class="form-control" rows="5" v-model="deleteAccountNotes"></textarea>
+                  </div>
+                </div>
+              </div>
+
+              <div class="text-right">
+                <button class="btn btn-danger" style="padding: 10px; margin-top: 10px;" @click="handleDeleteAccountClick" v-bind:disabled="isLoading || !deleteAccountReason || !deleteAccountNotes">Confirm Account Deletion</button>
+              </div>
+            </div>
+          </li>
+        </ul>
+      </div>
+
+      {# <!-- <div class="design-box inner">
+        <span class="setemail">john.bbn977@gmail.com</span>
+        <h2>Newsletter options</h2>
+        <div class="checkbox">
+          <label><input type="checkbox" value="">Option 1</label>
+        </div>
+        <div class="checkbox">
+          <label><input type="checkbox" value="">Option 2</label>
+        </div>
+        <div class="checkbox disabled">
+          <label><input type="checkbox" value="" disabled>Option 3</label>
+        </div>
+        <a href="#" class="btn btn-primary">SAVE SETTINGS</a>
+      </div> --> #}
+    </div>
+  </div>
+
+  <modal effect="fade" v-model="deleteAccountModal" class="modal-custom modal-delete-account" v-cloak>
+    <div slot="modal-header" class="modal-header">
+      <button type="button" class="close" @click="deleteAccountModal = false"><span>&times;</span></button>
+      <h4 class="modal-title">Confirm Account Deletion</h4>
+    </div>
+    <div slot="modal-body" class="modal-body">
+      <div class="request-form">
+        <div class="alert alert-danger" v-if="deleteAccountModalError" v-text="deleteAccountModalError"></div>
+
+        <div class="field">
+          <input v-model="deleteAccountModalPassword" type="password" placeholder="Type your password" />
+        </div>
+        
+      </div>
+    </div>
+    <div slot="modal-footer" class="modal-footer">
+      <button class="btn btn-danger" v-bind:disabled="!deleteAccountModalPassword || isLoading" style="width: 220px; margin: 0 auto; display: block;" @click.prevent="handleDeleteAccount">DELETE ACCOUNT</button>
+    </div>
+  </modal>
+</div>
+{% endblock %}

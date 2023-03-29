@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, minimum-scale=1, initial-scale=1, user-scalable=yes">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+
+    <title>{% block title %}JobDone{% endblock %}</title>
+
+    <meta name="description" content="{% if meta_description %}{{ meta_description }}{% else %}JobDone{% endif %}">
+    <link rel="alternate" type="application/atom+xml" title="Atom" href="{{ url_for('atom_xml') }}">
+
+    <link rel="icon" href="{{ static_file('images/favicon/favicon.ico') }}" />
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ static_file('images/favicon/favicon-32x32.png') }}" />
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ static_file('images/favicon/favicon-16x16.png') }}" />
+
+    <!-- Add to homescreen for Chrome on Android. Fallback for manifest.json -->
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="application-name" content="JobDone">
+    <link rel="manifest" href="{{ static_file('images/favicon/manifest.json') }}" />
+
+    <!-- Add to homescreen for Safari on iOS -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="JobDone">
+
+    <link rel="mask-icon" href="{{ static_file('images/favicon/safari-pinned-tab.svg') }}" color="#5bbad5" />
+    <meta name="theme-color" content="#ffffff" />
+
+    <!-- Homescreen icons -->
+    <link rel="apple-touch-icon" sizes="180x180" href="{{ static_file('images/favicon/apple-touch-icon.png') }}">
+
+    <!-- Tile icon for Windows 8 (144x144 + tile color) -->
+    <meta name="msapplication-TileImage" content="{{ static_file('images/favicon/mstile-150x150.png') }}">
+    <meta name="msapplication-TileColor" content="#000000">
+    <meta name="msapplication-tap-highlight" content="no">
+
+    {% block head %}{% endblock %}
+
+    <!-- get fonts from google (Lato, Open_Sans_Condensed, Raleway) -->
+    <link href="https://fonts.googleapis.com/css?family=Lato:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i|Open+Sans+Condensed:300,300i,700|Raleway:100,100i,200,200i,300,300i,400,400i,500,500i,600,600i,700,700i,800,800i,900,900i" rel="stylesheet">
+
+    <link rel="stylesheet" href="{{ static_file('assets/frontend.css', include_version=True) }}">
+    {% if g.user.is_admin %}
+    <link rel="stylesheet" href="{{ static_file('assets/editor.css', include_version=True) }}">
+    <link rel="stylesheet" href="{{ static_file('assets/adminPanel.css', include_version=True) }}">
+    {% endif %}
+
+    {% block styles %}{% endblock %}
+
+    <style>
+      body {
+        margin: 0;
+        font-family: 'Lato', sans-serif;
+        line-height: 1.5;
+        min-height: 100vh;
+        background-color: #FFF;
+      }
+    </style>
+
+
+  </head>
+  <body>
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-NTTD7ZR"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+    <!-- End Google Tag Manager (noscript) -->
+
+    {% include "new/components/header.html" %}
+
+    {% block body %}{% endblock %}
+
+    {% include "new/components/footer.html" %}
+
+    <script type="text/javascript">
+        window.SM_BOOTSTRAP_DATA = {{ application_data|tojson|safe }};
+        {% if g.inject_affiliate_script_options %}
+        window.SM_AFFILIATE_OPTIONS = {{ g.inject_affiliate_script_options|tojson|safe }};
+        {% endif %}
+    </script>
+    
+    <script type="text/javascript" src="{{ static_file('assets/vendor.js', include_version=True) }}"></script>
+    {% block scripts %}{% endblock %}
+    
+    {% if g.user.is_admin %}
+    <script type="text/javascript" src="{{ static_file('assets/editor.js', include_version=True) }}"></script>
+    <script type="text/javascript" src="{{ static_file('assets/adminPanel.js', include_version=True) }}"></script>
+    {% endif %}
+
+    <script type="text/javascript" src="{{ static_file('assets/frontend.js', include_version=True) }}"></script>
+
+    {% if g.inject_affiliate_script %}
+    <script type="text/javascript" src="{{ static_file('assets/affiliate.js', include_version=True) }}"></script>
+    {% endif %}
+
+    {% if not g.user.is_admin and not g.debug %}
+    <!-- Google Tag Manager frontend -->
+    <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-NTTD7ZR');</script>
+    <!-- End Google Tag Manager -->
+
+    <script type="text/javascript">
+        window.heap=window.heap||[],heap.load=function(e,t){window.heap.appid=e,window.heap.config=t=t||{};var r=t.forceSSL||"https:"===document.location.protocol,a=document.createElement("script");a.type="text/javascript",a.async=!0,a.src=(r?"https:":"http:")+"//cdn.heapanalytics.com/js/heap-"+e+".js";var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(a,n);for(var o=function(e){return function(){heap.push([e].concat(Array.prototype.slice.call(arguments,0)))}},p=["addEventProperties","addUserProperties","clearEventProperties","identify","removeEventProperty","setEventProperties","track","unsetEventProperty"],c=0;c<p.length;c++)heap[p[c]]=o(p[c])};
+        heap.load("1549510674");
+    </script>
+
+    <script>
+        window.intercomSettings = {
+            app_id: "tkxadmkb"
+        };
+    </script>
+
+    <script type="text/javascript">
+        window.smartlook||(function(d) {
+            var o=smartlook=function(){ o.api.push(arguments)},h=d.getElementsByTagName('head')[0];
+            var c=d.createElement('script');o.api=new Array();c.async=true;c.type='text/javascript';
+            c.charset='utf-8';c.src='https://rec.smartlook.com/recorder.js';h.appendChild(c);
+        })(document);
+        smartlook('init', 'b04236f7a3be040283e75538feee87e195ab1992');
+    </script>
+    
+    <!--Start of Tawk.to Script-->
+    <script type="text/javascript">
+    var Tawk_API=Tawk_API||{}, Tawk_LoadStart=new Date();
+    (function(){
+    var s1=document.createElement("script"),s0=document.getElementsByTagName("script")[0];
+    s1.async=true;
+    s1.src='https://embed.tawk.to/585a704e7418a41587c1725a/default';
+    s1.charset='UTF-8';
+    s1.setAttribute('crossorigin','*');
+    s0.parentNode.insertBefore(s1,s0);
+    })();
+    </script>
+    <!--End of Tawk.to Script-->
+    
+    {% endif %}
+  </body>
+</html>

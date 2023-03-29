@@ -1,0 +1,116 @@
+.modal-mask {
+  position: fixed;
+  z-index: 9998;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(23,30,44,.88);
+  display: table;
+}
+
+.modal-component {
+  .modal-body {
+    padding: 0;
+  }
+
+  .modal-footer {
+    padding: 15px 0 0;
+    border: none;
+  }
+
+  .modal-wrapper {
+    display: table-cell;
+    vertical-align: middle;
+  }
+
+  .modal-container {
+    width: 500px;
+    margin: 0px auto;
+    padding: 22px 18px 18px;
+    background-color: #f2f2f2;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, .33);
+    transition: all .3s ease;
+    font: 300 1em/100% Raleway;
+  }
+
+  &.modal-large .modal-container {
+    width: 800px;
+  }
+
+  .modal-header h3 {
+    margin-top: 0;
+    color: #42b983;
+  }
+
+  .modal-default-button {
+    float: right;
+  }
+
+  .modal-textarea-with-attachments {
+    height: 203px;
+    display: flex;
+    flex-direction: column;
+    background: #ffffff;
+    border: 1px solid #e6e6e6;
+
+    .attachment-items {
+      display: flex;
+      border: 1px solid #e6e6e6;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+      max-height: 122px;
+      overflow: auto;
+    }
+
+    .attachment-item {
+      padding: 8px 28px 8px 12px;
+      border-radius: 5px;
+      background: #0b83cd;
+      background: linear-gradient(to top, #4980c9, #0b83cd);
+      margin: 4px 6px;
+      color: #fff;
+      max-width: 200px;
+      display: flex;
+      position: relative;
+    }
+
+    .attachment-name {
+      width: 100%;
+      height: 16px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: block;
+      font-weight: 400;
+    }
+
+    .attachment-loading,
+    .attachment-delete{
+      cursor: pointer;
+      position: absolute;
+      right: 0;
+      top: 0;
+      height: 100%;
+      font-size: 18px;
+      width: 26px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .attachment-delete {
+      border-left: 1px solid #6596cf;
+    }
+
+    @keyframes blink {50% { color: transparent }}
+    .attachment-loading-dot {
+      animation: 1s blink infinite;
+      font-weight: bold;
+    }
+    .attachment-loading-dot:nth-child(2) { animation-delay: 250ms }
+    .attachment-loading-dot:nth-child(3) { animation-delay: 500ms }
+  }
+}
+

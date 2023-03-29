@@ -1,0 +1,11 @@
+{% extends "email/layout.html" %}
+
+{% block heading %}Warning!{% endblock %}
+
+{% block content %}
+<p>Only 1 day left to deliver your order #{{ order_id }} ({{ product_title }}).</p>
+
+<p>We recommend you to contact {{ buyer }} if you feel you are not able to deliver within the next 24 hours. Note that {{ buyer }} will be entitled to cancel this order.</p>
+
+<a href="{{ link }}" style="background: #0472b8; border-radius: 4px; color: #fff; padding: 16px; margin-top: 10px; text-decoration: none; display: block; width: 200px; text-align: center; margin: 20px auto 0;">View Order</a>
+{% endblock %}

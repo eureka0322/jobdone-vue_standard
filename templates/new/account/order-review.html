@@ -1,0 +1,91 @@
+{% set tab = mode %}
+{% set header_hide_navigation_bar = 'true' %}
+
+{% extends "new/account/layout.html" %}
+
+{% block body %}
+<div id="sm-account-order-review">
+  <div class="content_area">
+    <div class="container">
+      <div class="row">
+        <div class="col-md-9" v-if="!sent" v-cloak>
+          <div class="rate_review">
+            <h1>Rate &amp; Review</h1>
+            <p>Share your experience with the community, to help them make better decisions</p>
+          </div>
+
+          <div class="single_review">
+            <div class="pull-left rv_left">
+              <h3>Order</h3>
+              <p>How was your experience with this seller ?</p>
+            </div>
+            <div class="pull-right rat_rt">
+              <div class="btn-group">
+                <button type="button" class="btn btn-default"><label><input type="radio" v-model="orderReviewRate" value="-1" /> Negative</label></button>
+                <button type="button" class="btn btn-default"><label><input type="radio" v-model="orderReviewRate" value="0" /> Neutral</label></button>
+                <button type="button" class="btn btn-default"><label><input type="radio" v-model="orderReviewRate" value="1" /> Positive</label></button>
+              </div>
+            </div>
+          </div>
+
+          <div class="rv_write">
+            <h4>What did you like about this service ? Did the seller help you to achieve your goal ? </h4>
+            <form action="#" class="text-right">
+              <textarea v-model="orderReviewFeedback" maxlength="500" placeholder="type your feedback here"></textarea>
+              <p><span v-text="orderReviewFeedback.length"></span> / 500</p>
+
+              <div class="alert alert-danger" v-if="error" v-text="error"></div>
+
+              <button class="finish_pr" v-bind:disabled="loading" @click="handleRateOrderClick">SEND FEEDBACK</button>
+            </form>
+          </div>
+        </div>
+
+        <div class="col-md-9" v-else v-cloak>
+          <div class="rate_review_cm">
+            <h1>Thanks for your review</h1>
+          </div>
+          <div class="rv_compl">
+            <div class="rvw_profile">
+              <img v-bind:src="sharedState.extra.seller._photo_url" v-if="sharedState.extra.mode === 'buyer'" />
+              <img v-bind:src="sharedState.extra.buyer._photo_url" v-else />
+              <img class="like_psi" src="{{ static_file('images/account/like-icon.png') }}" alt="">
+            </div>
+            <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit. Unde impedit consequatur, non similique incidunt, quibusdam vel minus laudantium? Esse eveniet dolorem quia iure minima rem culpa consequuntur laudantium minus ipsum.</p>
+          </div>
+
+          {% if not order.product.is_private %}
+          <div class="social_share_sep text-center">
+            <p>Share this well done project:</p>
+            <ul>
+              <li class="share_fb"><a href="{{ url_for('product_share', product_id=order.product.unique_id, platform='facebook') }}"><i class="fa fa-facebook-official"></i> share on facebook</a></li>
+              {# <!--<li><a class="twtr_bg" href="#"><i class="fa fa-twitter"></i></a></li>
+              <li><a class="gplus_bg" href="#"><i class="fa fa-google-plus"></i></a></li>
+              <li><a class="linkd_bg" href="#"><i class="fa fa-linkedin"></i></a></li>
+              <li><a class="mail_bg" href="#"><i class="fa fa-envelope"></i></a></li>
+              <li><a class="link_bg" href="#"><i class="fa fa-link"></i></a></li>--> #}
+            </ul>
+          </div>
+          {% endif %}
+        </div>
+
+        <div class="col-md-3" v-cloak>
+          <div class="rate_service">
+            <div class="rt_s_thumb">
+              <img src="{{ order.product.get_primary_photo(transform='w_245,h_150') }}" alt="{{ order.title }}" />
+              <i class="fa fa-heart"></i>
+              <span>${{ "{0:.2f}".format(order.product.price / 100.0) }}</span>
+            </div>
+            <h3><a href="#">{{ order.title }}</a></h3>
+            <p>Seller <span>{{ order.product.seller.username }}</span></p>
+            <p>Date <span>{{ order.created_on }}</span></p>
+            <p>Order <span>#{{ order.id }}</span></p>
+            <p>Amount <span>${{ "{0:.2f}".format(order.price / 100.0) }}</span></p>
+          </div>
+          <a class="finish_pr" href="{{ url_for('account.order', order_id=order.id) }}" v-if="sent">FINISH</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
